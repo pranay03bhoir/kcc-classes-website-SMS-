@@ -1,0 +1,31 @@
+{
+  "name": "kcc-classes-website-sms-",
+  "version": "1.0.0",
+  "description": "KCC classes website",
+  "homepage": "https://github.com/pranay03bhoir/kcc-classes-website-SMS-#readme",
+  "bugs": {
+    "url": "https://github.com/pranay03bhoir/kcc-classes-website-SMS-/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pranay03bhoir/kcc-classes-website-SMS-.git"
+  },
+  "license": "ISC",
+  "author": "Pranay Bhoir",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "server.js",
+    "run": "node_modules/.bin/nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
