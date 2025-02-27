@@ -1,0 +1,36 @@
+const mongoose = require("mongoose");
+
+const studentSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    contact: { type: Number, required: true },
+    address: { type: String, required: true },
+    role: { type: String, default: "student" },
+    profileImage: { type: String, default: "" }, // Stored in AWS S3
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+    attendance: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Attendance",
+      },
+    ],
+    grades: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Grade",
+      },
+    ],
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { timestamps: true },
+);
+module.exports = mongoose.model("Student", studentSchema);
