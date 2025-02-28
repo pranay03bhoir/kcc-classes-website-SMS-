@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const studentRegister = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password,contact,address } = req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
       return res.status(400).json({
@@ -18,6 +18,8 @@ const studentRegister = async (req, res) => {
         name,
         email,
         password: hashedPassword,
+        contact,
+        address,
       });
       await student.save();
       if (student) {
@@ -53,9 +55,9 @@ const studentLogin = async (req, res) => {
       const student = await bcrypt.compare(password, existingStudent.password);
       if (student) {
         const payload = {
-          id: student._id,
-          email: student.email,
-          role: student.role,
+          id: existingStudent._id,
+          email: existingStudent.email,
+          role: existingStudent.role,
         };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
         return res.status(200).json({
@@ -64,7 +66,7 @@ const studentLogin = async (req, res) => {
           accessToken,
         });
       } else {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
           message: "Invalid credentials",
         });
