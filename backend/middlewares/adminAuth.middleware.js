@@ -1,14 +1,22 @@
 const adminAuthMiddleware = (req, res, next) => {
   try {
-    const userRole = req.userInfo.role;
-    if (userRole !== "admin") {
-      res.status(400).json({
+    if (!req.userInfo || !req.userInfo.role) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing user information",
+      });
+    }
+
+    // console.log("User role:", req.userInfo.role);
+
+    if (req.userInfo.role !== "admin") {
+      return res.status(403).json({
         success: false,
         message: "Admin rights required, Access denied",
       });
-    } else {
-      next();
     }
+
+    next();
   } catch (e) {
     console.error(e);
     res.status(500).json({
