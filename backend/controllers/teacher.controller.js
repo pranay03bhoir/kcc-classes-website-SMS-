@@ -52,9 +52,9 @@ const teacherLogin = async (req, res) => {
       const teacher = await bcrypt.compare(password, existingTeacher.password);
       if (teacher) {
         const payload = {
-          id: teacher._id,
-          email: teacher.email,
-          role: teacher.role,
+          id: existingTeacher._id,
+          email: existingTeacher.email,
+          role: existingTeacher.role,
         };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
         return res.status(200).json({
