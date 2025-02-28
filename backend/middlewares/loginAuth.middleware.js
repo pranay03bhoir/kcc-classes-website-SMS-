@@ -4,7 +4,8 @@ const loginAuthorizationMiddleware = (req, res, next) => {
   try {
     const authHeaders = req.headers["authorization"];
     const token = authHeaders && authHeaders.split(" ")[1];
-
+    // console.log(token);
+    // console.log(authHeaders);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -12,6 +13,7 @@ const loginAuthorizationMiddleware = (req, res, next) => {
       });
     } else {
       req.userInfo = jwt.verify(token, process.env.JWT_SECRET);
+      // console.log("decoded token",decodedToken);
       next();
     }
   } catch (e) {
