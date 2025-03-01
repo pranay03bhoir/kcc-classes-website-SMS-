@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const teacherRegister = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, contact, address } = req.body;
     const existingTeacher = await Teacher.findOne({ email: email });
     if (existingTeacher) {
       return res.status(400).json({
@@ -17,6 +17,8 @@ const teacherRegister = async (req, res) => {
         name,
         email,
         password: hashedPassword,
+        contact,
+        address,
       });
       await teacher.save();
       if (teacher) {
