@@ -1,6 +1,8 @@
 const Admin = require("../models/admin.model");
 const Student = require("../models/student.model");
 const Teacher = require("../models/teacher.model");
+const Course = require("../models/course.model");
+const Attendance = require("../models/attendance.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const adminRegister = async (req, res) => {
@@ -15,7 +17,7 @@ const adminRegister = async (req, res) => {
     } else {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-      const admin = Admin({
+      const admin = new Admin({
         name,
         email,
         password: hashedPassword,
@@ -76,7 +78,31 @@ const adminLogin = async (req, res) => {
 };
 const getAllStudents = async (req, res) => {
   try {
-    const students = await Student.find({});
+    const students = await Student.find({}).populate("courses");
+    if (!students) {
+      res.status(404).json({
+        success: false,
+        message: "No students found",
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Students found",
+        students: students,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getStudentsByCourse = async (req, res) => {
+  try {
+    const { id: courseId } = req.params;
+    const students = await Student.find({ courses: courseId });
     if (!students) {
       res.status(404).json({
         success: false,
@@ -282,10 +308,315 @@ const deleteStudent = async (req, res) => {
     });
   }
 };
+const createCourse = async (req, res) => {
+  try {
+    const { name, code, teachers, students } = req.body;
+    const existingCourse = await Course.findOne({
+      $or: [{ name: name }, { code: code }],
+    });
+    if (
+      existingCourse &&
+      (existingCourse.name === name || existingCourse.code === code)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Course already exists",
+      });
+    } else {
+      const course = new Course({
+        name,
+        code,
+        teachers,
+        students,
+      });
+      const student = await Student.updateMany(
+        {
+          _id: { $in: students },
+        },
+        {
+          $addToSet: { courses: course },
+        },
+      );
+      const teacher = await Teacher.updateMany(
+        {
+          _id: { $in: teachers },
+        },
+        {
+          $addToSet: { courses: course },
+        },
+      );
+      await course.save();
+      res.status(200).json({
+        success: true,
+        message: "Course added successfully",
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const updateCourse = async (req, res) => {
+  try {
+    let { name, code, teachers, students } = req.body;
+    const courseId = req.params.id;
+    if (!Array.isArray(students)) {
+      students = [...students];
+    }
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      {
+        name: name,
+        code: code,
+        $addToSet: {
+          teachers: { $each: teachers },
+          students: { $each: students },
+        },
+      },
+      { new: true, runValidators: true },
+    );
+    const student = await Student.updateMany(
+      { _id: { $in: students } },
+      {
+        $addToSet: { courses: course },
+      },
+      { new: true },
+    );
+    if (student.modifiedCount === 0) {
+      console.log("no students were updated");
+    } else {
+      console.log("courses added to students");
+    }
+    if (!course) {
+      res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Course updated successfully",
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({});
+    if (!courses) {
+      res.status(404).json({
+        success: false,
+        message: "Courses not found, Please add new course",
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Courses found successfully",
+        courses: courses,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const deleteCourse = async (req, res) => {
+  try {
+    const { id: courseId } = req.params;
+    let { studentIds, teacherIds } = req.body; // Expect studentIds & teacherIds in req.body
+
+    // Ensure studentIds and teacherIds are arrays
+    // if (!Array.isArray(studentIds) || !Array.isArray(teacherIds)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "studentIds and teacherIds must be arrays",
+    //   });
+    // }
+
+    // Delete the course
+    const course = await Course.findByIdAndDelete(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Remove courseId from students
+    await Student.updateMany(
+      { _id: { $in: studentIds } },
+      { $pull: { courses: courseId } },
+    );
+
+    // Remove courseId from teachers
+    await Teacher.updateMany(
+      { _id: { $in: teacherIds } },
+      { $pull: { courses: courseId } },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const removeStudentFromCourse = async (req, res) => {
+  try {
+    const { id: courseId } = req.params;
+    const { studentIds } = req.body;
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      {
+        $pull: { students: { $in: studentIds } },
+      },
+      { new: true },
+    );
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    } else {
+      const students = await Student.updateMany(
+        {
+          _id: { $in: studentIds },
+        },
+        { $pull: { courses: courseId } },
+        { new: true },
+      ).lean();
+      res.status(200).json({
+        success: true,
+        message: "Students removed from course successfully",
+        students,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const removeTeacherFromCourse = async (req, res) => {
+  try {
+    const { id: courseId } = req.params;
+    const { teacherIds } = req.body;
+    const teacher = await Course.findByIdAndUpdate(
+      courseId,
+      {
+        $pull: { teachers: { $in: teacherIds } },
+      },
+      { new: true },
+    );
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    } else {
+      const teachers = await Teacher.updateMany(
+        { _id: { $in: teacherIds } },
+        {
+          $pull: { courses: courseId },
+        },
+        { new: true },
+      );
+      if (!teachers) {
+        return res.status(404).json({
+          success: false,
+          message: "Teacher not found",
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Teacher removed from course successfully",
+        });
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const markStudentAttendance = async (req, res) => {
+  try {
+    const { student, course, status } = req.body;
+    const attendance = new Attendance({
+      student,
+      course,
+      status,
+    });
+    const studentAttendance = await Student.findByIdAndUpdate(
+      student,
+      {
+        $addToSet: { attendance: attendance },
+      },
+      { new: true },
+    );
+    await attendance.save();
+    return res.status(200).json({
+      success: true,
+      message: "Student attendance added successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getAttendanceRecords = async (req, res) => {
+  try {
+    const attendance = await Attendance.find({}).populate("student");
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance not found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Attendance found",
+        attendance,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getStudentByAttendance = async (req, res) => {};
 module.exports = {
   adminRegister,
   adminLogin,
   getAllStudents,
+  getStudentsByCourse,
   getAllTeachers,
   getStudentsById,
   getTeachersById,
@@ -293,4 +624,12 @@ module.exports = {
   updateStudentsDetails,
   deleteTeacher,
   deleteStudent,
+  createCourse,
+  updateCourse,
+  getAllCourses,
+  deleteCourse,
+  removeStudentFromCourse,
+  removeTeacherFromCourse,
+  markStudentAttendance,
+  getAttendanceRecords,
 };
