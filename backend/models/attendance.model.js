@@ -12,7 +12,7 @@ const attendanceSchema = new mongoose.Schema(
       ref: "Course",
       required: true,
     },
-    date: { type: Date, required: true },
+    date: { type: Date, default: Date.now },
     status: {
       type: String,
       enum: ["Present", "Absent", "Late"],
