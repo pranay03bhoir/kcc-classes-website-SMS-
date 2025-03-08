@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
-const gradeSchema = new mongoose.Schema(
+const scoreSchema = new mongoose.Schema(
   {
-    student: {
+    studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
@@ -12,8 +12,13 @@ const gradeSchema = new mongoose.Schema(
       ref: "Course",
       required: true,
     },
-    score: { type: Number, required: true },
-    grade: { type: String, required: true },
+    examType: {
+      type: String,
+      enum: ["Midterm", "Final", "Quiz", "Assignment"],
+      required: true,
+    },
+    score: { type: Number, required: true, min: 0, max: 100 },
+    date: { type: Date, default: Date.now },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -26,4 +31,4 @@ const gradeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Grade", gradeSchema);
+module.exports = mongoose.model("Score", scoreSchema);

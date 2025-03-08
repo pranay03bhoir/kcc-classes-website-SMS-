@@ -19,6 +19,9 @@ const {
   removeTeacherFromCourse,
   markStudentAttendance,
   getAttendanceRecords,
+  getStudentByAttendance,
+  getAttendanceByDate,
+  addGradesToStudent,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -51,6 +54,19 @@ router.put(
   adminAuth,
   removeTeacherFromCourse,
 );
-router.post("/students/attendance", markStudentAttendance);
-router.get("/all/attendance", getAttendanceRecords);
+router.post(
+  "/students/attendance",
+  loginAuth,
+  adminAuth,
+  markStudentAttendance,
+);
+router.get("/all/attendance", loginAuth, adminAuth, getAttendanceRecords);
+router.get(
+  "/attendance/students/:id",
+  loginAuth,
+  adminAuth,
+  getStudentByAttendance,
+);
+router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
+router.post("/scores/students", addGradesToStudent);
 module.exports = router;

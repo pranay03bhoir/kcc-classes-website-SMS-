@@ -16,10 +16,10 @@ const studentSchema = new mongoose.Schema(
         ref: "Attendance",
       },
     ],
-    grades: [
+    scores: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Grade",
+        ref: "Score",
       },
     ],
     createdAt: {

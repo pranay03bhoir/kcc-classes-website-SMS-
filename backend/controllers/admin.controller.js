@@ -3,6 +3,7 @@ const Student = require("../models/student.model");
 const Teacher = require("../models/teacher.model");
 const Course = require("../models/course.model");
 const Attendance = require("../models/attendance.model");
+const Score = require("../models/score.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const adminRegister = async (req, res) => {
@@ -611,7 +612,158 @@ const getAttendanceRecords = async (req, res) => {
     });
   }
 };
-const getStudentByAttendance = async (req, res) => {};
+const getStudentByAttendance = async (req, res) => {
+  try {
+    const { id: attendanceId } = req.params;
+    const students = await Student.find({ attendance: attendanceId });
+    if (!students) {
+      return res.status(404).json({
+        success: false,
+        message: "Students not found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Students found",
+        students,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getAttendanceByDate = async (req, res) => {
+  try {
+    const { date } = req.body;
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+    const startOfDay = new Date(`${date}T00:00:00.000Z`); // Start of the day in UTC
+    const endOfDay = new Date(`${date}T23:59:59.999Z`); // End of the day in UTC
+
+    const attendanceExists = await Attendance.exists({
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    if (!attendanceExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance not found",
+      });
+    } else {
+      const attendance = await Attendance.find({
+        date: { $gte: startOfDay, $lte: endOfDay },
+      }).populate("student");
+      return res.status(200).json({
+        success: true,
+        message: "Attendance found",
+        attendance,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const addGradesToStudent = async (req, res) => {
+  try {
+    const { studentId, course, examType, score } = req.body;
+
+    // Validate input
+    if (!studentId || !course || !examType || score === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields (studentId, course, examType, score) are required",
+      });
+    }
+
+    // Find the student
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    // Check if student is enrolled in the given course
+    if (!student.courses.includes(course)) {
+      return res.status(400).json({
+        success: false,
+        message: "Student is not enrolled in this course",
+      });
+    }
+
+    // Add the score to the student's scores array
+    const addScores = new Score({
+      studentId,
+      course,
+      examType,
+      score,
+    });
+    const addStudentScores = await Student.findByIdAndUpdate(
+      studentId,
+      {
+        $addToSet: { scores: addScores },
+      },
+      { new: true, runValidators: true },
+    );
+    // Save the updated student record
+    await addScores.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Score added successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const updateStudentGrades = async (req, res) => {
+  try {
+    const { id: studentId } = req.params.id;
+    const { score } = req.body;
+    const studentExists = await Student.findById(studentId);
+    if (!studentExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    } else {
+      const student = await Student.findByIdAndUpdate(
+        studentId,
+        {
+          $addToSet: { score: score },
+        },
+        { new: true },
+      );
+      return res.status(200).json({
+        success: true,
+        message: "Student marks updated successfully",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 module.exports = {
   adminRegister,
   adminLogin,
@@ -632,4 +784,7 @@ module.exports = {
   removeTeacherFromCourse,
   markStudentAttendance,
   getAttendanceRecords,
+  getStudentByAttendance,
+  getAttendanceByDate,
+  addGradesToStudent,
 };
