@@ -34,6 +34,7 @@ const router = express.Router();
 
 router.post("/register", adminRegister);
 router.post("/login", adminLogin);
+router.post("/logout", adminLogout);
 router.get("/students", loginAuth, adminAuth, getAllStudents);
 router.get("/students/courses/:id", loginAuth, adminAuth, getStudentsByCourse);
 router.get("/teachers", loginAuth, adminAuth, getAllTeachers);
