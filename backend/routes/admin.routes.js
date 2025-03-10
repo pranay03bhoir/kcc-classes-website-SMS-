@@ -2,6 +2,7 @@ const express = require("express");
 const {
   adminRegister,
   adminLogin,
+  adminLogout,
   getAllStudents,
   getAllTeachers,
   getStudentsById,
