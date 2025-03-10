@@ -83,6 +83,25 @@ const adminLogin = async (req, res) => {
     });
   }
 };
+const adminLogout = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "PRODUCTION",
+      sameSite: "None",
+    });
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({}).populate("courses");
