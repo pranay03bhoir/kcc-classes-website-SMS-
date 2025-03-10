@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const studentRegister = async (req, res) => {
   try {
-    const { name, email, password,contact,address } = req.body;
+    const { name, email, password, contact, address } = req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
       return res.status(400).json({
@@ -60,6 +60,11 @@ const studentLogin = async (req, res) => {
           role: existingStudent.role,
         };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
+        res.cookie("token", accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "PRODUCTION",
+          sameSite: "None",
+        });
         return res.status(200).json({
           success: true,
           message: `Welcome back ${existingStudent.name}`,

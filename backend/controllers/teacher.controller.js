@@ -59,6 +59,11 @@ const teacherLogin = async (req, res) => {
           role: existingTeacher.role,
         };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
+        res.cookie("token", accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "DEVELOPMENT",
+          sameSite: "None",
+        });
         return res.status(200).json({
           success: true,
           message: `Welcome back ${existingTeacher.name}`,
