@@ -953,6 +953,7 @@ const getScoresForCourse = async (req, res) => {
 module.exports = {
   adminRegister,
   adminLogin,
+  adminLogout,
   getAllStudents,
   getStudentsByCourse,
   getAllTeachers,
