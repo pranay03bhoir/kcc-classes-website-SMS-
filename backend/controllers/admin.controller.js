@@ -6,6 +6,7 @@ const Attendance = require("../models/attendance.model");
 const Score = require("../models/score.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const adminRegister = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -232,7 +233,16 @@ const updateTeachersDetails = async (req, res) => {
 const updateStudentsDetails = async (req, res) => {
   try {
     const studentId = req.params.id;
-    const { name, email, password, contact, address } = req.body;
+    const {
+      name,
+      email,
+      password,
+      contact,
+      address,
+      courses,
+      attendance,
+      scores,
+    } = req.body;
     const student = await Student.findByIdAndUpdate(
       studentId,
       {
@@ -241,6 +251,9 @@ const updateStudentsDetails = async (req, res) => {
         password: password,
         contact: contact,
         address: address,
+        courses: courses,
+        attendance: attendance,
+        scores: scores,
       },
       { new: true, runValidators: true },
     );
@@ -471,6 +484,100 @@ const deleteCourse = async (req, res) => {
       success: true,
       message: "Course deleted successfully",
     });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const enrollStudentInCourse = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { courses } = req.body;
+    const existingStudent = await Student.findById(studentId);
+    if (!existingStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    const coursesArray = Array.isArray(courses) ? courses : [courses];
+
+    const isAlreadyEnrolled = coursesArray.some((course) =>
+      existingStudent.courses
+        .map((c) => c.toString())
+        .includes(course.toString()),
+    );
+
+    if (isAlreadyEnrolled) {
+      return res.status(400).json({
+        success: false,
+        message: "Student already enrolled in the course",
+      });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      {
+        $addToSet: { courses: { $each: coursesArray } },
+      },
+      { new: true, runValidators: true },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Student enrolled successfully",
+      student,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const addTeacherToCourse = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { courses } = req.body;
+    const existingTeacher = await Teacher.findById(teacherId);
+    if (!existingTeacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    } else {
+      const courseArray = Array.isArray(courses) ? courses : [courses];
+
+      const isAlreadyAdded = courseArray.some((course) =>
+        existingTeacher.courses
+          .map((c) => c.toString())
+          .includes(course.toString()),
+      );
+      if (isAlreadyAdded) {
+        return res.status(400).json({
+          success: false,
+          message: "Teacher already added in the course",
+        });
+      } else {
+        const teacher = await Teacher.findByIdAndUpdate(
+          teacherId,
+          {
+            $addToSet: { courses: { $each: courseArray } },
+          },
+          { new: true, runValidators: true },
+        );
+        return res.status(200).json({
+          success: true,
+          message: "Teacher added to course successfully",
+          teacher,
+        });
+      }
+    }
   } catch (e) {
     console.error(e);
     res.status(500).json({
@@ -732,27 +839,102 @@ const addGradesToStudent = async (req, res) => {
     });
   }
 };
-const updateStudentGrades = async (req, res) => {
+const updateStudentScore = async (req, res) => {
   try {
-    const { id: studentId } = req.params.id;
+    const { studentId, courseId, examType } = req.params;
     const { score } = req.body;
-    const studentExists = await Student.findById(studentId);
-    if (!studentExists) {
+
+    if (
+      !mongoose.Types.ObjectId.isValid(studentId) ||
+      !mongoose.Types.ObjectId.isValid(courseId)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid student or course ID" });
+    }
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    const validExamTypes = ["Midterm", "Final", "Quiz", "Assignment"];
+    if (!validExamTypes.includes(examType)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid exam type" });
+    }
+
+    const updatedScore = await Score.findOneAndUpdate(
+      { studentId, course: courseId, examType },
+      { $set: { score, updatedAt: Date.now() } },
+      { new: true, upsert: true },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Student score updated successfully",
+      updatedScore,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getStudentScore = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const studentName = await Student.findById(studentId).select("name");
+    if (!studentName) {
       return res.status(404).json({
         success: false,
         message: "Student not found",
       });
     } else {
-      const student = await Student.findByIdAndUpdate(
-        studentId,
-        {
-          $addToSet: { score: score },
-        },
-        { new: true },
-      );
+      const scores = await Score.find({ studentId }).populate("course", "name");
+      if (!scores || scores.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No scores found for student",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "Student score found successfully",
+          studentName,
+          scores,
+        });
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getScoresForCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const scores = await Score.find({ course: courseId })
+      .populate("course", "name")
+      .populate("studentId", "name");
+    if (!scores || scores.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No scores found for course",
+      });
+    } else {
       return res.status(200).json({
         success: true,
-        message: "Student marks updated successfully",
+        message: "Course score found successfully",
+        scores,
       });
     }
   } catch (err) {
@@ -763,7 +945,6 @@ const updateStudentGrades = async (req, res) => {
     });
   }
 };
-
 module.exports = {
   adminRegister,
   adminLogin,
@@ -780,11 +961,16 @@ module.exports = {
   updateCourse,
   getAllCourses,
   deleteCourse,
+  enrollStudentInCourse,
   removeStudentFromCourse,
+  addTeacherToCourse,
   removeTeacherFromCourse,
   markStudentAttendance,
   getAttendanceRecords,
   getStudentByAttendance,
   getAttendanceByDate,
   addGradesToStudent,
+  updateStudentScore,
+  getStudentScore,
+  getScoresForCourse,
 };

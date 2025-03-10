@@ -14,14 +14,19 @@ const {
   updateCourse,
   getAllCourses,
   deleteCourse,
+  enrollStudentInCourse,
   removeStudentFromCourse,
   getStudentsByCourse,
+  addTeacherToCourse,
   removeTeacherFromCourse,
   markStudentAttendance,
   getAttendanceRecords,
   getStudentByAttendance,
   getAttendanceByDate,
   addGradesToStudent,
+  updateStudentScore,
+  getStudentScore,
+  getScoresForCourse,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -42,6 +47,18 @@ router.post("/courses", loginAuth, adminAuth, createCourse);
 router.put("/courses/:id", loginAuth, adminAuth, updateCourse);
 router.get("/courses", loginAuth, adminAuth, getAllCourses);
 router.delete("/courses/:id", loginAuth, adminAuth, deleteCourse);
+router.put(
+  "/courses/add/students/:studentId",
+  loginAuth,
+  adminAuth,
+  enrollStudentInCourse,
+);
+router.put(
+  "/courses/add/teachers/:teacherId",
+  loginAuth,
+  adminAuth,
+  addTeacherToCourse,
+);
 router.put(
   "/courses/students/:id",
   loginAuth,
@@ -68,5 +85,23 @@ router.get(
   getStudentByAttendance,
 );
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
-router.post("/scores/students", addGradesToStudent);
+router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
+router.put(
+  "/scores/students/:studentId/:courseId/:examType",
+  loginAuth,
+  adminAuth,
+  updateStudentScore,
+);
+router.get(
+  "/scores/students/:studentId",
+  loginAuth,
+  adminAuth,
+  getStudentScore,
+);
+router.get(
+  "/scores/courses/:courseId",
+  loginAuth,
+  adminAuth,
+  getScoresForCourse,
+);
 module.exports = router;
