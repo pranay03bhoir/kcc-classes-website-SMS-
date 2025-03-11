@@ -7,6 +7,7 @@ const {
   getStudentById,
   addStudentAttendance,
   updateStudentAttendance,
+  getAllAttendance,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
@@ -21,13 +22,14 @@ router.post(
   "/students/attendance",
   loginAuth,
   teacherAuth,
-  addStudentAttendance
+  addStudentAttendance,
 );
 router.put(
   "/students/:studentId/attendance/:attendanceId",
   loginAuth,
   teacherAuth,
-  updateStudentAttendance
+  updateStudentAttendance,
 );
+router.get("/students/all/attendance", getAllAttendance);
 
 module.exports = router;
