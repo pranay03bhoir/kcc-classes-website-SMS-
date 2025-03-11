@@ -164,10 +164,9 @@ const getStudentById = async (req, res) => {
 // ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
-    const { student, course, status } = req.body; // ✅ FIXED: req.body instead of res.body
+    const { student, course, status } = req.body; 
 
-    // ✅ Check if student exists
-    // const studentObjectId = new mongoose.Types.ObjectId(studentId);
+   
     const studentExists = await Student.findById(student);
     if (!studentExists) {
       return res.status(404).json({
@@ -194,7 +193,7 @@ const addStudentAttendance = async (req, res) => {
     }
     await attendance.save();
 
-    // ✅ Update student document with attendance reference
+   
     const updatedStudent = await Student.findByIdAndUpdate(
       student,
       {
@@ -203,19 +202,19 @@ const addStudentAttendance = async (req, res) => {
       { new: true, runValidators: true }
     )
       .select("name email contact parentsContact address courses attendance")
-      .populate("attendance", "student course status date"); // ✅ Populate attendance for better response
+      .populate("attendance", "student course status date");
 
     res.status(200).json({
       success: true,
       message: "Student attendance added successfully",
-      student: updatedStudent, // ✅ Return updated student
+      student: updatedStudent,
     });
   } catch (e) {
     console.error(e);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
-      error: e.message, // ✅ Send error details for debugging
+      error: e.message,
     });
   }
 };
