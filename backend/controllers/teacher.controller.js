@@ -1,7 +1,7 @@
 const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
 const Attendance = require("../models/attendance.model");
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const teacherRegister = async (req, res) => {
@@ -164,9 +164,8 @@ const getStudentById = async (req, res) => {
 // ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
-    const { student, course, status } = req.body; 
+    const { student, course, status } = req.body;
 
-   
     const studentExists = await Student.findById(student);
     if (!studentExists) {
       return res.status(404).json({
@@ -193,7 +192,6 @@ const addStudentAttendance = async (req, res) => {
     }
     await attendance.save();
 
-   
     const updatedStudent = await Student.findByIdAndUpdate(
       student,
       {
@@ -218,7 +216,50 @@ const addStudentAttendance = async (req, res) => {
     });
   }
 };
-
+const updateStudentAttendance = async (req, res) => {
+  try {
+    const { studentId, attendanceId } = req.params;
+    const { status } = req.body;
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    const attendance = await Attendance.findById(attendanceId);
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance not found",
+      });
+    }
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      attendanceId,
+      {
+        status,
+      },
+      { new: true, runValidators: true }
+    );
+    if (!updatedAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: "Error updating attendance",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Attendance updated successfully",
+      attendance: updatedAttendance,
+    });
+  } catch (error) {
+    console.error("Error updating student attendance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -226,4 +267,5 @@ module.exports = {
   getAllStudents,
   getStudentById,
   addStudentAttendance,
+  updateStudentAttendance,
 };
