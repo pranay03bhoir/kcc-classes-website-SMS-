@@ -333,6 +333,18 @@ const addStudentScores = async (req, res) => {
         message: "Student not enrolled in this course",
       });
     } else {
+      const existingScore = await Score.findOne({
+        studentId: studentId,
+        course: course,
+        examType: examType,
+      });
+
+      if (existingScore) {
+        return res.status(400).json({
+          success: false,
+          message: "Score already exists for this exam type and course",
+        });
+      }
       const studentScore = new Score({
         studentId: studentId,
         course,
@@ -348,7 +360,7 @@ const addStudentScores = async (req, res) => {
         { new: true, runValidators: true },
       )
         .select("name email contact parentsContact address courses scores")
-        .populate("course", "name");
+        .populate("courses", "name");
 
       if (!updateStudentScore) {
         return res.status(400).json({
