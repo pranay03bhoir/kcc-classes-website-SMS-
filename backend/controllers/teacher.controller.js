@@ -197,7 +197,7 @@ const addStudentAttendance = async (req, res) => {
       {
         $addToSet: { attendance: attendance },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     )
       .select("name email contact parentsContact address courses attendance")
       .populate("attendance", "student course status date");
@@ -239,7 +239,7 @@ const updateStudentAttendance = async (req, res) => {
       {
         status,
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
     if (!updatedAttendance) {
       return res.status(400).json({
@@ -260,6 +260,31 @@ const updateStudentAttendance = async (req, res) => {
     });
   }
 };
+const getAllAttendance = async (req, res) => {
+  try {
+    const attendance = await Attendance.find({})
+      .select("student course status date")
+      .populate("student", "name email")
+      .populate("course", "name");
+    if (attendance.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Attendance retrieved successfully",
+      attendance,
+    });
+  } catch (error) {
+    console.error("Error fetching attendance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -268,4 +293,5 @@ module.exports = {
   getStudentById,
   addStudentAttendance,
   updateStudentAttendance,
+  getAllAttendance,
 };
