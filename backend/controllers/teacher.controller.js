@@ -1,6 +1,7 @@
 const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
 const Attendance = require("../models/attendance.model");
+const Score = require("../models/score.model");
 // const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -285,6 +286,91 @@ const getAllAttendance = async (req, res) => {
     });
   }
 };
+const getAttendanceForStudent = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    const attendance = await Attendance.find({ student: studentId })
+      .select("course status date")
+      .populate("course", "name");
+    if (attendance.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Attendance retrieved successfully",
+      attendance,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const addStudentScores = async (req, res) => {
+  try {
+    const { studentId, course, examType, score } = req.body;
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    } else if (!student.courses.includes(course)) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not enrolled in this course",
+      });
+    } else {
+      const studentScore = new Score({
+        studentId: studentId,
+        course,
+        examType,
+        score,
+      });
+      await studentScore.save();
+      const updateStudentScore = await Student.findByIdAndUpdate(
+        studentId,
+        {
+          $addToSet: { scores: studentScore },
+        },
+        { new: true, runValidators: true },
+      )
+        .select("name email contact parentsContact address courses scores")
+        .populate("course", "name");
+
+      if (!updateStudentScore) {
+        return res.status(400).json({
+          success: false,
+          message: "Error adding score",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "Score added successfully",
+          student: updateStudentScore,
+        });
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -294,4 +380,6 @@ module.exports = {
   addStudentAttendance,
   updateStudentAttendance,
   getAllAttendance,
+  getAttendanceForStudent,
+  addStudentScores,
 };
