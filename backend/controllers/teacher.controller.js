@@ -161,7 +161,7 @@ const getStudentById = async (req, res) => {
     });
   }
 };
-// ADD FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
+// ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
     const { student, course, status } = req.body; // ✅ FIXED: req.body instead of res.body
@@ -182,7 +182,16 @@ const addStudentAttendance = async (req, res) => {
       course,
       status,
     });
-
+    const existingAttendance = await Attendance.findOne({
+      student,
+      course,
+    });
+    if (existingAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendance already exists for this course",
+      });
+    }
     await attendance.save();
 
     // ✅ Update student document with attendance reference
@@ -191,7 +200,7 @@ const addStudentAttendance = async (req, res) => {
       {
         $addToSet: { attendance: attendance },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     )
       .select("name email contact parentsContact address courses attendance")
       .populate("attendance", "student course status date"); // ✅ Populate attendance for better response
