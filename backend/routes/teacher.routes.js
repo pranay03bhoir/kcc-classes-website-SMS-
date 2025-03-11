@@ -8,6 +8,8 @@ const {
   addStudentAttendance,
   updateStudentAttendance,
   getAllAttendance,
+  getAttendanceForStudent,
+  addStudentScores,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
@@ -30,6 +32,12 @@ router.put(
   teacherAuth,
   updateStudentAttendance,
 );
-router.get("/students/all/attendance", getAllAttendance);
-
+router.get(
+  "/students/all/attendance",
+  loginAuth,
+  teacherAuth,
+  getAllAttendance,
+);
+router.get("/students/:studentId/attendance", getAttendanceForStudent);
+router.post("/students/scores", addStudentScores);
 module.exports = router;
