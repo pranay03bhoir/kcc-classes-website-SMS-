@@ -383,6 +383,54 @@ const addStudentScores = async (req, res) => {
     });
   }
 };
+const updateStudentScores = async (req, res) => {
+  try {
+    const { scoreId } = req.params;
+    const { score } = req.body;
+    if (!scoreId) {
+      return res.status(400).json({
+        success: false,
+        message: "Score ID is required",
+      });
+    }
+    const scoreExists = await Score.findById(scoreId);
+    if (!scoreExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Score not found",
+      });
+    } else {
+      const updateScore = await Score.findByIdAndUpdate(
+        scoreId,
+        {
+          score: score,
+        },
+        { new: true, runValidators: true },
+      )
+        .select("studentId course examType score date")
+        .populate("course", "name")
+        .populate("studentId", "name ");
+      if (!updateScore) {
+        return res.status(400).json({
+          success: false,
+          message: "Error updating score",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "Score updated successfully",
+          score: updateScore,
+        });
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -394,4 +442,5 @@ module.exports = {
   getAllAttendance,
   getAttendanceForStudent,
   addStudentScores,
+  updateStudentScores,
 };
