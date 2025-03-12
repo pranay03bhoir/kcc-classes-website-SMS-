@@ -10,6 +10,7 @@ const {
   getAllAttendance,
   getAttendanceForStudent,
   addStudentScores,
+  updateStudentScores,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
@@ -40,4 +41,5 @@ router.get(
 );
 router.get("/students/:studentId/attendance", getAttendanceForStudent);
 router.post("/students/scores", addStudentScores);
+router.put("/students/update/scores/:scoreId", updateStudentScores);
 module.exports = router;
