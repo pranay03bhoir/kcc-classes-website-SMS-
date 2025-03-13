@@ -3,6 +3,7 @@
 import React from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
 
 const HomePageSectionOne = () => {
   const { register, handleSubmit } = useForm();
@@ -42,12 +43,20 @@ const HomePageSectionOne = () => {
           </li>
         </ol>
         <div className="md:flex md:gap-5 ">
-          <button className="px-4 text-md items-center bg-blue-600 text-white rounded-sm hover:bg-blue-700 transition h-12 md:w-48 w-full cursor-pointer mt-7 flex gap-4 justify-center">
+          <motion.button
+            whileHover={{ scale: 1.1, backgroundColor: "#2563EB" }}
+            whileTap={{ scale: 0.95 }}
+            className="px-4 text-md items-center bg-blue-600 text-white rounded-sm  h-12 md:w-48 w-full cursor-pointer mt-7 flex gap-4 justify-center"
+          >
             Explore Courses <ChevronRight size={24} />
-          </button>
-          <button className="px-4 text-md items-center bg-transparent border-1 text-white rounded-sm hover:bg-neutral-700 transition h-12 md:w-40 w-full cursor-pointer mt-7 flex gap-4 justify-center">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1, backgroundColor: "#404040" }}
+            whileTap={{ scale: 0.95 }}
+            className="px-4 text-md items-center bg-transparent border-1 text-white rounded-sm   h-12 md:w-40 w-full cursor-pointer mt-7 flex gap-4 justify-center"
+          >
             Book Free Demo
-          </button>
+          </motion.button>
         </div>
       </div>
 
