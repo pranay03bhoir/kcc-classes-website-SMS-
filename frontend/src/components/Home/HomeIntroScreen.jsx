@@ -1,5 +1,6 @@
+"use client";
 import React from "react";
-
+import { motion } from "framer-motion";
 const HomeIntroScreen = () => {
   return (
     <div className="text-black text-center">
@@ -15,14 +16,20 @@ const HomeIntroScreen = () => {
         Personalized attention, expert faculty, and proven results.
       </p>
       <div className="text-xl mt-6 md:flex md:flex-row md:justify-center gap-5 flex flex-col items-center px-4 ">
-        <button className="md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition h-16 md:w-40 w-full cursor-pointer">
+        <motion.button
+          whileHover={{ scale: 1.1, backgroundColor: "#1447e6" }}
+          whileTap={{ scale: 0.95 }}
+          className="md:px-4 md:py-2 bg-blue-600 text-white rounded-lg  h-16 md:w-40 w-full cursor-pointer"
+        >
           Get Started
-        </button>
-        <button
-          className={`md:px-4 md:py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-gray-50 transition-colors  h-16 md:w-40 w-full cursor-pointer`}
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1, backgroundColor: "#f9fafb" }}
+          whileTap={{ scale: 0.95 }}
+          className={`md:px-4 md:py-2 text-blue-600 border border-blue-600 rounded-lg  h-16 md:w-40 w-full cursor-pointer`}
         >
           Learn More
-        </button>
+        </motion.button>
       </div>
     </div>
   );
