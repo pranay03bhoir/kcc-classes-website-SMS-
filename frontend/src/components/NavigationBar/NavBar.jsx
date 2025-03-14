@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-
+import Link from "next/link";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,9 +29,13 @@ const Navbar = () => {
 
         {/* Authentication Buttons */}
         <div className="hidden md:flex space-x-4">
-          <button className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition">
+          <Link
+            href={`/login`}
+            target="_blank"
+            className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition"
+          >
             Login
-          </button>
+          </Link>
           <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
             Sign Up
           </button>
