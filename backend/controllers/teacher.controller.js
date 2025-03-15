@@ -49,7 +49,7 @@ const teacherRegister = async (req, res) => {
 };
 const teacherLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const existingTeacher = await Teacher.findOne({ email: email });
     if (!existingTeacher) {
       return res.status(400).json({
@@ -64,11 +64,17 @@ const teacherLogin = async (req, res) => {
           email: existingTeacher.email,
           role: existingTeacher.role,
         };
-        const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+        const cookieExpiration = rememberMe
+          ? 30 * 24 * 60 * 60 * 1000
+          : 1 * 60 * 60 * 1000;
         res.cookie("token", accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: "None",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: cookieExpiration,
         });
         return res.status(200).json({
           success: true,
@@ -95,7 +101,8 @@ const teacherLogout = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "PRODUCTION",
-      sameSite: "None",
+      sameSite: "Lax",
+      expires: new Date(0),
     });
     res.status(200).json({
       success: true,
@@ -109,6 +116,7 @@ const teacherLogout = async (req, res) => {
     });
   }
 };
+
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
