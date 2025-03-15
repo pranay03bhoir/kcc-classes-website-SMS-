@@ -5,6 +5,8 @@ import HomePageSectionOne from "@/components/Home/HomePageSectionOne";
 import HomePageSectionTwo from "@/components/Home/HomePageSectionTwo";
 import HomePageSectionThree from "@/components/Home/HomePageSectionThree";
 import HomePageSectionFour from "@/components/Home/HomePageSectionFour";
+import AboutOurInstitution from "@/components/Home/AboutOurInstitution";
+import MeetOurToppers from "@/components/Home/MeetOurToppers";
 export default function Home() {
   return (
     <>
@@ -18,6 +20,9 @@ export default function Home() {
         <HomePageSectionOne />
       </section>
       <section className={`pt-16`}>
+        <AboutOurInstitution />
+      </section>
+      <section className={`pt-16`}>
         <HomePageSectionTwo />
       </section>
       <section className={`pt-32`}>
@@ -25,6 +30,9 @@ export default function Home() {
       </section>
       <section className={`pt-32`}>
         <HomePageSectionFour />
+      </section>
+      <section className={`pt-32`}>
+        <MeetOurToppers />
       </section>
     </>
   );
