@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 
 const studentRegister = async (req, res) => {
   try {
-    const { name, email, password, contact, address } = req.body;
+    const { name, email, password, contact, parentsContact, address } =
+      req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
       return res.status(400).json({
@@ -19,6 +20,7 @@ const studentRegister = async (req, res) => {
         email,
         password: hashedPassword,
         contact,
+        parentsContact,
         address,
       });
       await student.save();
@@ -44,7 +46,7 @@ const studentRegister = async (req, res) => {
 };
 const studentLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (!existingStudent) {
       return res.status(400).json({
@@ -59,11 +61,17 @@ const studentLogin = async (req, res) => {
           email: existingStudent.email,
           role: existingStudent.role,
         };
-        const accessToken = jwt.sign(payload, process.env.JWT_SECRET);
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+        const cookieExpiration = rememberMe
+          ? 30 * 24 * 60 * 60 * 1000
+          : 1 * 60 * 60 * 1000;
         res.cookie("token", accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: "None",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: cookieExpiration,
         });
         return res.status(200).json({
           success: true,
@@ -85,42 +93,90 @@ const studentLogin = async (req, res) => {
     });
   }
 };
-// const studentLogout = async (req, res) => {
-//   try {
-//   } catch (e) {
-//     console.error(e);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Something went wrong.",
-//     });
-//   }
-// };
+const studentLogout = async (req, res) => {
+  try {
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "PRODUCTION",
+      sameSite: "Lax",
+      expires: new Date(0),
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
 const updateStudentProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
-    const student = await Student.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const studentId = req.userInfo.id;
+    const { name, password, contact, parentsContact, address, profileImage } =
+      req.body;
+
+    // Fetch the current student record
+    const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({
         success: false,
         message: "Student not found",
       });
-    } else {
-      return res.status(200).json({
-        success: true,
-        message: "Details updated successfully.",
-      });
     }
+
+    // Prepare the fields to update
+    const updateFields = {
+      name,
+      contact,
+      parentsContact,
+      address,
+      profileImage,
+    };
+
+    // If a new password is provided, check if it's different from the current password
+    if (password) {
+      const isSamePassword = await bcrypt.compare(password, student.password);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Please enter a new password",
+        });
+      }
+      const genSalt = await bcrypt.genSalt(10);
+      updateFields.password = await bcrypt.hash(password, genSalt);
+    }
+
+    // Update the student record with new data
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      updateFields,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Details updated successfully.",
+      data: updatedStudent,
+    });
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "Some thing went wrong.",
+      message: "Something went wrong.",
     });
   }
 };
 
-module.exports = { studentRegister, studentLogin, updateStudentProfile };
+module.exports = {
+  studentRegister,
+  studentLogin,
+  studentLogout,
+  updateStudentProfile,
+};
