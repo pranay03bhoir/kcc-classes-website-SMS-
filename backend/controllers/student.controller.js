@@ -64,10 +64,21 @@ const studentLogin = async (req, res) => {
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: "1h",
         });
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+          expiresIn: "30d",
+        });
+        existingStudent.refreshToken = refreshToken;
+        await existingStudent.save();
         const cookieExpiration = rememberMe
           ? 30 * 24 * 60 * 60 * 1000
           : 1 * 60 * 60 * 1000;
-        res.cookie("token", accessToken, {
+        res.cookie("accessToken", accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "PRODUCTION",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: 60 * 60 * 1000,
+        });
+        res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "PRODUCTION",
           sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
@@ -93,13 +104,93 @@ const studentLogin = async (req, res) => {
     });
   }
 };
+const generateNewRefreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+    const student = await Student.findOne({ refreshToken: refreshToken });
+    if (!student) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+    jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET,
+      async (err, user) => {
+        if (err) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid token or Expired token",
+          });
+        }
+        const newAccessToken = jwt.sign(
+          { id: user.id, email: user.email, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "1h" },
+        );
+        const newRefreshToken = jwt.sign(
+          {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          },
+          process.env.JWT_REFRESH_SECRET,
+          { expiresIn: "30d" },
+        );
+        student.refreshToken = newRefreshToken;
+        await student.save();
+        res.cookie("refreshToken", newRefreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "PRODUCTION",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+        res.cookie("accessToken", newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "PRODUCTION",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: 60 * 60 * 100,
+        });
+        return res.status(200).json({
+          success: true,
+          message: "New access token generated",
+          newAccessToken,
+        });
+      },
+    );
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const studentLogout = async (req, res) => {
   try {
-    res.cookie("token", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "PRODUCTION",
-      sameSite: "Lax",
-      expires: new Date(0),
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(204).send();
+    }
+    await Student.updateOne(
+      { refreshToken: refreshToken },
+      { $unset: { refreshToken: "" } },
+    );
+    const cookiesToClear = ["accessToken", "refreshToken"];
+    cookiesToClear.forEach((cookie) => {
+      res.clearCookie(cookie, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: "Lax",
+        expires: new Date(0),
+      });
     });
     return res.status(200).json({
       success: true,
@@ -173,10 +264,36 @@ const updateStudentProfile = async (req, res) => {
     });
   }
 };
-
+const getStudentCourses = async (req, res) => {
+  try {
+    const studentId = req.userInfo.id;
+    const student = await Student.findById(studentId)
+      .select("name email")
+      .populate("courses", "name description");
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Details not found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        data: student,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 module.exports = {
   studentRegister,
   studentLogin,
+  generateNewRefreshAccessToken,
   studentLogout,
   updateStudentProfile,
+  getStudentCourses,
 };
