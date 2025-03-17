@@ -40,7 +40,7 @@ const adminRegister = async (req, res) => {
 };
 const adminLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const existingUser = await Admin.findOne({ email: email });
     if (!existingUser) {
       res.status(400).json({
@@ -55,13 +55,28 @@ const adminLogin = async (req, res) => {
           email: existingUser.email,
           role: existingUser.role,
         };
+        const cookieExpiration = rememberMe
+          ? 30 * 24 * 60 * 60 * 1000
+          : 1 * 60 * 60 * 1000;
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: "1h",
         });
-        res.cookie("token", accessToken, {
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+          expiresIn: "30d",
+        });
+        existingUser.refreshToken = refreshToken;
+        await existingUser.save();
+        res.cookie("accessToken", accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: "None",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: 60 * 60 * 1000,
+        });
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "PRODUCTION",
+          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+          maxAge: cookieExpiration,
         });
         res.status(200).json({
           success: true,
@@ -83,13 +98,91 @@ const adminLogin = async (req, res) => {
     });
   }
 };
+const generateNewRefreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+    const admin = await Admin.findOne({ refreshToken: refreshToken });
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, user) => {
+      if (err) {
+        return res.status(403).json({
+          success: false,
+          message: "Invalid token or Expired token",
+        });
+      }
+      const payload = {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      };
+      const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+      const newRefreshToken = jwt.sign(
+        payload,
+        process.env.JWT_REFRESH_SECRET,
+        {
+          expiresIn: "30d",
+        },
+      );
+      admin.refreshToken = newRefreshToken;
+      await admin.save();
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+        maxAge: 60 * 60 * 1000, // 1 hour
+      });
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+      return res.status(200).json({
+        success: true,
+        message: "New access token generated",
+        accessToken: newAccessToken,
+      });
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const adminLogout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "PRODUCTION",
-      sameSite: "None",
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(204).send();
+    }
+    await Admin.updateOne(
+      { refreshToken: refreshToken },
+      { $unset: { refreshToken: "" } },
+    );
+    const clearCookies = ["accessToken", "refreshToken"];
+    clearCookies.forEach((cookie) => {
+      res.clearCookie(cookie, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+      });
     });
+
     res.status(200).json({
       success: true,
       message: "Logged out successfully",
@@ -972,6 +1065,7 @@ const getScoresForCourse = async (req, res) => {
 module.exports = {
   adminRegister,
   adminLogin,
+  generateNewRefreshAccessToken,
   adminLogout,
   getAllStudents,
   getStudentsByCourse,
