@@ -23,6 +23,7 @@ const studentSchema = new mongoose.Schema(
         ref: "Score",
       },
     ],
+    refreshToken: { type: String, default: "" },
     createdAt: {
       type: Date,
       default: Date.now,
