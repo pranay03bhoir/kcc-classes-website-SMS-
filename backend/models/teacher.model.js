@@ -11,6 +11,7 @@ const teacherSchema = new mongoose.Schema(
     role: { type: String, default: "teacher" },
     profileImage: { type: String, default: "" },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+    refreshToken: { type: String, default: "" },
     createdAt: {
       type: Date,
       default: Date.now,
