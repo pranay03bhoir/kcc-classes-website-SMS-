@@ -50,6 +50,7 @@ const teacherRegister = async (req, res) => {
 const teacherLogin = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+
     const existingTeacher = await Teacher.findOne({ email: email });
     if (!existingTeacher) {
       return res.status(400).json({
@@ -64,18 +65,25 @@ const teacherLogin = async (req, res) => {
           email: existingTeacher.email,
           role: existingTeacher.role,
         };
-        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-          expiresIn: "1h",
-        });
         const cookieExpiration = rememberMe
           ? 30 * 24 * 60 * 60 * 1000
           : 1 * 60 * 60 * 1000;
-        res.cookie("token", accessToken, {
+        const options = {
           httpOnly: true,
           secure: process.env.NODE_ENV === "PRODUCTION",
           sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
           maxAge: cookieExpiration,
+        };
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: "1h",
         });
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+          expiresIn: "30d",
+        });
+        existingTeacher.refreshToken = refreshToken;
+        existingTeacher.save();
+        res.cookie("accessToken", accessToken, options);
+        res.cookie("refreshToken", refreshToken, options);
         return res.status(200).json({
           success: true,
           message: `Welcome back ${existingTeacher.name}`,
@@ -96,14 +104,87 @@ const teacherLogin = async (req, res) => {
     });
   }
 };
+const generateNewAccessRefreshToken = async (req, res) => {
+  const refreshToken = req.params.refreshToken;
+  if (!refreshToken) {
+    return res.status(400).json({
+      success: false,
+      message: "Access denied",
+    });
+  }
+  const teacher = await Teacher.findOne({ refreshToken: refreshToken });
+  if (!teacher) {
+    return res.status(404).json({
+      success: false,
+      message: "Invalid refresh token",
+    });
+  }
+  jwt.verify(
+    refreshToken,
+    process.env.JWT_REFRESH_SECRET,
+    async (err, user) => {
+      if (err) {
+        return res.status(403).json({
+          success: false,
+          message: "Invalid token or Expired token",
+        });
+      }
+      const newAccessToken = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" },
+      );
+      const newRefreshToken = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+        process.env.JWT_REFRESH_SECRET,
+        {
+          expiresIn: "30d",
+        },
+      );
+      teacher.refreshToken = newRefreshToken;
+      await teacher.save();
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
+        maxAge: 60 * 60 * 100,
+      });
+      return res.status(200).json({
+        success: true,
+        message: "New access token generated",
+        newAccessToken,
+      });
+    },
+  );
+};
 const teacherLogout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "PRODUCTION",
-      sameSite: "Lax",
-      expires: new Date(0),
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(203).send();
+    }
+    await Teacher.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
+
+    const cookiesToClear = ["accessToken", "refreshToken"];
+    cookiesToClear.forEach((cookie) => {
+      res.clearCookie(cookie, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "PRODUCTION",
+        sameSite: "Lax",
+        expires: new Date(0),
+      });
     });
+
     res.status(200).json({
       success: true,
       message: "Teacher logged out",
@@ -442,6 +523,7 @@ const updateStudentScores = async (req, res) => {
 module.exports = {
   teacherRegister,
   teacherLogin,
+  generateNewAccessRefreshToken,
   teacherLogout,
   getAllStudents,
   getStudentById,
