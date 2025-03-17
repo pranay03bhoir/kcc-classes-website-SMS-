@@ -31,10 +31,14 @@ const {
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
+const {
+  generateNewAccessRefreshToken,
+} = require("../controllers/teacher.controller");
 const router = express.Router();
 
 router.post("/register", adminRegister);
 router.post("/login", adminLogin);
+router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", adminLogout);
 router.get("/students", loginAuth, adminAuth, getAllStudents);
 router.get("/students/courses/:id", loginAuth, adminAuth, getStudentsByCourse);
