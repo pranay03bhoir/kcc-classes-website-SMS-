@@ -7,6 +7,7 @@ import HomePageSectionThree from "@/components/Home/HomePageSectionThree";
 import HomePageSectionFour from "@/components/Home/HomePageSectionFour";
 import AboutOurInstitution from "@/components/Home/AboutOurInstitution";
 import MeetOurToppers from "@/components/Home/MeetOurToppers";
+import HomePageSectionFive from "@/components/Home/HomePageSectionFive";
 export default function Home() {
   return (
     <>
@@ -33,6 +34,9 @@ export default function Home() {
       </section>
       <section className={`pt-32`}>
         <MeetOurToppers />
+      </section>
+      <section className={`pt-32`}>
+        <HomePageSectionFive />
       </section>
     </>
   );
