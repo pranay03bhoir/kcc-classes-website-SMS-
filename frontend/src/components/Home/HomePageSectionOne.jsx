@@ -90,7 +90,7 @@ const HomePageSectionOne = () => {
                 {...register("grade", { required: true })}
                 className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select Grade</option>
+                <option value="">Select Std.</option>
                 <option value="5">Grades 5</option>
                 <option value="6">Grades 6</option>
                 <option value="7">Grades 7</option>
