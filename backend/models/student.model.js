@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema(
     contact: { type: Number, required: true },
     parentsContact: [{ type: Number, required: true }],
     address: { type: String, required: true },
+    currentClass: { type: String, default: "" },
     role: { type: String, default: "student" },
     profileImage: { type: String, default: "" }, // Stored in AWS S3
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
