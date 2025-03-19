@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -51,7 +51,7 @@ const GetInTouchForm = () => {
     console.log("Form submitted with values:", values);
     toast.success("Form submitted successfully!");
 
-    toast.custom(() => (
+    toast(() => (
       <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4 text-white">
         {JSON.stringify(values, null, 2)}
       </pre>
@@ -199,7 +199,7 @@ const GetInTouchForm = () => {
         {/* Submit Button */}
         <Button type={`submit`} className="w-full cursor-pointer">
           Submit
-          <Toaster />
+          <ToastContainer />
         </Button>
       </form>
     </Form>
