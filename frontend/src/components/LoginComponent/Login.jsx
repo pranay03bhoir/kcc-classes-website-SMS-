@@ -1,147 +1,144 @@
 "use client";
-import { useState } from "react";
-import { FaFacebook, FaGoogle, FaApple } from "react-icons/fa";
+
+import Link from "next/link";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { ToastContainer, toast } from "react-toastify";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+
+// Validation schema
+const passwordRequirements = [
+  "Password must contain:",
+  "• Minimum eight characters",
+  "• At least one letter",
+  "• At least one number",
+  "• At least one special character (@,/,$,%,*,#,?,&)",
+].join("\n");
+const formSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 8 characters long" })
+    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
+      message: passwordRequirements,
+    }),
+});
 
 export default function LoginPage() {
-  const [role, setRole] = useState("student");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: "", password: "" });
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const validateForm = () => {
-    let valid = true;
-    let newErrors = { email: "", password: "" };
-
-    if (!email) {
-      newErrors.email = "Email is required.";
-      valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Invalid email format.";
-      valid = false;
+  async function onSubmit(values) {
+    try {
+      console.log(values);
+      toast.success("Login successful");
+      toast(
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
+        </pre>,
+      );
+    } catch (error) {
+      console.error("Form submission error", error);
+      toast.error("Failed to submit the form. Please try again.");
     }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-      valid = false;
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
-      valid = false;
-    }
-
-    setErrors(newErrors);
-    return valid;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log("Logging in with:", { email, password, role });
-      // Perform login request or redirect
-    }
-  };
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-white text-center">
-          EduAccess Login
-        </h2>
-        <p className="text-gray-400 text-center mb-4">
-          Access your personalized learning dashboard
-        </p>
-
-        {/* Toggle Button */}
-        <div className="flex justify-center mb-4">
-          <button
-            className={`px-4 py-2 rounded-l-lg text-white ${
-              role === "student" ? "bg-blue-600" : "bg-gray-600"
-            }`}
-            onClick={() => setRole("student")}
-          >
-            Student
-          </button>
-          <button
-            className={`px-4 py-2 rounded-r-lg text-white ${
-              role === "teacher" ? "bg-green-600" : "bg-gray-600"
-            }`}
-            onClick={() => setRole("teacher")}
-          >
-            Teacher
-          </button>
-        </div>
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-2">
-            <input
-              type="email"
-              placeholder="Email address"
-              className="w-full p-2 bg-gray-700 text-white rounded focus:outline-none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm">{errors.email}</p>
-            )}
+    <div className="flex flex-col min-h-screen items-center justify-center px-6 sm:px-8 bg-black">
+      <Card className="w-full max-w-md sm:max-w-lg lg:max-w-xl shadow-lg p-6 sm:p-8">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">Login</CardTitle>
+          <CardDescription className="text-gray-600">
+            Enter your email and password to access your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="grid gap-2">
+                      <FormLabel htmlFor="email">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="email"
+                          placeholder="johndoe@mail.com"
+                          type="email"
+                          autoComplete="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="grid gap-2">
+                      <div className="flex justify-between items-center">
+                        <FormLabel htmlFor="password">Password</FormLabel>
+                        <Link
+                          href="#"
+                          className="text-sm text-blue-500 underline"
+                        >
+                          Forgot your password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <PasswordInput
+                          id="password"
+                          placeholder="******"
+                          autoComplete="current-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full text-lg py-3">
+                  Login
+                  <ToastContainer position={`top-center`} />
+                </Button>
+              </div>
+            </form>
+          </Form>
+          <div className="mt-6 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="#" className="text-blue-500 underline">
+              Sign up
+            </Link>
           </div>
-
-          <div className="mb-2">
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full p-2 bg-gray-700 text-white rounded focus:outline-none"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Remember Me and Forgot Password */}
-          <div className="flex justify-between items-center text-gray-400 text-sm mb-4">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-2" /> Remember me
-            </label>
-            <a href="#" className="hover:underline">
-              Forgot your password?
-            </a>
-          </div>
-
-          {/* Sign In Button */}
-          <button
-            type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700"
-          >
-            Sign in
-          </button>
-        </form>
-
-        {/* Register Link */}
-        <p className="text-gray-400 text-center mt-4">
-          New student?{" "}
-          <a href="#" className="text-blue-400 hover:underline">
-            Register here
-          </a>
-        </p>
-
-        {/* Social Login */}
-        <div className="flex justify-center gap-4 mt-4">
-          <button className="text-gray-400 text-xl">
-            <FaFacebook />
-          </button>
-          <button className="text-gray-400 text-xl">
-            <FaGoogle />
-          </button>
-          <button className="text-gray-400 text-xl">
-            <FaApple />
-          </button>
-        </div>
-
-        <p className="text-gray-500 text-xs text-center mt-4">
-          Secure login protected by 256-bit encryption.
-        </p>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
