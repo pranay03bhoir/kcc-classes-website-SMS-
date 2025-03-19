@@ -36,9 +36,13 @@ const Navbar = () => {
           >
             Login
           </Link>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-            Sign Up
-          </button>
+          <Link
+            href={`/register`}
+            target="_blank"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            Register
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -68,12 +72,20 @@ const Navbar = () => {
               {item}
             </a>
           ))}
-          <button className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition">
+          <Link
+            href={`/login`}
+            target="_blank"
+            className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition"
+          >
             Login
-          </button>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-            Sign Up
-          </button>
+          </Link>
+          <Link
+            href={`/register`}
+            target="_blank"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            Register
+          </Link>
         </motion.div>
       )}
     </nav>
