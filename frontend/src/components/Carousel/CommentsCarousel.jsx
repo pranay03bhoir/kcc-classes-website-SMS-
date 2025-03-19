@@ -30,7 +30,7 @@ const CommentsCarousel = () => {
                   <CardContent className="flex flex-col items-center gap-5">
                     <div className="w-20 h-20 border-2 border-dashed border-blue-500 rounded-full overflow-hidden">
                       <img
-                        src="https://randomuser.me/api/portraits/men/34.jpg" // Replace with your actual image path
+                        src="https://randomuser.me/api/portraits/men/34.jpg"
                         alt="Student"
                         className="w-full h-full object-cover"
                       />
