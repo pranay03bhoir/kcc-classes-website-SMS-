@@ -126,7 +126,7 @@ const GetInTouchForm = () => {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <Input placeholder="Phone Number" type="tel" {...field} />
+                <Input placeholder="Phone Number" type="number" {...field} />
               </FormControl>
               <FormDescription>Enter your phone number.</FormDescription>
               <FormMessage />
