@@ -316,13 +316,22 @@ const getTeachersById = async (req, res) => {
 const updateTeachersDetails = async (req, res) => {
   try {
     const teacherId = req.params.id;
+    const existingTeacher = await Teacher.findById(teacherId);
+    if (!existingTeacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
     const { name, email, password, contact, address } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const teacher = await Teacher.findByIdAndUpdate(
       teacherId,
       {
         name: name,
         email: email,
-        password: password,
+        password: hashedPassword,
         contact: contact,
         address: address,
       },
@@ -331,7 +340,7 @@ const updateTeachersDetails = async (req, res) => {
     if (!teacher) {
       res.status(404).json({
         success: false,
-        message: "Teacher not found",
+        message: "Teacher details update failed",
       });
     } else {
       res.status(200).json({
@@ -350,6 +359,13 @@ const updateTeachersDetails = async (req, res) => {
 const updateStudentsDetails = async (req, res) => {
   try {
     const studentId = req.params.id;
+    const existingStudent = await Student.findById(studentId);
+    if (!existingStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
     const {
       name,
       email,
@@ -360,12 +376,14 @@ const updateStudentsDetails = async (req, res) => {
       attendance,
       scores,
     } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const student = await Student.findByIdAndUpdate(
       studentId,
       {
         name: name,
         email: email,
-        password: password,
+        password: hashedPassword,
         contact: contact,
         address: address,
         courses: courses,
@@ -377,7 +395,7 @@ const updateStudentsDetails = async (req, res) => {
     if (!student) {
       res.status(404).json({
         success: false,
-        message: "Student not found",
+        message: "Student update failed",
       });
     } else {
       res.status(200).json({
