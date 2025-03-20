@@ -9,6 +9,7 @@ const teacherSchema = new mongoose.Schema(
     alternateContact: { type: String, required: true },
     address: { type: String, required: true },
     role: { type: String, default: "teacher" },
+    isVerified: { type: Boolean, default: false },
     profileImage: { type: String, default: "" },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
     refreshToken: { type: String, default: "" },
