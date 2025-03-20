@@ -2,6 +2,7 @@ const express = require("express");
 const {
   teacherRegister,
   teacherLogin,
+  teacherVerifyEmail,
   teacherLogout,
   getAllStudents,
   getStudentById,
@@ -19,6 +20,8 @@ const router = express.Router();
 
 router.post("/register", teacherRegister);
 router.post("/login", teacherLogin);
+router.get("/verify-email", teacherVerifyEmail);
+
 router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", teacherLogout);
 router.get("/students", loginAuth, teacherAuth, getAllStudents);
