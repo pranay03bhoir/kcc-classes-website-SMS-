@@ -10,6 +10,7 @@ const studentSchema = new mongoose.Schema(
     address: { type: String, required: true },
     currentStd: { type: String, default: "" },
     role: { type: String, default: "student" },
+    isVerified: { type: Boolean, default: false },
     profileImage: { type: String, default: "" }, // Stored in AWS S3
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
     attendance: [
