@@ -5,6 +5,7 @@ const Score = require("../models/score.model");
 // const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendVerificationEmail } = require("../utils/email");
 const teacherRegister = async (req, res) => {
   try {
     const { name, email, password, contact, alternateContact, address } =
@@ -27,10 +28,15 @@ const teacherRegister = async (req, res) => {
         address,
       });
       await teacher.save();
+      const token = jwt.sign({ email: teacher.email }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+      await sendVerificationEmail(teacher.email, token);
       if (teacher) {
         res.status(200).json({
           success: true,
-          message: "Teacher registered successfully",
+          message:
+            "Teacher registered successfully!, A link has been sent to your email for verification",
         });
       } else {
         res.status(400).json({
@@ -47,6 +53,36 @@ const teacherRegister = async (req, res) => {
     });
   }
 };
+const teacherVerifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const teacher = await Teacher.findOne({ email: decoded.email });
+    if (!teacher) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token or expired verification link",
+      });
+    }
+    teacher.isVerified = true;
+    await teacher.save();
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const teacherLogin = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -56,6 +92,11 @@ const teacherLogin = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please register first",
+      });
+    } else if (!existingTeacher.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify your email",
       });
     } else {
       const teacher = await bcrypt.compare(password, existingTeacher.password);
@@ -523,6 +564,7 @@ const updateStudentScores = async (req, res) => {
 module.exports = {
   teacherRegister,
   teacherLogin,
+  teacherVerifyEmail,
   generateNewAccessRefreshToken,
   teacherLogout,
   getAllStudents,
