@@ -1,11 +1,19 @@
 const Student = require("../models/student.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendVerificationEmail } = require("../utils/email");
 
 const studentRegister = async (req, res) => {
   try {
-    const { name, email, password, contact, parentsContact, address } =
-      req.body;
+    const {
+      name,
+      email,
+      password,
+      contact,
+      parentsContact,
+      address,
+      currentStd,
+    } = req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
       return res.status(400).json({
@@ -22,12 +30,18 @@ const studentRegister = async (req, res) => {
         contact,
         parentsContact,
         address,
+        currentStd,
       });
       await student.save();
+      const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+      await sendVerificationEmail(student.email, token);
       if (student) {
         res.status(200).json({
           success: true,
-          message: "Student registered successfully",
+          message:
+            "Student registered successfully, A link has been sent to your email for verification",
         });
       } else {
         res.status(400).json({
@@ -44,6 +58,68 @@ const studentRegister = async (req, res) => {
     });
   }
 };
+const studentVerifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const student = await Student.findOne({ email: decoded.email });
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token or verification link expired",
+      });
+    }
+    student.isVerified = true;
+    await student.save();
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully!, you can log in now",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred",
+    });
+  }
+};
+const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const student = await Student.findOne({ email: email });
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    if (student.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+    const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    await sendVerificationEmail(student.email, token);
+    return res.status(200).json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred",
+    });
+  }
+};
 const studentLogin = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -52,6 +128,11 @@ const studentLogin = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please register first",
+      });
+    } else if (!existingStudent.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify your email first",
       });
     } else {
       const student = await bcrypt.compare(password, existingStudent.password);
@@ -291,6 +372,8 @@ const getStudentCourses = async (req, res) => {
 };
 module.exports = {
   studentRegister,
+  studentVerifyEmail,
+  resendVerificationEmail,
   studentLogin,
   generateNewRefreshAccessToken,
   studentLogout,
