@@ -24,7 +24,7 @@ This project is a **full-featured tutoring academy website** with an integrated 
 - **Deployment**: Hosted on **AWS EC2 with an Nginx reverse proxy**.
 
 ## Tech Stack
-### **Frontend** (React.js)
+### **Frontend** (Next.js)
 - React Router
 - Redux Toolkit (for state management)
 - Tailwind CSS for UI styling
