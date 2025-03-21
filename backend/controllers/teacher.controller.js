@@ -1,3 +1,4 @@
+const joi = require("joi");
 const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
 const Attendance = require("../models/attendance.model");
@@ -6,8 +7,23 @@ const Score = require("../models/score.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../utils/email");
+const teacherSchema = joi.object({
+  name: joi.string().required(),
+  email: joi.string().email().required(),
+  password: joi.string().min(8).required(),
+  contact: joi.string().min(10).max(13).required(),
+  alternateContact: joi.array().items(joi.string().min(10).max(13).required()),
+  address: joi.string().required(),
+});
 const teacherRegister = async (req, res) => {
   try {
+    const { error } = teacherSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
     const { name, email, password, contact, alternateContact, address } =
       req.body;
     const existingTeacher = await Teacher.findOne({ email: email });
