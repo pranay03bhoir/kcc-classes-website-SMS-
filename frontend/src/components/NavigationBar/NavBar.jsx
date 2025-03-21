@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { IoCall } from "react-icons/io5";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,6 +31,14 @@ const Navbar = () => {
 
         {/* Authentication Buttons */}
         <div className="hidden md:flex space-x-4">
+          <a
+            href={`tel:+918830986365`}
+            className={`w-full flex justify-center items-center`}
+          >
+            <Button className={`h-10 text-xl w-40 bg-blue-600`}>
+              Call us <IoCall />
+            </Button>
+          </a>
           <Link
             href={`/login`}
             target="_blank"
@@ -72,6 +82,11 @@ const Navbar = () => {
               {item}
             </a>
           ))}
+          <a href={`tel:+918830986365`} className={`w-full`}>
+            <Button className={`h-10 text-start text-lg w-full  bg-blue-600`}>
+              Call us <IoCall />
+            </Button>
+          </a>
           <Link
             href={`/login`}
             target="_blank"
