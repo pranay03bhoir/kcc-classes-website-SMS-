@@ -20,7 +20,13 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardHeader } from "@/components/ui/card";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 const passwordRequirements = [
   "Password must contain:",
   "• Minimum eight characters",
@@ -37,6 +43,7 @@ const formSchema = z.object({
     .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
       message: passwordRequirements,
     }),
+  currentStd: z.string(),
   phoneNumber: z.string().min(10).max(13),
   parentsPhoneNumber: z.string().min(10).max(13),
   address: z.string(),
@@ -50,6 +57,7 @@ export default function Register() {
       email: "",
       password: "",
       phoneNumber: "",
+      currentStd: "",
       parentsPhoneNumber: "",
       address: "",
     },
@@ -130,7 +138,47 @@ export default function Register() {
               </FormItem>
             )}
           />
-
+          <FormField
+            control={form.control}
+            name="currentStd"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>CurrentStd</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Current STD." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Class 5">Class 5</SelectItem>
+                    <SelectItem value="Class 6">Class 6</SelectItem>
+                    <SelectItem value="Class 7">Class 7</SelectItem>
+                    <SelectItem value="Class 8">Class 8</SelectItem>
+                    <SelectItem value="Class 9">Class 9</SelectItem>
+                    <SelectItem value="Class 10">Class 10</SelectItem>
+                    <SelectItem value="Class 11 Commerce">
+                      Class 11 Commerce
+                    </SelectItem>
+                    <SelectItem value="Class 11 Science">
+                      Class 11 Science
+                    </SelectItem>
+                    <SelectItem value="Class 12 Commerce">
+                      Class 12 Commerce
+                    </SelectItem>
+                    <SelectItem value="Class 12 Science">
+                      Class 12 Science
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>Select the std. you are in</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="phoneNumber"
