@@ -9,9 +9,10 @@ import AboutOurInstitution from "@/components/Home/AboutOurInstitution";
 import MeetOurToppers from "@/components/Home/MeetOurToppers";
 import HomePageSectionFive from "@/components/Home/HomePageSectionFive";
 import HomePageSectionSix from "@/components/Home/HomePageSectionSix";
+import Footer from "@/components/Home/Footer";
 export default function Home() {
   return (
-    <>
+    <div className={`overflow-x-hidden`}>
       <div className="">
         <Navbar />
       </div>
@@ -42,6 +43,9 @@ export default function Home() {
       <section className={`pt-32`}>
         <HomePageSectionSix />
       </section>
-    </>
+      <section>
+        <Footer />
+      </section>
+    </div>
   );
 }
