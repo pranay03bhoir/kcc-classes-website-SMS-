@@ -1,5 +1,5 @@
 # Tutoring Academy Website Frontend
-```markdown
+
 
 This is the frontend of the **Tutoring Academy Website** built using **Next.js**. The frontend provides a user-friendly interface for students, tutors, and administrators to interact with the system. It includes features such as student registration, course management, attendance tracking, and more.
 
