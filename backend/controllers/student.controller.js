@@ -11,6 +11,7 @@ const studentSchema = joi.object({
   contact: joi.string().min(10).max(13).required(),
   parentsContact: joi.array().items(joi.string().min(10).max(13).required()),
   address: joi.string().required(),
+  currentStd: joi.string().required(),
   profileImage: joi.string().optional(),
 });
 
