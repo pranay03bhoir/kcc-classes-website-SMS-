@@ -7,6 +7,18 @@ import { FaCheckCircle } from "react-icons/fa";
 import { TiMessages } from "react-icons/ti";
 import { FaClock } from "react-icons/fa";
 import { FaChartPie } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.3 } },
+};
+
 const HomePageSectionFour = () => {
   const data = [
     {
@@ -54,26 +66,33 @@ const HomePageSectionFour = () => {
     },
   ];
   return (
-    <div className={``}>
-      <div className={`text-center`}>
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={staggerContainer}
+    >
+      <motion.div variants={fadeInUp} className={`text-center`}>
         <h1 className={`text-4xl font-bold pb-4`}>What Makes Us Different</h1>
         <p className={`text-lg`}>
           Experience excellence in education with our unique features.
         </p>
-      </div>
-      <div
+      </motion.div>
+      <motion.div
+        variants={staggerContainer}
         className={`md:grid md:grid-cols-3 gap-5 pt-10 px-8 md:px-8 flex flex-col`}
       >
         {data.map((item, index) => (
-          <InfoCards
-            key={index}
-            title={item.title}
-            description={item.description}
-            icon={item.icon}
-          />
+          <motion.div key={index} variants={fadeInUp}>
+            <InfoCards
+              title={item.title}
+              description={item.description}
+              icon={item.icon}
+            />
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
