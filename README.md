@@ -1,5 +1,5 @@
 # Tutoring Academy Website with Student Management System (MERN Stack)
-```markdown
+
 
 ## Overview
 This project is a **full-featured tutoring academy website** with an integrated **student management system (SMS)** built using the **MERN (MongoDB, Express.js, React, Node.js) stack**. The platform allows tutors and administrators to manage student records, attendance, grades, courses, and notifications while providing a seamless learning experience for students.
