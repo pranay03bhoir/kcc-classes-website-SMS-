@@ -185,7 +185,7 @@ const GetInTouchForm = () => {
               <FormLabel>Message</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Write your message (optional)"
+                  placeholder="Message"
                   className="resize-none"
                   {...field}
                 />
@@ -197,7 +197,7 @@ const GetInTouchForm = () => {
         />
 
         {/* Submit Button */}
-        <Button type={`submit`} className="w-full cursor-pointer">
+        <Button type={`submit`} className="w-full cursor-pointer bg-blue-600">
           Submit
           <ToastContainer />
         </Button>
