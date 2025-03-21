@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
@@ -10,12 +11,24 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
 const CommentsCarousel = () => {
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true }),
   );
+
   return (
-    <div className={`flex justify-center pt-22`}>
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeInUp}
+      className="flex justify-center pt-22"
+    >
       <Carousel
         plugins={[plugin.current]}
         onMouseEnter={plugin.current.stop}
@@ -25,7 +38,7 @@ const CommentsCarousel = () => {
         <CarouselContent>
           {Array.from({ length: 5 }).map((_, index) => (
             <CarouselItem key={index}>
-              <div className="p-1">
+              <motion.div variants={fadeInUp} className="p-1">
                 <Card className="bg-[#FAFBFB]">
                   <CardContent className="flex flex-col items-center gap-5">
                     <div className="w-20 h-20 border-2 border-dashed border-blue-500 rounded-full overflow-hidden">
@@ -43,7 +56,7 @@ const CommentsCarousel = () => {
                       <p>
                         "I am very happy with the teaching methods at the
                         institute. The faculty is very supportive and helpful."
-                        <br></br>
+                        <br />
                         "The teaching methodology here is excellent. I improved
                         my Physics and Mathematics significantly. The teachers
                         are very supportive and always available for doubt
@@ -52,14 +65,14 @@ const CommentsCarousel = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
+              </motion.div>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className={`hidden md:flex size-20 cursor-pointer`} />
-        <CarouselNext className={`hidden md:flex size-20 cursor-pointer`} />
+        <CarouselPrevious className="hidden md:flex size-20 cursor-pointer" />
+        <CarouselNext className="hidden md:flex size-20 cursor-pointer" />
       </Carousel>
-    </div>
+    </motion.div>
   );
 };
 
