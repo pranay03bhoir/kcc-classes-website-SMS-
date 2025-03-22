@@ -30,7 +30,7 @@ const HomePageSectionOne = () => {
     >
       {/* Left Section */}
       <motion.div variants={fadeInUp} className="text-white px-8">
-        <h1 className="md:text-5xl text-4xl font-extrabold">
+        <h1 className="md:text-5xl text-4xl font-extrabold text-red-700">
           Transform Your Academic Journey with Expert Tutoring
         </h1>
         <p className="pt-10 text-lg md:text-xl">
@@ -45,16 +45,16 @@ const HomePageSectionOne = () => {
             "Proven results with our teaching methods.",
           ].map((text, index) => (
             <motion.li variants={fadeInUp} key={index} className="flex pt-5">
-              <Check size={24} className="text-blue-600" />
+              <Check size={24} className="text-red-600" />
               <span className="pl-3">{text}</span>
             </motion.li>
           ))}
         </ol>
         <motion.div variants={fadeInUp} className="md:flex md:gap-5 ">
           <motion.button
-            whileHover={{ scale: 1.1, backgroundColor: "#2563EB" }}
+            whileHover={{ scale: 1.1, backgroundColor: "#9f0712" }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 text-md items-center bg-blue-600 text-white rounded-sm h-12 md:w-48 w-full cursor-pointer mt-7 flex gap-4 justify-center"
+            className="px-4 text-md items-center bg-red-600 text-white rounded-sm h-12 md:w-48 w-full cursor-pointer mt-7 flex gap-4 justify-center"
           >
             Explore Courses <ChevronRight size={24} />
           </motion.button>
@@ -83,26 +83,26 @@ const HomePageSectionOne = () => {
               type="text"
               placeholder="Student Name"
               {...register("studentName", { required: true })}
-              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             <motion.input
               variants={fadeInUp}
               type="email"
               placeholder="Parent's Email"
               {...register("parentEmail", { required: true })}
-              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             <motion.input
               variants={fadeInUp}
               type="tel"
               placeholder="Phone Number"
               {...register("phone", { required: true })}
-              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             <motion.select
               variants={fadeInUp}
               {...register("grade", { required: true })}
-              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">Select Std.</option>
               {[...Array(6).keys()].map((i) => (
@@ -121,7 +121,7 @@ const HomePageSectionOne = () => {
             <motion.button
               variants={fadeInUp}
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition"
+              className="w-full bg-red-600 text-white py-3 rounded hover:bg-red-700 transition"
             >
               Schedule Free Consultation
             </motion.button>

@@ -22,7 +22,7 @@ const Navbar = () => {
             <a
               key={item}
               href={`#${item.toLowerCase().replace(" ", "")}`}
-              className="hover:text-blue-500 transition"
+              className="hover:text-red-500 transition"
             >
               {item}
             </a>
@@ -35,21 +35,21 @@ const Navbar = () => {
             href={`tel:+918830986365`}
             className={`w-full flex justify-center items-center`}
           >
-            <Button className={`h-10 text-xl w-40 bg-blue-600`}>
+            <Button className={`h-10 text-xl w-40 bg-red-600`}>
               Call us <IoCall />
             </Button>
           </a>
           <Link
             href={`/login`}
             target="_blank"
-            className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition"
+            className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"
           >
             Login
           </Link>
           <Link
             href={`/register`}
             target="_blank"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
           >
             Register
           </Link>
@@ -76,28 +76,28 @@ const Navbar = () => {
             <a
               key={item}
               href={`#${item.toLowerCase().replace(" ", "")}`}
-              className="text-gray-700 hover:text-blue-500 transition"
+              className="text-gray-700 hover:text-red-500 transition"
               onClick={() => setIsOpen(false)}
             >
               {item}
             </a>
           ))}
           <a href={`tel:+918830986365`} className={`w-full`}>
-            <Button className={`h-10 text-start text-lg w-full  bg-blue-600`}>
+            <Button className={`h-10 text-start text-lg w-full  bg-red-600`}>
               Call us <IoCall />
             </Button>
           </a>
           <Link
             href={`/login`}
             target="_blank"
-            className="px-4 py-2 text-blue-500 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition"
+            className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"
           >
             Login
           </Link>
           <Link
             href={`/register`}
             target="_blank"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
           >
             Register
           </Link>

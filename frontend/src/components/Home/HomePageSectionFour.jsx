@@ -73,7 +73,9 @@ const HomePageSectionFour = () => {
       variants={staggerContainer}
     >
       <motion.div variants={fadeInUp} className={`text-center`}>
-        <h1 className={`text-4xl font-bold pb-4`}>What Makes Us Different</h1>
+        <h1 className={`text-4xl font-bold pb-4 text-red-700`}>
+          What Makes Us Different
+        </h1>
         <p className={`text-lg`}>
           Experience excellence in education with our unique features.
         </p>

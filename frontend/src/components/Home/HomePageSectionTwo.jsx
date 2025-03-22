@@ -68,7 +68,7 @@ const HomePageSectionTwo = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-4xl font-bold"
+          className="text-4xl font-bold text-red-700"
         >
           Why Choose Our Tutoring Program?
         </motion.h1>
@@ -140,17 +140,17 @@ const HomePageSectionTwo = () => {
           </p>
           <ol className="pt-3">
             <li className="flex pt-3">
-              <Check size={24} className="text-blue-600" />
+              <Check size={24} className="text-red-600" />
               <span className="pl-3">
                 Regular progress tracking and reports{" "}
               </span>
             </li>
             <li className="flex pt-3">
-              <Check size={24} className="text-blue-600" />
+              <Check size={24} className="text-red-600" />
               <span className="pl-3">Practice tests and mock examinations</span>
             </li>
             <li className="flex pt-3">
-              <Check size={24} className="text-blue-600" />
+              <Check size={24} className="text-red-600" />
               <span className="pl-3">Doubt clearing sessions</span>
             </li>
           </ol>
@@ -176,7 +176,7 @@ const HomePageSectionTwo = () => {
               transition={{ duration: 0.6, delay: index * 0.2 }}
               className={`grid grid-row-2 ${CommonClassesForCards} text-center items-center`}
             >
-              <h1 className="md:text-3xl text-2xl font-bold text-blue-600">
+              <h1 className="md:text-3xl text-2xl font-bold text-red-600">
                 {item.count}+
               </h1>
               <p className="text-lg text-neutral-700">{item.text}</p>

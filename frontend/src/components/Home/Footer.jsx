@@ -3,7 +3,7 @@ import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-blue-900 text-white pt-10 pb-4">
+    <footer className="bg-red-900 text-white pt-10 pb-4">
       <div className="container mx-auto px-5">
         {/* Grid for Contact and Map */}
         <div className="grid md:grid-cols-2 gap-8">
@@ -19,7 +19,7 @@ const Footer = () => {
           </div>
 
           {/* Contact Information */}
-          <div className="bg-blue-950 p-6 rounded-lg shadow-lg">
+          <div className="bg-red-950 p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4 border-l-4 border-yellow-400 pl-2">
               Contact Us
             </h2>

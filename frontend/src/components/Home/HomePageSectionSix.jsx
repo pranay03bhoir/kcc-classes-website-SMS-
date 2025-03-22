@@ -17,7 +17,7 @@ const HomePageSectionSix = () => {
             href={`tel:+918830986365`}
             className={`w-full flex justify-center items-center px-2 pt-16`}
           >
-            <Button className={`h-12 text-xl w-48`}>
+            <Button className={`h-12 text-xl w-48 bg-green-700`}>
               Call us <IoCall />
             </Button>
           </a>

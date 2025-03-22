@@ -197,7 +197,10 @@ const GetInTouchForm = () => {
         />
 
         {/* Submit Button */}
-        <Button type={`submit`} className="w-full cursor-pointer bg-blue-600">
+        <Button
+          type={`submit`}
+          className={`w-full cursor-pointer bg-red-600 hover:bg-red-900`}
+        >
           Submit
           <ToastContainer />
         </Button>

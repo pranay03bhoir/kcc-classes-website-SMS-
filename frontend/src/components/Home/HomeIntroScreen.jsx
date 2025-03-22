@@ -23,7 +23,7 @@ const HomeIntroScreen = () => {
           Excel in Your Studies with
           <br />
         </h1>
-        <h1 className="text-blue-600">Expert Tutoring</h1>
+        <h1 className="text-red-600">Expert Tutoring</h1>
       </motion.div>
       <motion.p
         variants={fadeInUp}
@@ -38,16 +38,16 @@ const HomeIntroScreen = () => {
         className="text-xl mt-6 md:flex md:flex-row md:justify-center gap-5 flex flex-col items-center px-4"
       >
         <motion.button
-          whileHover={{ scale: 1.1, backgroundColor: "#1447e6" }}
+          whileHover={{ scale: 1.1, backgroundColor: "#9f0712" }}
           whileTap={{ scale: 0.95 }}
-          className="md:px-4 md:py-2 bg-blue-600 text-white rounded-lg h-16 md:w-40 w-full cursor-pointer"
+          className="md:px-4 md:py-2 bg-red-600 text-white rounded-lg h-16 md:w-40 w-full cursor-pointer"
         >
           Get Started
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1, backgroundColor: "#f9fafb" }}
           whileTap={{ scale: 0.95 }}
-          className="md:px-4 md:py-2 text-blue-600 border border-blue-600 rounded-lg h-16 md:w-40 w-full cursor-pointer"
+          className="md:px-4 md:py-2 text-red-600 border border-red-600 rounded-lg h-16 md:w-40 w-full cursor-pointer"
         >
           Learn More
         </motion.button>

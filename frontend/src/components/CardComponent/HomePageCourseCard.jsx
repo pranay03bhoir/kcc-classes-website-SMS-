@@ -13,7 +13,7 @@ const HomePageCourseCard = ({ data }) => {
         className="bg-white shadow-lg rounded-xl overflow-hidden w-[100%] "
       >
         {/* Card Header */}
-        <div className="bg-indigo-600 text-white p-4 rounded-t-lg">
+        <div className="bg-red-600 text-white p-4 rounded-t-lg">
           <h2 className="text-xl font-bold">{data.title}</h2>
           <p className="text-sm">{data.description}</p>
         </div>
@@ -23,7 +23,7 @@ const HomePageCourseCard = ({ data }) => {
           {data.features && data.features.length > 0 ? (
             data.features.map((item, index) => (
               <li key={index} className="flex items-center">
-                <Check className="text-indigo-600" />
+                <Check className="text-red-600" />
                 <span className="ml-2">{item}</span>
               </li>
             ))
@@ -35,9 +35,9 @@ const HomePageCourseCard = ({ data }) => {
         {/* Centered Button */}
         <div className="flex justify-center pt-5">
           <motion.button
-            whileHover={{ scale: 1.1, backgroundColor: "#2563EB" }}
+            whileHover={{ scale: 1.1, backgroundColor: "#9f0712" }}
             whileTap={{ scale: 0.95 }}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold mb-5"
+            className="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-semibold mb-5"
           >
             Learn More
           </motion.button>

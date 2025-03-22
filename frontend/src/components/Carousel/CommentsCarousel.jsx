@@ -41,7 +41,7 @@ const CommentsCarousel = () => {
               <motion.div variants={fadeInUp} className="p-1">
                 <Card className="bg-[#FAFBFB]">
                   <CardContent className="flex flex-col items-center gap-5">
-                    <div className="w-20 h-20 border-2 border-dashed border-blue-500 rounded-full overflow-hidden">
+                    <div className="w-20 h-20 border-2 border-dashed border-red-500 rounded-full overflow-hidden">
                       <img
                         src="https://randomuser.me/api/portraits/men/34.jpg"
                         alt="Student"

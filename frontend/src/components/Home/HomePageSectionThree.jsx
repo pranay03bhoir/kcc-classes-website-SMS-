@@ -63,7 +63,9 @@ const HomePageSectionThree = () => {
       className="bg-[#F4F5F4] pt-20"
     >
       <motion.div variants={fadeInUp} className="text-center">
-        <h1 className="text-4xl font-bold">Our Academic Programs.</h1>
+        <h1 className="text-4xl font-bold text-red-700">
+          Our Academic Programs.
+        </h1>
         <p className="text-lg pt-5 text-gray-700">
           Comprehensive courses tailored for different academic levels
         </p>
@@ -81,9 +83,9 @@ const HomePageSectionThree = () => {
         className="flex md:flex-row gap-5 md:pt-10 pt-16 px-8 justify-center w-full"
       >
         <motion.button
-          whileHover={{ scale: 1.1, backgroundColor: "#2563EB" }}
+          whileHover={{ scale: 1.1, backgroundColor: "#9f0712" }}
           whileTap={{ scale: 0.95 }}
-          className="bg-blue-600 text-white rounded-lg text-md font-semibold mb-5 w-48 h-14 flex items-center justify-center gap-5"
+          className="bg-red-600 text-white rounded-lg text-md font-semibold mb-5 w-48 h-14 flex items-center justify-center gap-5"
         >
           Enroll Now
           <MoveRight size={22} className="mt-1" />

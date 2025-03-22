@@ -27,7 +27,9 @@ const AboutOurInstitution = () => {
         variants={fadeInUp}
         className="md:px-10 px-5 flex flex-col justify-center items-center md:items-start w-full"
       >
-        <h1 className="text-3xl font-bold pb-4">About Our Institution</h1>
+        <h1 className="text-3xl font-bold pb-4 text-red-700">
+          About Our Institution
+        </h1>
         <p className="text-xl pb-4">
           KCC classes – Excellence in Education, Success for Every Student. At
           KCC classes, we are committed to providing high-quality tutoring
@@ -56,7 +58,7 @@ const AboutOurInstitution = () => {
         <motion.button
           variants={fadeInUp}
           whileHover={{ scale: 1.05 }}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md mt-7 transition-transform duration-300 transform h-14 w-38"
+          className="bg-red-600 text-white px-4 py-2 rounded-md mt-7 transition-transform duration-300 transform h-14 w-38"
         >
           Know More
         </motion.button>

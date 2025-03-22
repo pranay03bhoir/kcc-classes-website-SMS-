@@ -13,7 +13,7 @@ const TopperCards = () => {
         className="flex flex-col items-center text-center bg-white shadow-lg rounded-lg p-4"
       >
         {/* Profile Image */}
-        <div className="w-40 h-40 border-2 border-dashed border-blue-500 rounded-full overflow-hidden">
+        <div className="w-40 h-40 border-2 border-dashed border-red-500 rounded-full overflow-hidden">
           <img
             src="https://randomuser.me/api/portraits/men/34.jpg" // Replace with your actual image path
             alt="Student"
@@ -25,7 +25,7 @@ const TopperCards = () => {
         <h2 className="text-lg font-bold mt-4 text-gray-900">HARDIK JAIN</h2>
 
         {/* Percentage and Exam */}
-        <p className="text-blue-600 font-semibold text-sm">99.40% – JEE Main</p>
+        <p className=" font-semibold text-sm text-red-900">99.40% – JEE Main</p>
       </motion.div>
     </div>
   );
