@@ -10,6 +10,7 @@ const studentSchema = joi.object({
   password: joi.string().min(8).required(),
   contact: joi.string().min(10).max(13).required(),
   parentsContact: joi.array().items(joi.string().min(10).max(13).required()),
+  admissionYear: joi.number().required(),
   address: joi.string().required(),
   currentStd: joi.string().required(),
   profileImage: joi.string().optional(),
@@ -31,6 +32,7 @@ const studentRegister = async (req, res) => {
       parentsContact,
       address,
       currentStd,
+      admissionYear,
     } = req.body;
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
@@ -49,6 +51,7 @@ const studentRegister = async (req, res) => {
         parentsContact,
         address,
         currentStd,
+        admissionYear,
       });
       await student.save();
       const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
