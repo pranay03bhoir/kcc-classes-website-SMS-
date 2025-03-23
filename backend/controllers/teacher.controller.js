@@ -12,8 +12,9 @@ const teacherSchema = joi.object({
   email: joi.string().email().required(),
   password: joi.string().min(8).required(),
   contact: joi.string().min(10).max(13).required(),
-  alternateContact: joi.array().items(joi.string().min(10).max(13).required()),
+  alternateContact: joi.string().min(10).max(13).required(),
   address: joi.string().required(),
+  joiningYear: joi.number().required(),
 });
 const teacherRegister = async (req, res) => {
   try {
@@ -24,8 +25,15 @@ const teacherRegister = async (req, res) => {
         message: error.details[0].message,
       });
     }
-    const { name, email, password, contact, alternateContact, address } =
-      req.body;
+    const {
+      name,
+      email,
+      password,
+      contact,
+      alternateContact,
+      address,
+      joiningYear,
+    } = req.body;
     const existingTeacher = await Teacher.findOne({ email: email });
     if (existingTeacher) {
       return res.status(400).json({
@@ -42,6 +50,7 @@ const teacherRegister = async (req, res) => {
         contact,
         alternateContact,
         address,
+        joiningYear,
       });
       await teacher.save();
       const token = jwt.sign({ email: teacher.email }, process.env.JWT_SECRET, {
