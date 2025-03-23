@@ -4,6 +4,7 @@ const Teacher = require("../models/teacher.model");
 const Course = require("../models/course.model");
 const Attendance = require("../models/attendance.model");
 const Score = require("../models/score.model");
+const Batch = require("../models/batch.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -267,8 +268,8 @@ const getAllTeachers = async (req, res) => {
 };
 const getStudentsById = async (req, res) => {
   try {
-    const studentId = req.params.id;
-    const student = await Student.findById(studentId);
+    const studentId = req.params.studentId;
+    const student = await Student.findOne({ studentId });
     if (!student) {
       res.status(404).json({
         success: false,
@@ -1080,6 +1081,112 @@ const getScoresForCourse = async (req, res) => {
     });
   }
 };
+const createBatch = async (req, res) => {
+  try {
+    const { name, classStd, timings, courseId } = req.body;
+    const batch = new Batch({
+      name,
+      classStd,
+      timings,
+      courseId,
+    });
+    await batch.save();
+    if (!batch) {
+      return res.status(400).json({
+        success: false,
+        message: "Batch not created! please try again later",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Batch created successfully",
+        batch,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const addStudentToBatch = async (req, res) => {
+  try {
+    const studentId = req.params.id; // Fix extraction of studentId
+    const batchId = req.body.batchId;
+
+    // Check if student exists
+    const existingStudent = await Student.findById(studentId);
+    if (!existingStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // Check if batch exists
+    const batchExists = await Batch.findById(batchId);
+    if (!batchExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Batch not found",
+      });
+    }
+    if (!existingStudent.courses.includes(batchExists.courseId)) {
+      return res.status(400).json({
+        success: false,
+        message: `Student is not enrolled in the course for batch ${batchExists.batchId}`,
+      });
+    }
+    if (existingStudent.batches.includes(batchId)) {
+      // Check if student is already in the batch
+      return res.status(400).json({
+        success: false,
+        message: `Student already in batch ${batchExists.batchId}`,
+      });
+    }
+
+    // Add student to batch
+    const batch = await Batch.findByIdAndUpdate(
+      batchId,
+      { $addToSet: { studentIds: studentId } },
+      { new: true, runValidators: true },
+    );
+    if (!batch) {
+      return res.status(400).json({
+        success: false,
+        message: "Error adding student to batch",
+      });
+    }
+
+    // Add batch to student
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      { $addToSet: { batches: batchId } },
+      { new: true, runValidators: true },
+    );
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Error adding batch to student",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Student added to batch ${batchExists.batchId}!`,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: e.message,
+    });
+  }
+};
+
 module.exports = {
   adminRegister,
   adminLogin,
@@ -1110,4 +1217,6 @@ module.exports = {
   updateStudentScore,
   getStudentScore,
   getScoresForCourse,
+  createBatch,
+  addStudentToBatch,
 };
