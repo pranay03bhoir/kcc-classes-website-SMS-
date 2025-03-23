@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const batchSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  class: { type: String, required: true },
   courseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
