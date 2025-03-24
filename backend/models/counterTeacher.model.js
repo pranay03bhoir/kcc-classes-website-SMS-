@@ -4,5 +4,5 @@ const counterTeacher = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   seq: { type: Number, default: 0 },
 });
-const CounterTeacher = mongoose.model("CounterStudent");
+const CounterTeacher = mongoose.model("counterTeacher", counterTeacher);
 module.exports = CounterTeacher;
