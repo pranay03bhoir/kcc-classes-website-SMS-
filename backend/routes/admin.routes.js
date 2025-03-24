@@ -30,6 +30,7 @@ const {
   getScoresForCourse,
   createBatch,
   addStudentToBatch,
+  addTeacherToBatch,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -114,4 +115,5 @@ router.get(
 );
 router.post("/batch", createBatch);
 router.post("/add/student/batch/:id", addStudentToBatch);
+router.post("/add/teacher/batch/:id", addTeacherToBatch);
 module.exports = router;
