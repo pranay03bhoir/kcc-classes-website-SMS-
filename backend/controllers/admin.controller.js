@@ -1186,6 +1186,73 @@ const addStudentToBatch = async (req, res) => {
     });
   }
 };
+const addTeacherToBatch = async (req, res) => {
+  try {
+    const teacherId = req.params.id;
+    const batchId = req.body.batchId;
+    const existingTeacher = await Teacher.findById(teacherId);
+    if (!existingTeacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    const batch = await Batch.findById(batchId);
+    if (!batch) {
+      return res.status(404).json({
+        success: false,
+        message: "Batch not found",
+      });
+    }
+    const course = await Course.findById(batch.courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+    const teacherTeachesCourse = existingTeacher.courses.includes(course._id);
+    if (!teacherTeachesCourse) {
+      return res.status(400).json({
+        success: false,
+        message: `${existingTeacher.name} does not teach for the course ${course.name}`,
+      });
+    }
+    const addTeacherInCourse = await Batch.findByIdAndUpdate(
+      batchId,
+      existingTeacher,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    await addTeacherInCourse.save();
+    if (!addTeacherInCourse) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher not added to batch",
+      });
+    }
+    const addBatchToTeacher = await Teacher.findByIdAndUpdate(
+      teacherId,
+      {
+        $addToSet: { batches: batch },
+      },
+      { new: true, runValidators: true },
+    );
+    await addBatchToTeacher.save();
+    return res.status(200).json({
+      success: true,
+      message: "Teacher added successfully to batch",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
 
 module.exports = {
   adminRegister,
@@ -1219,4 +1286,5 @@ module.exports = {
   getScoresForCourse,
   createBatch,
   addStudentToBatch,
+  addTeacherToBatch,
 };
