@@ -1114,7 +1114,7 @@ const createBatch = async (req, res) => {
 const addStudentToBatch = async (req, res) => {
   try {
     const studentId = req.params.id; // Fix extraction of studentId
-    const batchId = req.body.batchId;
+    const batchId = req.query.batchId;
 
     // Check if student exists
     const existingStudent = await Student.findById(studentId);
@@ -1189,7 +1189,7 @@ const addStudentToBatch = async (req, res) => {
 const addTeacherToBatch = async (req, res) => {
   try {
     const teacherId = req.params.id;
-    const batchId = req.body.batchId;
+    const batchId = req.query.batchId;
     const existingTeacher = await Teacher.findById(teacherId);
     if (!existingTeacher) {
       return res.status(404).json({
@@ -1253,7 +1253,59 @@ const addTeacherToBatch = async (req, res) => {
     });
   }
 };
-
+const removeStudentFromBatch = async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const batchId = req.query.batchId;
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    const batch = await Batch.findById(batchId);
+    if (!batch) {
+      return res.status(404).json({
+        success: false,
+        message: "Batch not found",
+      });
+    }
+    const isStudentInBatch = student.batches.includes(batch._id);
+    if (!isStudentInBatch) {
+      return res.status(400).json({
+        success: false,
+        message: `Student ${student.name} is not in the batch ${batch.batchId}`,
+      });
+    }
+    const removeStudentFromBatch = await Batch.findByIdAndDelete(
+      batchId,
+      {
+        $pull: { studentId: student._id },
+      },
+      { new: true, runValidators: true },
+    );
+    await removeStudentFromBatch.save();
+    const removeBatchFromStudent = await Student.findByIdAndDelete(
+      studentId,
+      {
+        $pull: { batches: batch._id },
+      },
+      { new: true, runValidators: true },
+    );
+    await removeBatchFromStudent.save();
+    return res.status(200).json({
+      success: true,
+      message: "Student removed successfully from batch",
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
 module.exports = {
   adminRegister,
   adminLogin,
@@ -1287,4 +1339,5 @@ module.exports = {
   createBatch,
   addStudentToBatch,
   addTeacherToBatch,
+  removeStudentFromBatch,
 };
