@@ -32,6 +32,7 @@ const {
   addStudentToBatch,
   addTeacherToBatch,
   removeStudentFromBatch,
+  removeTeacherFromBatch,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -118,4 +119,5 @@ router.post("/batch", createBatch);
 router.post("/add/student/batch/:id", addStudentToBatch);
 router.post("/add/teacher/batch/:id", addTeacherToBatch);
 router.delete("/remove/student/batch/:id", removeStudentFromBatch);
+router.delete("/remove/teacher/batch/:id", removeTeacherFromBatch);
 module.exports = router;
