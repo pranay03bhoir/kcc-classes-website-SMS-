@@ -1306,6 +1306,59 @@ const removeStudentFromBatch = async (req, res) => {
     });
   }
 };
+const removeTeacherFromBatch = async (req, res) => {
+  try {
+    const teacherId = req.params.id;
+    const batchId = req.query.batchId;
+    const existingTeacher = await Teacher.findById(teacherId);
+    if (!existingTeacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    const batch = await Batch.findById(batchId);
+    if (!batch) {
+      return res.status(404).json({
+        success: false,
+        message: "Batch not found",
+      });
+    }
+    const isTeacherInTheBatch = existingTeacher.batches.includes(batch._id);
+    if (!isTeacherInTheBatch) {
+      return res.status(400).json({
+        success: false,
+        message: `${existingTeacher.name} does not teach the batch ${batch.batchId}`,
+      });
+    }
+    const removeTeacherFromTheBatch = await Teacher.findByIdAndUpdate(
+      teacherId,
+      {
+        $pull: { batches: batch._id },
+      },
+      { new: true, runValidators: true },
+    );
+    await removeTeacherFromTheBatch.save();
+    const removeBatchFromTeacher = await Batch.findByIdAndUpdate(
+      batch._id,
+      {
+        $pull: { teacherId: existingTeacher._id },
+      },
+      { new: true, runValidators: true },
+    );
+    await removeBatchFromTeacher.save();
+    return res.status(200).json({
+      success: true,
+      message: `Teacher ${existingTeacher.name} successfully removed from batch ${batch.batchId}`,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
 module.exports = {
   adminRegister,
   adminLogin,
@@ -1340,4 +1393,5 @@ module.exports = {
   addStudentToBatch,
   addTeacherToBatch,
   removeStudentFromBatch,
+  removeTeacherFromBatch,
 };
