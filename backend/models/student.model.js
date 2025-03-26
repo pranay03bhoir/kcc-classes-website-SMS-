@@ -9,7 +9,7 @@ const studentSchema = new mongoose.Schema(
     contact: { type: String, required: true },
     parentsContact: [{ type: String, required: true }],
     address: { type: String, required: true },
-    currentStd: { type: String, default: "", required: true },
+    currentStd: { type: String, default: "" },
     role: { type: String, default: "student" },
     isVerified: { type: Boolean, default: false },
     profileImage: { type: String, default: "" }, // Stored in AWS S3
