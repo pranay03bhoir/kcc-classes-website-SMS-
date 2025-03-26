@@ -1,258 +1,269 @@
 "use client";
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardDescription, CardHeader } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const passwordRequirements = [
-  "Password must contain:",
-  "• Minimum eight characters",
-  "• At least one letter",
-  "• At least one number",
-  "• At least one special character (@,/,$,%,*,#,?,&)",
-].join("\n");
-
-const formSchema = z.object({
-  fullName: z.string().min(1),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long" })
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
-      message: passwordRequirements,
-    }),
-  currentStd: z.string(),
-  phoneNumber: z.string().min(10).max(13),
-  parentsPhoneNumber: z.string().min(10).max(13),
-  address: z.string(),
-});
-
-export default function Register() {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      phoneNumber: "",
-      currentStd: "",
-      parentsPhoneNumber: "",
-      address: "",
-    },
+import { motion } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
+import Link from "next/link";
+export default function RegistrationPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    contact: "",
+    parentsContact: "",
+    address: "",
+    admissionYear: "",
+    agree: false,
   });
+  const [step, setStep] = useState(0);
+  const [errors, setErrors] = useState({});
 
-  function onSubmit(values) {
-    try {
-      console.log(values);
-      toast.success("Registration successful");
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>,
-      );
-    } catch (error) {
-      console.error("Form submission error", error);
-      toast.error("Failed to submit the form. Please try again.");
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const validate = () => {
+    let newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+      newErrors.email = "Invalid email";
+    if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+    if (!formData.contact.match(/^\d{10}$/))
+      newErrors.contact = "Enter a valid 10-digit contact number";
+    if (!formData.parentsContact.match(/^\d{10}$/))
+      newErrors.parentsContact =
+        "Enter a valid 10-digit parent’s contact number";
+    if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (!formData.admissionYear.match(/^\d{4}$/))
+      newErrors.admissionYear = "Enter a valid year";
+    if (!formData.agree) newErrors.agree = "You must agree to the terms";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const handleCheckboxChange = () => {
+    setFormData((prev) => ({
+      ...prev,
+      agree: !prev.agree,
+    }));
+  };
+  const handleNext = () => {
+    if (!validate()) setStep((prev) => prev + 1);
+  };
+
+  const handlePrev = () => {
+    setStep((prev) => prev - 1);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) {
+      console.error("Validation failed! Form not submitted.");
+      return;
     }
-  }
+
+    console.log("Validation passed. Submitting form...");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/students/register",
+        formData,
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      // console.log("API Response:", response.data);
+      toast.success(response.data.message || "Registered successfully.");
+    } catch (error) {
+      console.error("API Request Failed:", error);
+      toast.error(error.response?.data?.message || "Registration failed.");
+    }
+  };
+
+  const steps = [
+    [
+      <Input
+        key="name"
+        name="name"
+        placeholder="Your Name"
+        onChange={handleChange}
+        required
+      />,
+      errors.name && (
+        <p key="name-error" className="text-red-500 text-sm">
+          {errors.name}
+        </p>
+      ),
+      <Input
+        key="email"
+        type="email"
+        name="email"
+        placeholder="Your Email"
+        onChange={handleChange}
+        required
+      />,
+      errors.email && (
+        <p key="email-error" className="text-red-500 text-sm">
+          {errors.email}
+        </p>
+      ),
+    ],
+    [
+      <Input
+        key="password"
+        type="password"
+        name="password"
+        placeholder="Password"
+        onChange={handleChange}
+        required
+        minLength={6}
+      />,
+      errors.password && (
+        <p key="password-error" className="text-red-500 text-sm">
+          {errors.password}
+        </p>
+      ),
+      <Input
+        key="contact"
+        type="tel"
+        name="contact"
+        placeholder="Your Contact"
+        onChange={handleChange}
+        required
+        pattern="\d{10}"
+      />,
+      errors.contact && (
+        <p key="contact-error" className="text-red-500 text-sm">
+          {errors.contact}
+        </p>
+      ),
+    ],
+    [
+      <Input
+        key="parentsContact"
+        type="tel"
+        name="parentsContact"
+        placeholder="Parent's Contact"
+        onChange={handleChange}
+        required
+        pattern="\d{10}"
+      />,
+      errors.parentsContact && (
+        <p key="parentsContact-error" className="text-red-500 text-sm">
+          {errors.parentsContact}
+        </p>
+      ),
+
+      <Textarea
+        key="address"
+        name="address"
+        placeholder="Address"
+        onChange={handleChange}
+        required
+      />,
+      errors.address && (
+        <p key="address-error" className="text-red-500 text-sm">
+          {errors.address}
+        </p>
+      ),
+    ],
+    [
+      <Input
+        key="admissionYear"
+        type="number"
+        name="admissionYear"
+        placeholder="Admission Year"
+        onChange={handleChange}
+        required
+        pattern="\d{4}"
+      />,
+      errors.admissionYear && (
+        <p key="admissionYear-error" className="text-red-500 text-sm">
+          {errors.admissionYear}
+        </p>
+      ),
+      <div key="checkbox" className="flex items-center space-x-2">
+        <Checkbox
+          name="agree"
+          onChange={handleChange}
+          onCheckedChange={handleCheckboxChange}
+        />
+        <label className="text-sm">
+          I agree to the{" "}
+          <a href="#" className="text-blue-600">
+            Terms, Privacy Policy
+          </a>
+          , and Fees.
+        </label>
+      </div>,
+      errors.agree && (
+        <p key="agree-error" className="text-red-500 text-sm">
+          {errors.agree}
+        </p>
+      ),
+    ],
+  ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="grid grid-cols-1 md:grid-cols-2 bg-white rounded-lg shadow-lg overflow-hidden w-full">
-        {/* Left Side - Image */}
-        <div className="hidden md:flex items-center justify-center">
-          <img
-            src="/images/KCC%20CLASSES.png"
-            alt="Join us"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Right Side - Form */}
-        <div className="p-8">
-          <Card className="w-full">
-            <CardHeader className="text-center">
-              <h1 className="text-3xl font-extrabold text-gray-900">
-                Join Us Today!
-              </h1>
-            </CardHeader>
-            <CardDescription className="text-gray-700 text-center">
-              Fill in the details to create your account.
-            </CardDescription>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6 p-8"
-              >
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Email" type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <PasswordInput placeholder="Password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="currentStd"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Class</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Class" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {[
-                            "Class 5",
-                            "Class 6",
-                            "Class 7",
-                            "Class 8",
-                            "Class 9",
-                            "Class 10",
-                            "Class 11 Commerce",
-                            "Class 11 Science",
-                            "Class 12 Commerce",
-                            "Class 12 Science",
-                          ].map((className) => (
-                            <SelectItem key={className} value={className}>
-                              {className}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Number</FormLabel>
-                      <FormControl>
-                        <PhoneInput
-                          placeholder="Phone number"
-                          {...field}
-                          defaultCountry="IN"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="parentsPhoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parent's Contact</FormLabel>
-                      <FormControl>
-                        <PhoneInput
-                          placeholder="Parent's phone number"
-                          {...field}
-                          defaultCountry="IN"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Address"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full">
-                  Register
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-200 via-blue-200 to-pink-200">
+      <Card className="w-full max-w-md p-6 bg-white rounded-2xl shadow-md">
+        <CardContent>
+          <h2 className="text-2xl font-semibold text-center mb-4">Sign Up</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-4"
+            >
+              {steps[step].map((field) => field)}
+            </motion.div>
+            <div className="flex justify-between">
+              {step > 0 && (
+                <Button
+                  onClick={handlePrev}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Back
                 </Button>
-              </form>
-            </Form>
-          </Card>
-        </div>
-      </div>
-      <ToastContainer position="top-center" />
+              )}
+              {step < steps.length - 1 ? (
+                <Button
+                  onClick={handleNext}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Submit <ToastContainer position={`top-center`} />
+                </Button>
+              )}
+            </div>
+          </form>
+          <p className="text-sm text-center mt-4">
+            Have an account?{" "}
+            <Link href="/login" className="text-blue-600">
+              Log in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
