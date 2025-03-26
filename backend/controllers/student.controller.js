@@ -12,7 +12,7 @@ const studentSchema = joi.object({
   parentsContact: joi.array().items(joi.string().min(10).max(13).required()),
   admissionYear: joi.number().required(),
   address: joi.string().required(),
-  currentStd: joi.string().required(),
+  currentStd: joi.string(),
   profileImage: joi.string().optional(),
 });
 
