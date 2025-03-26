@@ -15,7 +15,11 @@ const Navbar = () => {
         <a href="#" className="text-2xl font-bold text-gray-800">
           KCC-CLASSES
         </a>
-
+        <a href={`tel:+919765022022`} className={`w-[30%] md:hidden`}>
+          <Button className={`h-10 text-start text-lg w-full  bg-red-600`}>
+            Call us <IoCall />
+          </Button>
+        </a>
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-8 text-gray-700">
           {["Home", "About Us", "Courses", "Faculty", "Contact"].map((item) => (
@@ -82,11 +86,11 @@ const Navbar = () => {
               {item}
             </a>
           ))}
-          <a href={`tel:+918830986365`} className={`w-full`}>
-            <Button className={`h-10 text-start text-lg w-full  bg-red-600`}>
-              Call us <IoCall />
-            </Button>
-          </a>
+          {/*<a href={`tel:+918830986365`} className={`w-full`}>*/}
+          {/*  <Button className={`h-10 text-start text-lg w-full  bg-red-600`}>*/}
+          {/*    Call us <IoCall />*/}
+          {/*  </Button>*/}
+          {/*</a>*/}
           <Link
             href={`/login`}
             target="_blank"
