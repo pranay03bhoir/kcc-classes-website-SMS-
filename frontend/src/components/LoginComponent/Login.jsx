@@ -1,144 +1,102 @@
 "use client";
-
-import Link from "next/link";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { ToastContainer, toast } from "react-toastify";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-
-// Validation schema
-const passwordRequirements = [
-  "Password must contain:",
-  "• Minimum eight characters",
-  "• At least one letter",
-  "• At least one number",
-  "• At least one special character (@,/,$,%,*,#,?,&)",
-].join("\n");
-const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 8 characters long" })
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
-      message: passwordRequirements,
-    }),
-});
+import { Checkbox } from "@/components/ui/checkbox";
+// import { motion } from "framer-motion";
+import { FcGoogle } from "react-icons/fc";
+import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
 
 export default function LoginPage() {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
   });
 
-  async function onSubmit(values) {
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+  const handleRememberMeCheckBox = () => {
+    setFormData((prev) => ({
+      ...prev,
+      rememberMe: !prev.rememberMe,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      console.log(values);
-      toast.success("Login successful");
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>,
-      );
-    } catch (error) {
-      console.error("Form submission error", error);
-      toast.error("Failed to submit the form. Please try again.");
+      const myURL = "http://localhost:5000/api/students/login";
+      const response = await axios.post(myURL, formData, {
+        headers: { "Content-Type": "application/json" },
+      });
+      toast.success(response.data.message || "Login successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Login failed");
     }
-  }
+    console.log(formData);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center px-6 sm:px-8 bg-black">
-      <Card className="w-full max-w-md sm:max-w-lg lg:max-w-xl shadow-lg p-6 sm:p-8">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Login</CardTitle>
-          <CardDescription className="text-gray-600">
-            Enter your email and password to access your account.
-          </CardDescription>
-        </CardHeader>
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-200 via-blue-200 to-pink-200">
+      <Card className="w-full max-w-md p-8 bg-white rounded-2xl shadow-md relative z-10">
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid gap-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="email">Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="email"
-                          placeholder="johndoe@mail.com"
-                          type="email"
-                          autoComplete="email"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <h2 className="text-2xl font-semibold text-center mb-4">
+            Welcome back
+          </h2>
+          <p className="text-center text-gray-500 mb-2">
+            Sign in with your email
+          </p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="email"
+              name="email"
+              placeholder="Email address"
+              onChange={handleChange}
+              required
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              required
+            />
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  name="rememberMe"
+                  onChange={handleChange}
+                  onCheckedChange={handleRememberMeCheckBox}
                 />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="grid gap-2">
-                      <div className="flex justify-between items-center">
-                        <FormLabel htmlFor="password">Password</FormLabel>
-                        <Link
-                          href="#"
-                          className="text-sm text-blue-500 underline"
-                        >
-                          Forgot your password?
-                        </Link>
-                      </div>
-                      <FormControl>
-                        <PasswordInput
-                          id="password"
-                          placeholder="******"
-                          autoComplete="current-password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full text-lg py-3">
-                  Login
-                  <ToastContainer position={`top-center`} />
-                </Button>
+                <label className="text-gray-600">Keep me signed in</label>
               </div>
-            </form>
-          </Form>
-          <div className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="text-blue-500 underline">
-              Sign up
-            </Link>
-          </div>
+              <a href="#" className="text-blue-600">
+                Forgot password?
+              </a>
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-green-500 text-white py-2 rounded-lg"
+            >
+              Sign In
+              <ToastContainer position={`top-center`} />
+            </Button>
+          </form>
         </CardContent>
       </Card>
+      <div
+        className="absolute right-0 top-0 bottom-0 w-1/2 bg-cover bg-center rounded-l-2xl"
+        style={{ backgroundImage: "url('/path-to-your-background-image.jpg')" }}
+      ></div>
     </div>
   );
 }
