@@ -23,13 +23,13 @@ const Navbar = () => {
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-8 text-gray-700">
           {["Home", "About Us", "Courses", "Faculty", "Contact"].map((item) => (
-            <a
+            <Link
               key={item}
-              href={`#${item.toLowerCase().replace(" ", "")}`}
+              href={`/${item.toLowerCase().replace(" ", "")}`}
               className="hover:text-red-500 transition"
             >
               {item}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -79,7 +79,7 @@ const Navbar = () => {
           {["Home", "About Us", "Courses", "Faculty", "Contact"].map((item) => (
             <a
               key={item}
-              href={`#${item.toLowerCase().replace(" ", "")}`}
+              href={`/${item.toLowerCase().replace(" ", "")}`}
               className="text-gray-700 hover:text-red-500 transition"
               onClick={() => setIsOpen(false)}
             >
