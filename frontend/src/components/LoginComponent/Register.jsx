@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { PasswordInput } from "@/components/ui/password-input";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
@@ -14,6 +15,7 @@ export default function RegistrationPage() {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     contact: "",
     parentsContact: "",
     address: "",
@@ -23,6 +25,42 @@ export default function RegistrationPage() {
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
 
+  const validateStep = (currentStep) => {
+    let newErrors = {};
+
+    if (currentStep === 0) {
+      if (!formData.name.trim()) newErrors.name = "Name is required";
+      if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+        newErrors.email = "Invalid email";
+    }
+
+    if (currentStep === 1) {
+      if (formData.password.length < 8)
+        newErrors.password = "Password must be at least 8 characters";
+      if (formData.confirmPassword.length < 8)
+        newErrors.confirmPassword = "Password must be at least 8 characters";
+      if (formData.confirmPassword.trim() !== formData.password.trim())
+        newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (currentStep === 2) {
+      if (!formData.contact.match(/^\d{10}$/))
+        newErrors.contact = "Enter a valid 10-digit contact number";
+      if (!formData.parentsContact.match(/^\d{10}$/))
+        newErrors.parentsContact =
+          "Enter a valid 10-digit parent’s contact number";
+    }
+
+    if (currentStep === 3) {
+      if (!formData.admissionYear.match(/^\d{4}$/))
+        newErrors.admissionYear = "Enter a valid year";
+      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.agree) newErrors.agree = "You must agree to the terms";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Proceed only if no errors
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -31,25 +69,6 @@ export default function RegistrationPage() {
     }));
   };
 
-  const validate = () => {
-    let newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-      newErrors.email = "Invalid email";
-    if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (!formData.contact.match(/^\d{10}$/))
-      newErrors.contact = "Enter a valid 10-digit contact number";
-    if (!formData.parentsContact.match(/^\d{10}$/))
-      newErrors.parentsContact =
-        "Enter a valid 10-digit parent’s contact number";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.admissionYear.match(/^\d{4}$/))
-      newErrors.admissionYear = "Enter a valid year";
-    if (!formData.agree) newErrors.agree = "You must agree to the terms";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
   const handleCheckboxChange = () => {
     setFormData((prev) => ({
       ...prev,
@@ -57,7 +76,8 @@ export default function RegistrationPage() {
     }));
   };
   const handleNext = () => {
-    if (!validate()) setStep((prev) => prev + 1);
+    if (!validateStep(step)) return; // Prevent navigation if validation fails
+    setStep((prev) => prev + 1);
   };
 
   const handlePrev = () => {
@@ -66,8 +86,7 @@ export default function RegistrationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validate()) {
+    if (!validateStep()) {
       console.error("Validation failed! Form not submitted.");
       return;
     }
@@ -127,13 +146,29 @@ export default function RegistrationPage() {
         placeholder="Password"
         onChange={handleChange}
         required
-        minLength={6}
+        minLength={8}
       />,
       errors.password && (
         <p key="password-error" className="text-red-500 text-sm">
           {errors.password}
         </p>
       ),
+      <Input
+        key="confirmPassword"
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirm password"
+        onChange={handleChange}
+        required
+        minLength={8}
+      />,
+      errors.confirmPassword && (
+        <p key="confirmPassword-error" className="text-red-500 text-sm">
+          {errors.confirmPassword}
+        </p>
+      ),
+    ],
+    [
       <Input
         key="contact"
         type="tel"
@@ -148,8 +183,6 @@ export default function RegistrationPage() {
           {errors.contact}
         </p>
       ),
-    ],
-    [
       <Input
         key="parentsContact"
         type="tel"
@@ -162,19 +195,6 @@ export default function RegistrationPage() {
       errors.parentsContact && (
         <p key="parentsContact-error" className="text-red-500 text-sm">
           {errors.parentsContact}
-        </p>
-      ),
-
-      <Textarea
-        key="address"
-        name="address"
-        placeholder="Address"
-        onChange={handleChange}
-        required
-      />,
-      errors.address && (
-        <p key="address-error" className="text-red-500 text-sm">
-          {errors.address}
         </p>
       ),
     ],
@@ -191,6 +211,18 @@ export default function RegistrationPage() {
       errors.admissionYear && (
         <p key="admissionYear-error" className="text-red-500 text-sm">
           {errors.admissionYear}
+        </p>
+      ),
+      <Textarea
+        key="address"
+        name="address"
+        placeholder="Address"
+        onChange={handleChange}
+        required
+      />,
+      errors.address && (
+        <p key="address-error" className="text-red-500 text-sm">
+          {errors.address}
         </p>
       ),
       <div key="checkbox" className="flex items-center space-x-2">
