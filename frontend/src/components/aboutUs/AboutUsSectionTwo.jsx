@@ -25,7 +25,7 @@ const AboutUsSectionTwo = () => {
     >
       <CustomHeading
         title={"About Our Tutoring Center"}
-        top={`top-[140%]`}
+        top={`md:top-[140%]`}
         padding={`py-24`}
         borderColour={"border-white"}
       />
