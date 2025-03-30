@@ -10,7 +10,9 @@ import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 export default function RegistrationPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -104,6 +106,9 @@ export default function RegistrationPage() {
 
       // console.log("API Response:", response.data);
       toast.success(response.data.message || "Registered successfully.");
+      if (response) {
+        router.push("/login");
+      }
     } catch (error) {
       console.error("API Request Failed:", error);
       toast.error(error.response?.data?.message || "Registration failed.");
