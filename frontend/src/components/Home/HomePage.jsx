@@ -10,9 +10,10 @@ import MeetOurToppers from "@/components/Home/MeetOurToppers";
 import HomePageSectionFive from "@/components/Home/HomePageSectionFive";
 import HomePageSectionSix from "@/components/Home/HomePageSectionSix";
 import Footer from "@/components/Home/Footer";
-const Home = () => {
+
+const HomePage = () => {
   return (
-    <div>
+    <div className={`overflow-x-hidden`}>
       <div className="">
         <Navbar />
       </div>
@@ -50,4 +51,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default HomePage;
