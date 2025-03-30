@@ -5,7 +5,7 @@ import { IoCall } from "react-icons/io5";
 const AboutUsSectionOne = () => {
   return (
     <div
-      className={`grid md:grid-cols-2 bg-gray-900 pt-16 p-6 text-center md:text-start gap-10 md:gap-0`}
+      className={`grid md:grid-cols-2 bg-gray-900 pt-16 p-6 text-center md:text-start gap-10 md:gap-0 py-24 md:rounded-br-[15%] md:rounded-bl-[15%] rounded-r-4xl rounded-l-4xl`}
     >
       <div className="text-white space-y-10">
         <h1 className={`font-extrabold md:text-5xl text-4xl`}>
