@@ -6,24 +6,33 @@ import { FaCheckCircle } from "react-icons/fa";
 
 const VisionAndMission = () => {
   return (
-    <div className="w-full max-w-screen-xl mx-auto flex flex-col items-center md:pt-16">
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      className="w-full max-w-screen-xl mx-auto flex flex-col items-center md:pt-16"
+    >
       <CustomHeading
         title={"Our Vision & Mission"}
         padding={`py-16`}
         animate={{ opacity: 1, y: 0 }}
         borderColour={"border-white"}
       />
+
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full bg-black p-8 rounded-lg shadow-lg md:pt-48"
       >
         {/* Mission Section */}
         <motion.div
           initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
+          whileInView={{ x: 0, opacity: 1 }}
           transition={{ duration: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
           className="bg-blue-900 text-white p-6 rounded-2xl shadow-md flex flex-col items-center text-center hover:shadow-2xl hover:scale-105 transition-transform duration-300 ease-in-out"
         >
           <div className="bg-blue-500 p-4 rounded-full mb-4">⚡</div>
@@ -60,8 +69,9 @@ const VisionAndMission = () => {
         {/* Vision Section */}
         <motion.div
           initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
+          whileInView={{ x: 0, opacity: 1 }}
           transition={{ duration: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
           className="bg-purple-900 text-white p-6 rounded-2xl shadow-md flex flex-col items-center text-center hover:shadow-2xl hover:scale-105 transition-transform duration-300 ease-in-out"
         >
           <div className="bg-purple-500 p-4 rounded-full mb-4">👁️</div>
@@ -95,7 +105,7 @@ const VisionAndMission = () => {
           </ul>
         </motion.div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 

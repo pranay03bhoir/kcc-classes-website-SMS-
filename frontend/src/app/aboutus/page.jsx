@@ -3,7 +3,7 @@ import AboutUs from "@/components/aboutUs/AboutUs";
 
 const Page = () => {
   return (
-    <div>
+    <div className={`overflow-hidden`}>
       <AboutUs />
     </div>
   );

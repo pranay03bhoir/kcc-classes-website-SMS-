@@ -62,9 +62,9 @@ const GetInTouchForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 max-w-3xl mx-auto py-10 px-5 md:px-28 pt-16 border rounded-lg"
+        className="space-y-8 max-w-3xl mx-auto py-10 px-5 md:px-14 pt-16 border rounded-lg"
       >
-        <div className="grid grid-cols-12 gap-4">
+        <div className="grid md:grid-cols-12 gap-4">
           {/* First Name */}
           <div className="col-span-6">
             <FormField

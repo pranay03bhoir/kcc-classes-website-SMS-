@@ -9,7 +9,7 @@ import AboutOurInstitution from "@/components/Home/AboutOurInstitution";
 import MeetOurToppers from "@/components/Home/MeetOurToppers";
 import HomePageSectionFive from "@/components/Home/HomePageSectionFive";
 import HomePageSectionSix from "@/components/Home/HomePageSectionSix";
-import Footer from "@/components/Home/Footer";
+import Footer from "@/components/Footer/Footer";
 
 const HomePage = () => {
   return (
