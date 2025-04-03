@@ -1,20 +1,9 @@
 "use client";
+
 import { useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -24,189 +13,250 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-// Define validation schema using meaningful names
-const formSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email format"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  course: z.string().min(1, "Please select a course"),
-  message: z.string().optional(),
-});
-
-const GetInTouchForm = () => {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      course: "",
-      message: "",
-    },
+const RegistrationForm = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+    gender: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    pin: "",
+    currentClass: "",
+    school: "",
+    subjects: [],
+    batch: "",
+    additionalInfo: "",
+    agree: false,
   });
 
-  function onSubmit(values) {
-    console.log("Form submitted with values:", values);
-    toast.success("Form submitted successfully!");
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => {
+      if (type === "checkbox" && name === "subjects") {
+        return {
+          ...prev,
+          subjects: checked
+            ? [...prev.subjects, value]
+            : prev.subjects.filter((subj) => subj !== value),
+        };
+      }
+      return { ...prev, [name]: type === "checkbox" ? checked : value };
+    });
+  };
 
-    toast(() => (
-      <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4 text-white">
-        {JSON.stringify(values, null, 2)}
-      </pre>
-    ));
-  }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Form submitted:", formData);
+  };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 max-w-3xl mx-auto py-10 px-5 md:px-14 pt-16 border rounded-lg"
-      >
-        <div className="grid md:grid-cols-12 gap-4">
-          {/* First Name */}
-          <div className="col-span-6">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="First Name" type="text" {...field} />
-                  </FormControl>
-                  <FormDescription>Enter your first name.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg space-y-6"
+    >
+      <h2 className="text-2xl font-bold text-gray-800">Registration Form</h2>
 
-          {/* Last Name */}
-          <div className="col-span-6">
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Last Name" type="text" {...field} />
-                  </FormControl>
-                  <FormDescription>Enter your last name.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+      {/* Student Information */}
+      <div>
+        <h3 className="text-lg font-semibold text-purple-700">
+          1️⃣ Student Information
+        </h3>
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <Input
+            name="firstName"
+            placeholder="First Name*"
+            onChange={handleChange}
+          />
+          <Input
+            name="lastName"
+            placeholder="Last Name*"
+            onChange={handleChange}
+          />
         </div>
+        <div className="grid md:grid-cols-2 gap-4 mt-2">
+          <Input
+            type="date"
+            name="dob"
+            placeholder="Date of birth"
+            onChange={handleChange}
+            className={`flex justify-center items-center md:justify-start`}
+          />
+          <Select
+            name="gender"
+            onValueChange={(value) =>
+              setFormData({ ...formData, gender: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Male">Male</SelectItem>
+              <SelectItem value="Female">Female</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        {/* Email */}
-        <FormField
-          control={form.control}
+      {/* Contact Information */}
+      <div>
+        <h3 className="text-lg font-semibold text-purple-700">
+          2️⃣ Contact Information
+        </h3>
+        <Input
+          type="email"
           name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
-              </FormControl>
-              <FormDescription>Enter your email address.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+          placeholder="Email Address*"
+          onChange={handleChange}
         />
-
-        {/* Phone Number */}
-        <FormField
-          control={form.control}
+        <Input
+          type="tel"
           name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="Phone Number" type="number" {...field} />
-              </FormControl>
-              <FormDescription>Enter your phone number.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+          placeholder="Phone Number*"
+          className="mt-2"
+          onChange={handleChange}
         />
-
-        {/* Course Selection */}
-        <FormField
-          control={form.control}
-          name="course"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Choose Course</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a course" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Class 5">Class 5</SelectItem>
-                  <SelectItem value="Class 6">Class 6</SelectItem>
-                  <SelectItem value="Class 7">Class 7</SelectItem>
-                  <SelectItem value="Class 8">Class 8</SelectItem>
-                  <SelectItem value="Class 9">Class 9</SelectItem>
-                  <SelectItem value="Class 10">Class 10</SelectItem>
-                  <SelectItem value="Class 11 Commerce">
-                    Class 11 Commerce
-                  </SelectItem>
-                  <SelectItem value="Class 11 Science">
-                    Class 11 Science
-                  </SelectItem>
-                  <SelectItem value="Class 12 Commerce">
-                    Class 12 Commerce
-                  </SelectItem>
-                  <SelectItem value="Class 12 Science">
-                    Class 12 Science
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the course you are inquiring about.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+        <Input
+          type="text"
+          name="address"
+          placeholder="Address*"
+          className="mt-2"
+          onChange={handleChange}
         />
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <Input
+            type="text"
+            name="city"
+            placeholder="City*"
+            onChange={handleChange}
+          />
+          <Input
+            type="text"
+            name="pin"
+            placeholder="PIN Code*"
+            onChange={handleChange}
+          />
+        </div>
+      </div>
 
-        {/* Message */}
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Message</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Message"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>Write your message (optional).</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Submit Button */}
-        <Button
-          type={`submit`}
-          className={`w-full cursor-pointer bg-red-600 hover:bg-red-900`}
+      {/* Academic Information */}
+      <div>
+        <h3 className="text-lg font-semibold text-purple-700">
+          3️⃣ Academic Information
+        </h3>
+        <Select
+          name="currentClass"
+          onValueChange={(value) =>
+            setFormData({ ...formData, currentClass: value })
+          }
         >
-          Submit
-          <ToastContainer />
-        </Button>
-      </form>
-    </Form>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Class" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 8 }, (_, i) => i + 5).map((cls) => (
+              <SelectItem
+                key={cls}
+                value={`Class ${cls}`}
+              >{`Class ${cls}`}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          type="text"
+          name="school"
+          placeholder="Current School*"
+          className="mt-2"
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Course Selection */}
+      <div>
+        <h3 className="text-lg font-semibold text-purple-700">
+          4️⃣ Course Selection
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            "Mathematics",
+            "Science",
+            "Physics",
+            "Chemistry",
+            "Biology",
+            "Social Studies",
+            "English",
+            "Accountancy",
+            "Economics",
+            "Business Studies",
+          ].map((subject) => (
+            <label key={subject} className="flex items-center">
+              <Checkbox
+                name="subjects"
+                value={subject}
+                className="mr-2"
+                onChange={handleChange}
+              />{" "}
+              {subject}
+            </label>
+          ))}
+        </div>
+        <div className={`pt-7`}>
+          <Select
+            name="batch"
+            className="mt-10 "
+            onValueChange={(value) =>
+              setFormData({ ...formData, batch: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Preferred Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Morning">Morning</SelectItem>
+              <SelectItem value="Afternoon">Afternoon</SelectItem>
+              <SelectItem value="Evening">Evening</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Additional Information */}
+      <div>
+        <h3 className="text-lg font-semibold text-purple-700">
+          5️⃣ Additional Information
+        </h3>
+        <Textarea
+          name="additionalInfo"
+          placeholder="Any specific requirements or queries?"
+          className="mt-2"
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Terms and Submit */}
+      <div className="flex items-center">
+        <Checkbox name="agree" onChange={handleChange} className="mr-2" />
+        <span>
+          I agree to the{" "}
+          <a href="#" className="text-blue-600 underline">
+            Terms and Conditions
+          </a>{" "}
+          and{" "}
+          <a href="#" className="text-blue-600 underline">
+            Privacy Policy
+          </a>
+          *
+        </span>
+      </div>
+
+      <Button className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
+        Submit Registration →
+      </Button>
+    </form>
   );
 };
 
-export default GetInTouchForm;
+export default RegistrationForm;
