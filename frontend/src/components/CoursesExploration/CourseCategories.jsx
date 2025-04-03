@@ -70,7 +70,7 @@ export default function CourseCategories() {
             >
               {/* Card Header with Gradient */}
               <div
-                className={`p-6 text-white bg-gradient-to-r ${
+                className={`p-20 text-white text-center bg-gradient-to-r ${
                   course.color === "blue"
                     ? "from-blue-500 to-blue-600"
                     : course.color === "purple"
