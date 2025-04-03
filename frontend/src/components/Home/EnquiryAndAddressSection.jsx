@@ -51,7 +51,16 @@ const EnquiryAndAddressSection = () => {
                 </div>
               </div>
             </div>
-
+            {/* Map Section */}
+            <div className="w-full md:h-[50%] pb-[56.25%] relative r">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3774.4506010517784!2d73.32349977421386!3d18.911439057120024!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7fbd4d1d5054f%3A0xac3a244af5ef6108!2sKCC%20classes%20(Commerce%20%26%20Science%20classes)!5e0!3m2!1sen!2sin!4v1743678948294!5m2!1sen!2sin"
+                className="absolute top-0 left-0 w-full h-full border-0 rounded-3xl"
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
             {/* Business Hours */}
             <div className="bg-white shadow-lg rounded-lg p-6">
               <h2 className="text-xl font-bold mb-4">Business Hours</h2>
