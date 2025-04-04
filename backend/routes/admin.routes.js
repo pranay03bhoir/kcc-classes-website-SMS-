@@ -11,15 +11,15 @@ const {
   updateStudentsDetails,
   deleteStudent,
   deleteTeacher,
-  createCourse,
-  updateCourse,
-  getAllCourses,
-  deleteCourse,
-  enrollStudentInCourse,
-  removeStudentFromCourse,
-  getStudentsByCourse,
-  addTeacherToCourse,
-  removeTeacherFromCourse,
+  createSubject,
+  updateSubject,
+  getAllSubjects,
+  deleteSubject,
+  enrollStudentInSubject,
+  removeStudentFromSubject,
+  getStudentsBySubject,
+  addTeacherToSubject,
+  removeTeacherFromSubject,
   markStudentAttendance,
   getAttendanceRecords,
   getStudentByAttendance,
@@ -27,7 +27,7 @@ const {
   addGradesToStudent,
   updateStudentScore,
   getStudentScore,
-  getScoresForCourse,
+  getScoresForSubject,
   createBatch,
   addStudentToBatch,
   addTeacherToBatch,
@@ -46,7 +46,12 @@ router.post("/login", adminLogin);
 router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", adminLogout);
 router.get("/students", loginAuth, adminAuth, getAllStudents);
-router.get("/students/courses/:id", loginAuth, adminAuth, getStudentsByCourse);
+router.get(
+  "/students/subjects/:id",
+  loginAuth,
+  adminAuth,
+  getStudentsBySubject,
+);
 router.get("/teachers", loginAuth, adminAuth, getAllTeachers);
 router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
 router.get("/teachers/:id", loginAuth, adminAuth, getTeachersById);
@@ -54,33 +59,33 @@ router.put("/teachers/update/:id", loginAuth, adminAuth, updateTeachersDetails);
 router.put("/students/:id", loginAuth, adminAuth, updateStudentsDetails);
 router.delete("/teachers/:id", loginAuth, adminAuth, deleteTeacher);
 router.delete("/students/:id", loginAuth, adminAuth, deleteStudent);
-router.post("/courses", createCourse);
-router.put("/courses/:id", loginAuth, adminAuth, updateCourse);
-router.get("/courses", loginAuth, adminAuth, getAllCourses);
-router.delete("/courses/:id", loginAuth, adminAuth, deleteCourse);
+router.post("/subjects", createSubject);
+router.put("/subjects/:id", loginAuth, adminAuth, updateSubject);
+router.get("/subjects", loginAuth, adminAuth, getAllSubjects);
+router.delete("/subjects/:id", loginAuth, adminAuth, deleteSubject);
 router.put(
-  "/courses/add/students/:studentId",
+  "/subjects/add/students/:studentId",
   loginAuth,
   adminAuth,
-  enrollStudentInCourse,
+  enrollStudentInSubject,
 );
 router.put(
-  "/courses/add/teachers/:teacherId",
+  "/subjects/add/teachers/:teacherId",
   loginAuth,
   adminAuth,
-  addTeacherToCourse,
+  addTeacherToSubject,
 );
 router.put(
-  "/courses/students/:id",
+  "/subjects/students/:id",
   loginAuth,
   adminAuth,
-  removeStudentFromCourse,
+  removeStudentFromSubject,
 );
 router.put(
-  "/courses/teachers/:id",
+  "/subjects/teachers/:id",
   loginAuth,
   adminAuth,
-  removeTeacherFromCourse,
+  removeTeacherFromSubject,
 );
 router.post(
   "/students/attendance",
@@ -98,7 +103,7 @@ router.get(
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
 router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
 router.put(
-  "/scores/students/:studentId/:courseId/:examType",
+  "/scores/students/:studentId/:subjectId/:examType",
   loginAuth,
   adminAuth,
   updateStudentScore,
@@ -110,10 +115,10 @@ router.get(
   getStudentScore,
 );
 router.get(
-  "/scores/courses/:courseId",
+  "/scores/subjects/:subjectId",
   loginAuth,
   adminAuth,
-  getScoresForCourse,
+  getScoresForSubject,
 );
 router.post("/batch", createBatch);
 router.post("/add/student/batch/:id", addStudentToBatch);
