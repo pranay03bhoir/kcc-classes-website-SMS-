@@ -12,7 +12,7 @@ const teacherSchema = new mongoose.Schema(
     role: { type: String, default: "teacher" },
     isVerified: { type: Boolean, default: false },
     profileImage: { type: String, default: "" },
-    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+    subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
     refreshToken: { type: String, default: "" },
     joiningYear: { type: Number, required: true },
     batches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Batch" }],
