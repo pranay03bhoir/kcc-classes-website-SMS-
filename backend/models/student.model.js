@@ -12,8 +12,9 @@ const studentSchema = new mongoose.Schema(
     currentStd: { type: String, default: "" },
     role: { type: String, default: "student" },
     isVerified: { type: Boolean, default: false },
+    isAdmitted: { type: Boolean, default: false },
     profileImage: { type: String, default: "" }, // Stored in AWS S3
-    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+    subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
     batches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Batch" }],
     attendance: [
       {
