@@ -6,7 +6,7 @@ const {
   studentLogin,
   updateStudentProfile,
   studentLogout,
-  getStudentCourses,
+  getStudentSubjects,
   generateNewRefreshAccessToken,
 } = require("../controllers/student.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware.js");
@@ -19,5 +19,5 @@ router.post("/login", studentLogin);
 router.post("/refresh", generateNewRefreshAccessToken);
 router.post("/logout", studentLogout);
 router.put("/update", loginAuth, updateStudentProfile);
-router.get("/get/courses", loginAuth, getStudentCourses);
+router.get("/get/Subjects", loginAuth, getStudentSubjects);
 module.exports = router;
