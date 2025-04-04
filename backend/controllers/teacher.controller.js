@@ -267,9 +267,9 @@ const teacherLogout = async (req, res) => {
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
-      .select("name email contact parentsContact address courses attendance")
-      .populate("courses", "name")
-      .populate("attendance", "course status date");
+      .select("name email contact parentsContact address subjects attendance")
+      .populate("subjects", "name")
+      .populate("attendance", "subject status date");
     if (students.length === 0) {
       return res.status(404).json({
         success: false,
@@ -294,9 +294,9 @@ const getStudentById = async (req, res) => {
   try {
     const { studentId } = req.params;
     const student = await Student.findById(studentId)
-      .select("name email contact parentsContact address courses attendance")
-      .populate("courses", "name")
-      .populate("attendance", "course status date");
+      .select("name email contact parentsContact address subjects attendance")
+      .populate("subjects", "name")
+      .populate("attendance", "subject status date");
     if (student) {
       return res.status(200).json({
         success: true,
@@ -320,7 +320,7 @@ const getStudentById = async (req, res) => {
 // ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
-    const { student, course, status } = req.body;
+    const { student, subject, status } = req.body;
 
     const studentExists = await Student.findById(student);
     if (!studentExists) {
@@ -333,17 +333,17 @@ const addStudentAttendance = async (req, res) => {
     // ✅ Create new attendance record
     const attendance = new Attendance({
       student,
-      course,
+      subject,
       status,
     });
     const existingAttendance = await Attendance.findOne({
       student,
-      course,
+      subject,
     });
     if (existingAttendance) {
       return res.status(400).json({
         success: false,
-        message: "Attendance already exists for this course",
+        message: "Attendance already exists for this subject",
       });
     }
     await attendance.save();
@@ -355,8 +355,8 @@ const addStudentAttendance = async (req, res) => {
       },
       { new: true, runValidators: true },
     )
-      .select("name email contact parentsContact address courses attendance")
-      .populate("attendance", "student course status date");
+      .select("name email contact parentsContact address subjects attendance")
+      .populate("attendance", "student subject status date");
 
     res.status(200).json({
       success: true,
@@ -419,9 +419,9 @@ const updateStudentAttendance = async (req, res) => {
 const getAllAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find({})
-      .select("student course status date")
+      .select("student subject status date")
       .populate("student", "name email")
-      .populate("course", "name");
+      .populate("subject", "name");
     if (attendance.length === 0) {
       return res.status(404).json({
         success: false,
@@ -452,8 +452,8 @@ const getAttendanceForStudent = async (req, res) => {
       });
     }
     const attendance = await Attendance.find({ student: studentId })
-      .select("course status date")
-      .populate("course", "name");
+      .select("subject status date")
+      .populate("subject", "name");
     if (attendance.length === 0) {
       return res.status(404).json({
         success: false,
@@ -475,34 +475,34 @@ const getAttendanceForStudent = async (req, res) => {
 };
 const addStudentScores = async (req, res) => {
   try {
-    const { studentId, course, examType, score } = req.body;
+    const { studentId, subject, examType, score } = req.body;
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({
         success: false,
         message: "Student not found",
       });
-    } else if (!student.courses.includes(course)) {
+    } else if (!student.subjects.includes(subject)) {
       return res.status(404).json({
         success: false,
-        message: "Student not enrolled in this course",
+        message: "Student not enrolled in this subject",
       });
     } else {
       const existingScore = await Score.findOne({
         studentId: studentId,
-        course: course,
+        subject: subject,
         examType: examType,
       });
 
       if (existingScore) {
         return res.status(400).json({
           success: false,
-          message: "Score already exists for this exam type and course",
+          message: "Score already exists for this exam type and subject",
         });
       }
       const studentScore = new Score({
         studentId: studentId,
-        course,
+        subject,
         examType,
         score,
       });
@@ -514,8 +514,8 @@ const addStudentScores = async (req, res) => {
         },
         { new: true, runValidators: true },
       )
-        .select("name email contact parentsContact address courses scores")
-        .populate("courses", "name");
+        .select("name email contact parentsContact address subjects scores")
+        .populate("subjects", "name");
 
       if (!updateStudentScore) {
         return res.status(400).json({
@@ -562,8 +562,8 @@ const updateStudentScores = async (req, res) => {
         },
         { new: true, runValidators: true },
       )
-        .select("studentId course examType score date")
-        .populate("course", "name")
+        .select("studentId subject examType score date")
+        .populate("subject", "name")
         .populate("studentId", "name ");
       if (!updateScore) {
         return res.status(400).json({
