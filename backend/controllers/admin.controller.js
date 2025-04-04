@@ -1,7 +1,7 @@
 const Admin = require("../models/admin.model");
 const Student = require("../models/student.model");
 const Teacher = require("../models/teacher.model");
-const Course = require("../models/course.model");
+const Subject = require("../models/subject.model");
 const Attendance = require("../models/attendance.model");
 const Score = require("../models/score.model");
 const Batch = require("../models/batch.model");
@@ -198,7 +198,7 @@ const adminLogout = async (req, res) => {
 };
 const getAllStudents = async (req, res) => {
   try {
-    const students = await Student.find({}).populate("courses");
+    const students = await Student.find({}).populate("subjects");
     if (!students) {
       res.status(404).json({
         success: false,
@@ -219,10 +219,10 @@ const getAllStudents = async (req, res) => {
     });
   }
 };
-const getStudentsByCourse = async (req, res) => {
+const getStudentsBySubject = async (req, res) => {
   try {
-    const { id: courseId } = req.params;
-    const students = await Student.find({ courses: courseId });
+    const { id: subjectId } = req.params;
+    const students = await Student.find({ subjects: subjectId });
     if (!students) {
       res.status(404).json({
         success: false,
@@ -373,7 +373,7 @@ const updateStudentsDetails = async (req, res) => {
       password,
       contact,
       address,
-      courses,
+      subjects,
       attendance,
       scores,
     } = req.body;
@@ -387,7 +387,7 @@ const updateStudentsDetails = async (req, res) => {
         password: hashedPassword,
         contact: contact,
         address: address,
-        courses: courses,
+        subjects: subjects,
         attendance: attendance,
         scores: scores,
       },
@@ -458,22 +458,22 @@ const deleteStudent = async (req, res) => {
     });
   }
 };
-const createCourse = async (req, res) => {
+const createSubject = async (req, res) => {
   try {
     const { name, code, teachers, students } = req.body;
-    const existingCourse = await Course.findOne({
+    const existingSubject = await Subject.findOne({
       $or: [{ name: name }, { code: code }],
     });
     if (
-      existingCourse &&
-      (existingCourse.name === name || existingCourse.code === code)
+      existingSubject &&
+      (existingSubject.name === name || existingSubject.code === code)
     ) {
       res.status(400).json({
         success: false,
-        message: "Course already exists",
+        message: "Subject already exists",
       });
     } else {
-      const course = new Course({
+      const subject = new Subject({
         name,
         code,
         teachers,
@@ -484,7 +484,7 @@ const createCourse = async (req, res) => {
           _id: { $in: students },
         },
         {
-          $addToSet: { courses: course },
+          $addToSet: { subjects: subject },
         },
       );
       const teacher = await Teacher.updateMany(
@@ -492,13 +492,13 @@ const createCourse = async (req, res) => {
           _id: { $in: teachers },
         },
         {
-          $addToSet: { courses: course },
+          $addToSet: { subjects: subject },
         },
       );
-      await course.save();
+      await subject.save();
       res.status(200).json({
         success: true,
-        message: "Course added successfully",
+        message: "Subject added successfully",
       });
     }
   } catch (e) {
@@ -509,15 +509,15 @@ const createCourse = async (req, res) => {
     });
   }
 };
-const updateCourse = async (req, res) => {
+const updateSubject = async (req, res) => {
   try {
     let { name, code, teachers, students } = req.body;
-    const courseId = req.params.id;
+    const subjectId = req.params.id;
     if (!Array.isArray(students)) {
       students = [...students];
     }
-    const course = await Course.findByIdAndUpdate(
-      courseId,
+    const subject = await Subject.findByIdAndUpdate(
+      subjectId,
       {
         name: name,
         code: code,
@@ -531,24 +531,24 @@ const updateCourse = async (req, res) => {
     const student = await Student.updateMany(
       { _id: { $in: students } },
       {
-        $addToSet: { courses: course },
+        $addToSet: { subjects: subject },
       },
       { new: true },
     );
     if (student.modifiedCount === 0) {
       console.log("no students were updated");
     } else {
-      console.log("courses added to students");
+      console.log("subjects added to students");
     }
-    if (!course) {
+    if (!subject) {
       res.status(404).json({
         success: false,
-        message: "Course not found",
+        message: "Subject not found",
       });
     } else {
       res.status(200).json({
         success: true,
-        message: "Course updated successfully",
+        message: "Subject updated successfully",
       });
     }
   } catch (e) {
@@ -559,19 +559,19 @@ const updateCourse = async (req, res) => {
     });
   }
 };
-const getAllCourses = async (req, res) => {
+const getAllSubjects = async (req, res) => {
   try {
-    const courses = await Course.find({});
-    if (!courses) {
+    const subjects = await Subject.find({});
+    if (!subjects) {
       res.status(404).json({
         success: false,
-        message: "Courses not found, Please add new course",
+        message: "Subjects not found, Please add new subject",
       });
     } else {
       res.status(200).json({
         success: true,
-        message: "Courses found successfully",
-        courses: courses,
+        message: "Subjects found successfully",
+        subjects: subjects,
       });
     }
   } catch (e) {
@@ -582,9 +582,9 @@ const getAllCourses = async (req, res) => {
     });
   }
 };
-const deleteCourse = async (req, res) => {
+const deleteSubject = async (req, res) => {
   try {
-    const { id: courseId } = req.params;
+    const { id: subjectId } = req.params;
     let { studentIds, teacherIds } = req.body; // Expect studentIds & teacherIds in req.body
 
     // Ensure studentIds and teacherIds are arrays
@@ -595,30 +595,30 @@ const deleteCourse = async (req, res) => {
     //   });
     // }
 
-    // Delete the course
-    const course = await Course.findByIdAndDelete(courseId);
-    if (!course) {
+    // Delete the subject
+    const subject = await Subject.findByIdAndDelete(subjectId);
+    if (!subject) {
       return res.status(404).json({
         success: false,
-        message: "Course not found",
+        message: "Subject not found",
       });
     }
 
-    // Remove courseId from students
+    // Remove subjectId from students
     await Student.updateMany(
       { _id: { $in: studentIds } },
-      { $pull: { courses: courseId } },
+      { $pull: { subjects: subjectId } },
     );
 
-    // Remove courseId from teachers
+    // Remove subjectId from teachers
     await Teacher.updateMany(
       { _id: { $in: teacherIds } },
-      { $pull: { courses: courseId } },
+      { $pull: { subjects: subjectId } },
     );
 
     res.status(200).json({
       success: true,
-      message: "Course deleted successfully",
+      message: "Subject deleted successfully",
     });
   } catch (e) {
     console.error(e);
@@ -628,10 +628,10 @@ const deleteCourse = async (req, res) => {
     });
   }
 };
-const enrollStudentInCourse = async (req, res) => {
+const enrollStudentInSubject = async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { courses } = req.body;
+    const { subjects } = req.body;
     const existingStudent = await Student.findById(studentId);
     if (!existingStudent) {
       return res.status(404).json({
@@ -639,26 +639,32 @@ const enrollStudentInCourse = async (req, res) => {
         message: "Student not found.",
       });
     }
+    const hasStudentTakenAdmission = await Student.findById(studentId);
+    if (!hasStudentTakenAdmission.isAdmitted) {
+      return res.status(400).json({
+        success: false,
+        message: "Student has not taken admission.",
+      });
+    }
+    const subjectsArray = Array.isArray(subjects) ? subjects : [subjects];
 
-    const coursesArray = Array.isArray(courses) ? courses : [courses];
-
-    const isAlreadyEnrolled = coursesArray.some((course) =>
-      existingStudent.courses
+    const isAlreadyEnrolled = subjectsArray.some((subject) =>
+      existingStudent.subjects
         .map((c) => c.toString())
-        .includes(course.toString()),
+        .includes(subject.toString()),
     );
 
     if (isAlreadyEnrolled) {
       return res.status(400).json({
         success: false,
-        message: "Student already enrolled in the course",
+        message: "Student already enrolled in the subject",
       });
     }
 
     const student = await Student.findByIdAndUpdate(
       studentId,
       {
-        $addToSet: { courses: { $each: coursesArray } },
+        $addToSet: { subjects: { $each: subjectsArray } },
       },
       { new: true, runValidators: true },
     );
@@ -676,10 +682,10 @@ const enrollStudentInCourse = async (req, res) => {
     });
   }
 };
-const addTeacherToCourse = async (req, res) => {
+const addTeacherToSubject = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const { courses } = req.body;
+    const { subjects } = req.body;
     const existingTeacher = await Teacher.findById(teacherId);
     if (!existingTeacher) {
       return res.status(404).json({
@@ -687,29 +693,29 @@ const addTeacherToCourse = async (req, res) => {
         message: "Teacher not found",
       });
     } else {
-      const courseArray = Array.isArray(courses) ? courses : [courses];
+      const subjectArray = Array.isArray(subjects) ? subjects : [subjects];
 
-      const isAlreadyAdded = courseArray.some((course) =>
-        existingTeacher.courses
+      const isAlreadyAdded = subjectArray.some((subject) =>
+        existingTeacher.subjects
           .map((c) => c.toString())
-          .includes(course.toString()),
+          .includes(subject.toString()),
       );
       if (isAlreadyAdded) {
         return res.status(400).json({
           success: false,
-          message: "Teacher already added in the course",
+          message: "Teacher already added in the subject",
         });
       } else {
         const teacher = await Teacher.findByIdAndUpdate(
           teacherId,
           {
-            $addToSet: { courses: { $each: courseArray } },
+            $addToSet: { subjects: { $each: subjectArray } },
           },
           { new: true, runValidators: true },
         );
         return res.status(200).json({
           success: true,
-          message: "Teacher added to course successfully",
+          message: "Teacher added to subject successfully",
           teacher,
         });
       }
@@ -722,33 +728,33 @@ const addTeacherToCourse = async (req, res) => {
     });
   }
 };
-const removeStudentFromCourse = async (req, res) => {
+const removeStudentFromSubject = async (req, res) => {
   try {
-    const { id: courseId } = req.params;
+    const { id: subjectId } = req.params;
     const { studentIds } = req.body;
-    const course = await Course.findByIdAndUpdate(
-      courseId,
+    const subject = await Subject.findByIdAndUpdate(
+      subjectId,
       {
         $pull: { students: { $in: studentIds } },
       },
       { new: true },
     );
-    if (!course) {
+    if (!subject) {
       return res.status(404).json({
         success: false,
-        message: "Course not found",
+        message: "Subject not found",
       });
     } else {
       const students = await Student.updateMany(
         {
           _id: { $in: studentIds },
         },
-        { $pull: { courses: courseId } },
+        { $pull: { subjects: subjectId } },
         { new: true },
       ).lean();
       res.status(200).json({
         success: true,
-        message: "Students removed from course successfully",
+        message: "Students removed from subject successfully",
         students,
       });
     }
@@ -760,12 +766,12 @@ const removeStudentFromCourse = async (req, res) => {
     });
   }
 };
-const removeTeacherFromCourse = async (req, res) => {
+const removeTeacherFromSubject = async (req, res) => {
   try {
-    const { id: courseId } = req.params;
+    const { id: subjectId } = req.params;
     const { teacherIds } = req.body;
-    const teacher = await Course.findByIdAndUpdate(
-      courseId,
+    const teacher = await Subject.findByIdAndUpdate(
+      subjectId,
       {
         $pull: { teachers: { $in: teacherIds } },
       },
@@ -780,7 +786,7 @@ const removeTeacherFromCourse = async (req, res) => {
       const teachers = await Teacher.updateMany(
         { _id: { $in: teacherIds } },
         {
-          $pull: { courses: courseId },
+          $pull: { subjects: subjectId },
         },
         { new: true },
       );
@@ -792,7 +798,7 @@ const removeTeacherFromCourse = async (req, res) => {
       } else {
         res.status(200).json({
           success: true,
-          message: "Teacher removed from course successfully",
+          message: "Teacher removed from subject successfully",
         });
       }
     }
@@ -806,10 +812,10 @@ const removeTeacherFromCourse = async (req, res) => {
 };
 const markStudentAttendance = async (req, res) => {
   try {
-    const { student, course, status } = req.body;
+    const { student, subject, status } = req.body;
     const attendance = new Attendance({
       student,
-      course,
+      subject,
       status,
     });
     const studentAttendance = await Student.findByIdAndUpdate(
@@ -920,13 +926,14 @@ const getAttendanceByDate = async (req, res) => {
 };
 const addGradesToStudent = async (req, res) => {
   try {
-    const { studentId, course, examType, score } = req.body;
+    const { studentId, subject, examType, score } = req.body;
 
     // Validate input
-    if (!studentId || !course || !examType || score === undefined) {
+    if (!studentId || !subject || !examType || score === undefined) {
       return res.status(400).json({
         success: false,
-        message: "All fields (studentId, course, examType, score) are required",
+        message:
+          "All fields (studentId, subject, examType, score) are required",
       });
     }
 
@@ -938,18 +945,18 @@ const addGradesToStudent = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    // Check if student is enrolled in the given course
-    if (!student.courses.includes(course)) {
+    // Check if student is enrolled in the given subject
+    if (!student.subjects.includes(subject)) {
       return res.status(400).json({
         success: false,
-        message: "Student is not enrolled in this course",
+        message: "Student is not enrolled in this subject",
       });
     }
 
     // Add the score to the student's scores array
     const addScores = new Score({
       studentId,
-      course,
+      subject,
       examType,
       score,
     });
@@ -977,16 +984,16 @@ const addGradesToStudent = async (req, res) => {
 };
 const updateStudentScore = async (req, res) => {
   try {
-    const { studentId, courseId, examType } = req.params;
+    const { studentId, subjectId, examType } = req.params;
     const { score } = req.body;
 
     if (
       !mongoose.Types.ObjectId.isValid(studentId) ||
-      !mongoose.Types.ObjectId.isValid(courseId)
+      !mongoose.Types.ObjectId.isValid(subjectId)
     ) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid student or course ID" });
+        .json({ success: false, message: "Invalid student or subject ID" });
     }
 
     const student = await Student.findById(studentId);
@@ -1004,7 +1011,7 @@ const updateStudentScore = async (req, res) => {
     }
 
     const updatedScore = await Score.findOneAndUpdate(
-      { studentId, course: courseId, examType },
+      { studentId, subject: subjectId, examType },
       { $set: { score, updatedAt: Date.now() } },
       { new: true, upsert: true },
     );
@@ -1032,7 +1039,10 @@ const getStudentScore = async (req, res) => {
         message: "Student not found",
       });
     } else {
-      const scores = await Score.find({ studentId }).populate("course", "name");
+      const scores = await Score.find({ studentId }).populate(
+        "subject",
+        "name",
+      );
       if (!scores || scores.length === 0) {
         return res.status(404).json({
           success: false,
@@ -1055,21 +1065,21 @@ const getStudentScore = async (req, res) => {
     });
   }
 };
-const getScoresForCourse = async (req, res) => {
+const getScoresForSubject = async (req, res) => {
   try {
-    const { courseId } = req.params;
-    const scores = await Score.find({ course: courseId })
-      .populate("course", "name")
+    const { subjectId } = req.params;
+    const scores = await Score.find({ subject: subjectId })
+      .populate("subject", "name")
       .populate("studentId", "name");
     if (!scores || scores.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No scores found for course",
+        message: "No scores found for subject",
       });
     } else {
       return res.status(200).json({
         success: true,
-        message: "Course score found successfully",
+        message: "Subject score found successfully",
         scores,
       });
     }
@@ -1083,12 +1093,12 @@ const getScoresForCourse = async (req, res) => {
 };
 const createBatch = async (req, res) => {
   try {
-    const { name, classStd, timings, courseId } = req.body;
+    const { name, classStd, timings, subjectId } = req.body;
     const batch = new Batch({
       name,
       classStd,
       timings,
-      courseId,
+      subjectId,
     });
     await batch.save();
     if (!batch) {
@@ -1133,10 +1143,10 @@ const addStudentToBatch = async (req, res) => {
         message: "Batch not found",
       });
     }
-    if (!existingStudent.courses.includes(batchExists.courseId)) {
+    if (!existingStudent.subjects.includes(batchExists.subjectId)) {
       return res.status(400).json({
         success: false,
-        message: `Student is not enrolled in the course for batch ${batchExists.batchId}`,
+        message: `Student is not enrolled in the subject for batch ${batchExists.batchId}`,
       });
     }
     if (existingStudent.batches.includes(batchId)) {
@@ -1204,21 +1214,23 @@ const addTeacherToBatch = async (req, res) => {
         message: "Batch not found",
       });
     }
-    const course = await Course.findById(batch.courseId);
-    if (!course) {
+    const subject = await Subject.findById(batch.subjectId);
+    if (!subject) {
       return res.status(404).json({
         success: false,
-        message: "Course not found",
+        message: "Subject not found",
       });
     }
-    const teacherTeachesCourse = existingTeacher.courses.includes(course._id);
-    if (!teacherTeachesCourse) {
+    const teacherTeachesSubject = existingTeacher.subjects.includes(
+      subject._id,
+    );
+    if (!teacherTeachesSubject) {
       return res.status(400).json({
         success: false,
-        message: `${existingTeacher.name} does not teach for the course ${course.name}`,
+        message: `${existingTeacher.name} does not teach for the subject ${subject.name}`,
       });
     }
-    const addTeacherInCourse = await Batch.findByIdAndUpdate(
+    const addTeacherInSubject = await Batch.findByIdAndUpdate(
       batchId,
       existingTeacher,
       {
@@ -1226,8 +1238,8 @@ const addTeacherToBatch = async (req, res) => {
         runValidators: true,
       },
     );
-    await addTeacherInCourse.save();
-    if (!addTeacherInCourse) {
+    await addTeacherInSubject.save();
+    if (!addTeacherInSubject) {
       return res.status(400).json({
         success: false,
         message: "Teacher not added to batch",
@@ -1365,7 +1377,7 @@ module.exports = {
   generateNewRefreshAccessToken,
   adminLogout,
   getAllStudents,
-  getStudentsByCourse,
+  getStudentsBySubject,
   getAllTeachers,
   getStudentsById,
   getTeachersById,
@@ -1373,14 +1385,14 @@ module.exports = {
   updateStudentsDetails,
   deleteTeacher,
   deleteStudent,
-  createCourse,
-  updateCourse,
-  getAllCourses,
-  deleteCourse,
-  enrollStudentInCourse,
-  removeStudentFromCourse,
-  addTeacherToCourse,
-  removeTeacherFromCourse,
+  createSubject,
+  updateSubject,
+  getAllSubjects,
+  deleteSubject,
+  enrollStudentInSubject,
+  removeStudentFromSubject,
+  addTeacherToSubject,
+  removeTeacherFromSubject,
   markStudentAttendance,
   getAttendanceRecords,
   getStudentByAttendance,
@@ -1388,7 +1400,7 @@ module.exports = {
   addGradesToStudent,
   updateStudentScore,
   getStudentScore,
-  getScoresForCourse,
+  getScoresForSubject,
   createBatch,
   addStudentToBatch,
   addTeacherToBatch,
