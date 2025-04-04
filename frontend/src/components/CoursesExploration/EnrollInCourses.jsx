@@ -50,7 +50,7 @@ const EnrollInCourses = () => {
       </motion.p>
 
       <motion.div
-        className="grid grid-cols-3 md:flex md:flex-row justify-center gap-2 pt-10 py-12 px-3"
+        className="  grid grid-cols-3 md:flex md:flex-row justify-center items-center gap-2 pt-10 py-12 md:px-0 px-10 w-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.5 }}
@@ -65,7 +65,7 @@ const EnrollInCourses = () => {
             <motion.button
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.08 }}
-              className="rounded-full bg-red-50 transition-colors hover:bg-red-100 md:h-12 md:w-36 text-black"
+              className=" rounded-full p-3 text-md md:text-lg bg-red-50 transition-colors hover:bg-red-100 md:h-12 md:w-36 text-black"
             >
               {course.title}
             </motion.button>
