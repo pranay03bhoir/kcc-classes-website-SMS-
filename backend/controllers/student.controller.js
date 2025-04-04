@@ -366,12 +366,12 @@ const updateStudentProfile = async (req, res) => {
     });
   }
 };
-const getStudentCourses = async (req, res) => {
+const getStudentSubjects = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select("name email")
-      .populate("courses", "name description");
+      .populate("subjects", "name description");
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -399,5 +399,5 @@ module.exports = {
   generateNewRefreshAccessToken,
   studentLogout,
   updateStudentProfile,
-  getStudentCourses,
+  getStudentSubjects,
 };
