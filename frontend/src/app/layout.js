@@ -17,7 +17,7 @@ const roboto = Roboto({
 });
 
 export const metadata = {
-  title: "KCC classes",
+  title: `KCC classes `,
   description: "The best tutoring classes in karjat",
 };
 
