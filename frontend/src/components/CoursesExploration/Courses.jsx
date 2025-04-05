@@ -4,6 +4,8 @@ import CoursesSectionOne from "@/components/CoursesExploration/CoursesSectionOne
 import Navbar from "@/components/NavigationBar/NavBar";
 import CourseCategories from "@/components/CoursesExploration/CourseCategories";
 import EnrollInCourses from "@/components/CoursesExploration/EnrollInCourses";
+import MiddleSchoolProgram from "@/components/CoursesExploration/MiddleSchoolProgram";
+import HighSchoolProgram from "@/components/CoursesExploration/HighSchoolProgram";
 
 const Courses = () => {
   return (
@@ -19,6 +21,12 @@ const Courses = () => {
       </div>
       <div className="pt-16">
         <EnrollInCourses />
+      </div>
+      <div className="pt-16">
+        <MiddleSchoolProgram />
+      </div>
+      <div className="pt-16">
+        <HighSchoolProgram />
       </div>
     </div>
   );
