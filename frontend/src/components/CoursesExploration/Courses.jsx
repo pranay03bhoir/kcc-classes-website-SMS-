@@ -6,6 +6,11 @@ import CourseCategories from "@/components/CoursesExploration/CourseCategories";
 import EnrollInCourses from "@/components/CoursesExploration/EnrollInCourses";
 import MiddleSchoolProgram from "@/components/CoursesExploration/MiddleSchoolProgram";
 import HighSchoolProgram from "@/components/CoursesExploration/HighSchoolProgram";
+import HigherSecondaryProgram from "@/components/CoursesExploration/HigherSecondaryProgram";
+import TeachingMethodology from "@/components/CoursesExploration/TeachingMethodology";
+import EnquiryAndAddressSection from "@/components/Home/EnquiryAndAddressSection";
+import StudentEnroll from "@/components/CoursesExploration/StudentEnroll";
+import Footer from "@/components/Footer/Footer";
 
 const Courses = () => {
   return (
@@ -27,6 +32,18 @@ const Courses = () => {
       </div>
       <div className="pt-16">
         <HighSchoolProgram />
+      </div>
+      <div>
+        <HigherSecondaryProgram />
+      </div>
+      <div className="pt-16">
+        <TeachingMethodology />
+      </div>
+      <div className={`pt-16`}>
+        <StudentEnroll />
+      </div>
+      <div>
+        <Footer />
       </div>
     </div>
   );

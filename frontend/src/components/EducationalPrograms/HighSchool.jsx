@@ -1,9 +1,9 @@
 "use client";
-import { FaCheckCircle, FaCheck, FaArrowRight } from "react-icons/fa";
+import { FaCheck } from "react-icons/fa";
 import { MdScience } from "react-icons/md";
 import { GiOpenBook } from "react-icons/gi";
 import { motion } from "framer-motion";
-import { GithubIcon } from "lucide-react";
+import CourseProgram from "@/components/CoursesExploration/CourseProgramComponents/CoursePrograms";
 
 const fadeInVariant = {
   hidden: { opacity: 0, y: 50 },
@@ -107,14 +107,7 @@ const highSchoolProgramData = {
 };
 
 const HighSchool = () => {
-  const {
-    description,
-    curriculum,
-    keyFeatures,
-    whyChoose,
-    subjectOfferings,
-    classSchedule,
-  } = highSchoolProgramData;
+  const { subjectOfferings, classSchedule } = highSchoolProgramData;
 
   return (
     <motion.div
@@ -124,61 +117,13 @@ const HighSchool = () => {
       variants={containerVariant}
       className="p-6 grid md:grid-cols-2 md:gap-14"
     >
-      {/* Left Section */}
-      <motion.div variants={fadeInVariant}>
-        <p className="text-gray-700 mb-4">{description}</p>
-        <p className="text-gray-700 mb-6">{curriculum}</p>
-
-        {/* Key Features */}
-        <motion.div
-          variants={fadeInVariant}
-          className="bg-purple-100 p-4 rounded-lg border-l-4 border-purple-600 mb-6"
-        >
-          <h3 className="text-purple-700 font-bold mb-3">
-            Key Program Features
-          </h3>
-          <ul className="space-y-2">
-            {keyFeatures.map((feature, index) => (
-              <motion.li
-                key={index}
-                variants={fadeInVariant}
-                className="flex items-center gap-2"
-              >
-                <FaCheckCircle className="text-purple-600" /> {feature}
-              </motion.li>
-            ))}
-          </ul>
-        </motion.div>
-
-        {/* Why Choose Section */}
-        <motion.h3 variants={fadeInVariant} className="text-xl font-bold mb-4">
-          Why Choose Our High School Program?
-        </motion.h3>
-        <motion.div
-          variants={fadeInVariant}
-          className="grid grid-cols-2 gap-4 mb-6"
-        >
-          {whyChoose.map((item, index) => (
-            <motion.div
-              key={index}
-              variants={fadeInVariant}
-              className="p-4 bg-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-            >
-              <h4 className="font-semibold">{item.title}</h4>
-              <p className="text-gray-700 text-sm">{item.desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Enroll Button */}
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          className="mt-6 col-span-2 w-fit bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors md:flex items-center gap-2 hidden"
-        >
-          Enroll in High School Program <FaArrowRight />
-        </motion.button>
-      </motion.div>
-
+      <CourseProgram
+        description={highSchoolProgramData.description}
+        curriculum={highSchoolProgramData.curriculum}
+        whyChoose={highSchoolProgramData.whyChoose}
+        keyFeatures={highSchoolProgramData.keyFeatures}
+        enrollButton={"High School"}
+      />
       {/* Right Section */}
       <motion.div variants={fadeInVariant}>
         {/* Subject Offerings */}

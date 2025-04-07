@@ -1,7 +1,7 @@
 import React from "react";
 import CustomHeading from "@/components/Heading/CustomHeading";
 import HighSchool from "@/components/EducationalPrograms/HighSchool";
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaGraduationCap } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const HighSchoolProgram = () => {

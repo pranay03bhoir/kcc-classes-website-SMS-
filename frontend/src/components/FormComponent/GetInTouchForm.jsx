@@ -77,13 +77,21 @@ const RegistrationForm = () => {
           />
         </div>
         <div className="grid md:grid-cols-2 gap-4 mt-2">
-          <Input
-            type="date"
-            name="dob"
-            placeholder="Date of birth"
-            onChange={handleChange}
-            className={`flex justify-center items-center md:justify-start`}
-          />
+          <div className="relative">
+            <label
+              htmlFor="dob"
+              className="absolute left-36 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400"
+            >
+              Date of Birth
+            </label>
+            <Input
+              type="date"
+              id="dob"
+              name="dob"
+              onChange={handleChange}
+              className="peer w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
           <Select
             name="gender"
             onValueChange={(value) =>
