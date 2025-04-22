@@ -41,7 +41,7 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false); // To toggle sidebar on mobile
+  const [isOpen, setIsOpen] = useState(true); // To toggle sidebar on mobile
 
   return (
     <aside
@@ -94,7 +94,7 @@ export default function Sidebar() {
       {/* Toggle Button for Mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={` lg:hidden fixed top-4 ${isOpen ? "left-50" : "left-4"} p-2 bg-gray-800 rounded-full shadow-lg duration-300`}
+        className={` fixed top-4 ${isOpen ? "left-50" : "left-4"} p-2 bg-gray-800 rounded-full shadow-lg duration-300`}
       >
         <span className="text-white">{isOpen ? <FaTimes /> : <FaBars />}</span>
       </button>

@@ -22,7 +22,6 @@ import {
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
 import api from "../../utils/axios";
 import { toast, ToastContainer } from "react-toastify";
-import { error } from "next/dist/build/output/log";
 
 const AdminCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -163,6 +162,9 @@ const AdminCourses = () => {
         student.name.toLowerCase().includes(studentSearch.toLowerCase()),
       )
     : [];
+  if (!courses) {
+    return <strong className={`text-2xl font-bold`}>Loading.....</strong>;
+  }
 
   return (
     <div>
@@ -382,6 +384,9 @@ const AdminCourses = () => {
           </Button>
         </div>
 
+        <div>
+          <h1 className={`text-4xl font-bold`}>Courses</h1>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
           {courses.length > 0 ? (
             courses.map((course, index) => (
