@@ -20,6 +20,9 @@ import {
   FaFire,
 } from "react-icons/fa";
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
+import api from "../../utils/axios";
+import { toast, ToastContainer } from "react-toastify";
+import { error } from "next/dist/build/output/log";
 
 const AdminCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -48,44 +51,23 @@ const AdminCourses = () => {
 
   useEffect(() => {
     // Example data initialization, ensuring arrays are not undefined
-    setCourses([
-      {
-        code: "MATH101",
-        name: "Mathematics",
-        description: "Algebra and Geometry basics",
-        category: "Middle School",
-        duration: "3 months",
-        classesPerWeek: 3,
-        gradeLevel: "9",
-        rating: 4.2,
-        isPopular: true,
-        imageUrl: "https://via.placeholder.com/150",
-        teachers: ["Teacher1"],
-        students: ["Student1"],
-      },
-      {
-        code: "SCI101",
-        name: "Science",
-        description: "Physics and Chemistry fundamentals",
-        category: "High School",
-        duration: "4 months",
-        classesPerWeek: 4,
-        gradeLevel: "10",
-        rating: 4.5,
-        isPopular: false,
-        imageUrl: "https://via.placeholder.com/150",
-        teachers: ["Teacher2"],
-        students: ["Student2"],
-      },
-    ]);
-    setTeachers([
-      { _id: "Teacher1", name: "Mr. Sharma" },
-      { _id: "Teacher2", name: "Ms. Rao" },
-    ]);
-    setStudents([
-      { _id: "Student1", name: "John Doe" },
-      { _id: "Student2", name: "Jane Smith" },
-    ]);
+    const fetchData = async () => {
+      try {
+        const [CourseResponse, TeacherResponse, StudentResponse] =
+          await Promise.all([
+            api.get("/subjects"),
+            api.get("/teachers"),
+            api.get("/students"),
+          ]);
+        setCourses(CourseResponse.data.subjects);
+        setTeachers(TeacherResponse.data.teachers);
+        setStudents(StudentResponse.data.students);
+      } catch (error) {
+        toast.error("Error fetching data", error);
+        console.log(error);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -94,36 +76,61 @@ const AdminCourses = () => {
   };
 
   const handleMultiSelectChange = (e) => {
-    const { name, options } = e.target;
-    const selectedOptions = Array.from(options)
-      .filter((option) => option.selected)
-      .map((option) => option.value);
-    setForm({ ...form, [name]: selectedOptions });
+    const { name, value, checked } = e.target;
+
+    setForm((prevForm) => {
+      const selected = prevForm[name] || [];
+
+      if (checked) {
+        // Add the value if checked
+        return {
+          ...prevForm,
+          [name]: [...selected, value],
+        };
+      } else {
+        // Remove the value if unchecked
+        return {
+          ...prevForm,
+          [name]: selected.filter((v) => v !== value),
+        };
+      }
+    });
   };
 
-  const handleAddOrUpdate = () => {
-    if (editingIndex !== null) {
-      const updatedCourses = [...courses];
-      updatedCourses[editingIndex] = form;
-      setCourses(updatedCourses);
-      setEditingIndex(null);
-    } else {
-      setCourses([...courses, form]);
+  const handleAddOrUpdate = async () => {
+    try {
+      if (editingIndex !== null) {
+        const updated = await api.put(`/subjects/${form._id}`, form);
+        const updatedCourses = [...courses];
+        updatedCourses[editingIndex] = updated.data;
+        setCourses(updatedCourses);
+        setEditingIndex(null);
+        toast.success(updated.message || "Course updated successfully");
+      } else {
+        const created = await api.post(`/subjects`, form);
+        setCourses([...courses, created.data]);
+        if (created.data) {
+          toast.success(created.message || "Course created successfully");
+        }
+      }
+      setForm({
+        code: "",
+        name: "",
+        description: "",
+        category: "",
+        duration: "",
+        classesPerWeek: "",
+        gradeLevel: "",
+        rating: 0,
+        isPopular: false,
+        imageUrl: "",
+        teachers: [],
+        students: [],
+      });
+    } catch (e) {
+      toast.error("Error saving course", e);
+      console.error(e);
     }
-    setForm({
-      code: "",
-      name: "",
-      description: "",
-      category: "",
-      duration: "",
-      classesPerWeek: "",
-      gradeLevel: "",
-      rating: 0,
-      isPopular: false,
-      imageUrl: "",
-      teachers: [],
-      students: [],
-    });
   };
 
   const handleEdit = (index) => {
@@ -133,63 +140,100 @@ const AdminCourses = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (index) => {
-    const filtered = courses.filter((_, i) => i !== index);
-    setCourses(filtered);
+  const handleDelete = async (index) => {
+    try {
+      const courseToDelete = courses[index];
+      await api.delete(`/subjects/${courseToDelete._id}`);
+      setCourses(courses.filter((_, i) => i !== index));
+      toast.success("Course deleted successfully");
+    } catch (e) {
+      toast.error("Error deleting course", e);
+      console.log(e);
+    }
   };
 
   // Filtered teachers and students based on search input
-  const filteredTeachers = teachers.filter((teacher) =>
-    teacher.name.toLowerCase().includes(teacherSearch.toLowerCase()),
-  );
-  const filteredStudents = students.filter((student) =>
-    student.name.toLowerCase().includes(studentSearch.toLowerCase()),
-  );
+  const filteredTeachers = Array.isArray(teachers)
+    ? teachers.filter((teacher) =>
+        teacher.name.toLowerCase().includes(teacherSearch.toLowerCase()),
+      )
+    : [];
+  const filteredStudents = Array.isArray(students)
+    ? students?.filter((student) =>
+        student.name.toLowerCase().includes(studentSearch.toLowerCase()),
+      )
+    : [];
 
   return (
-    <div className="flex">
-      <div className="w-64 h-screen fixed border-r bg-gray-100">
+    <div>
+      <ToastContainer position={`top-center`} />
+      <div className="md:w-64 h-screen fixed border-r bg-gray-100">
         <Sidebar />
       </div>
 
-      <div className="flex-1 ml-64 p-6 space-y-6 bg-gray-50 min-h-screen">
+      <div className="flex-1 md:ml-64 ml-2 p-6 space-y-6 bg-gray-50 min-h-screen">
         <h2 className="text-3xl font-bold flex items-center gap-2">
           <FaBookOpen className="text-blue-600" /> Manage Courses
         </h2>
 
         <div className="bg-white p-6 rounded-xl shadow space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-xl shadow">
-            <Input
-              name="code"
-              value={form.code}
-              onChange={handleChange}
-              placeholder="Course Code (Unique)"
-            />
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Course Name"
-            />
-            <Input
-              name="duration"
-              value={form.duration}
-              onChange={handleChange}
-              placeholder="Duration (e.g. 3 months)"
-            />
-            <Input
-              type="number"
-              name="classesPerWeek"
-              value={form.classesPerWeek}
-              onChange={handleChange}
-              placeholder="Classes per Week"
-            />
-            <Input
-              name="gradeLevel"
-              value={form.gradeLevel}
-              onChange={handleChange}
-              placeholder="Grade Level"
-            />
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Course Code
+              </label>
+              <Input
+                name="code"
+                value={form.code}
+                onChange={handleChange}
+                placeholder="Course Code (Unique)"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Course Name
+              </label>
+              <Input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Course Name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Duration
+              </label>
+              <Input
+                name="duration"
+                value={form.duration}
+                onChange={handleChange}
+                placeholder="Duration (e.g. 3 months)"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Classes per Week
+              </label>
+              <Input
+                type="number"
+                name="classesPerWeek"
+                value={form.classesPerWeek}
+                onChange={handleChange}
+                placeholder="Classes per Week"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Grade Level
+              </label>
+              <Input
+                name="gradeLevel"
+                value={form.gradeLevel}
+                onChange={handleChange}
+                placeholder="Grade Level"
+              />
+            </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700">
@@ -204,8 +248,8 @@ const AdminCourses = () => {
                 <option value="">Select Category</option>
                 <option value="Middle School">Middle School</option>
                 <option value="High School">High School</option>
-                <option value="Science">Science</option>
-                <option value="Commerce">Commerce</option>
+                <option value="Science">Science Stream</option>
+                <option value="Commerce">Commerce Stream</option>
               </select>
             </div>
 
@@ -220,13 +264,17 @@ const AdminCourses = () => {
                 placeholder="Course Description"
               />
             </div>
-
-            <Input
-              name="imageUrl"
-              value={form.imageUrl}
-              onChange={handleChange}
-              placeholder="Image URL (optional)"
-            />
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Image URL
+              </label>
+              <Input
+                name="imageUrl"
+                value={form.imageUrl}
+                onChange={handleChange}
+                placeholder="Image URL (optional)"
+              />
+            </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700">
@@ -334,7 +382,7 @@ const AdminCourses = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
           {courses.length > 0 ? (
             courses.map((course, index) => (
               <Card
@@ -387,18 +435,29 @@ const AdminCourses = () => {
                         <FaFire className="inline mr-1" /> Popular Course
                       </p>
                     )}
-                    {course.teachers.length > 0 && (
-                      <p className="text-sm flex items-center gap-1 text-gray-500">
-                        <FaChalkboardTeacher /> Teachers:{" "}
-                        {course.teachers.join(", ")}
-                      </p>
-                    )}
-                    {course.students.length > 0 && (
-                      <p className="text-sm flex items-center gap-1 text-gray-500">
-                        <FaUserGraduate /> Students:{" "}
-                        {course.students.join(", ")}
-                      </p>
-                    )}
+                    {Array.isArray(course.teachers) &&
+                      course.teachers.length > 0 && (
+                        <p className="text-sm flex items-center gap-1 text-gray-500">
+                          <FaChalkboardTeacher /> Teachers:{" "}
+                          {course.teachers
+                            .slice(0, 5)
+                            .map((teacher) => teacher.name)
+                            .join(", ")}
+                          {course.teachers.length > 5 ? "...." : ""}
+                        </p>
+                      )}
+
+                    {Array.isArray(course.students) &&
+                      course.students.length > 0 && (
+                        <p className="text-sm flex items-center gap-1 text-gray-500">
+                          <FaUserGraduate /> Students:{" "}
+                          {course.students
+                            .slice(0, 5)
+                            .map((student) => student.name)
+                            .join(", ")}
+                          {course.students.length > 5 ? "...." : ""}
+                        </p>
+                      )}
                   </div>
 
                   <div className="flex gap-2">

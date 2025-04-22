@@ -9,7 +9,12 @@ const subjectSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["Middle School", "High School", "Science", "Commerce"],
+      enum: [
+        "Middle School",
+        "High School",
+        "Science Stream",
+        "Commerce Stream",
+      ],
       required: true,
     },
     duration: {

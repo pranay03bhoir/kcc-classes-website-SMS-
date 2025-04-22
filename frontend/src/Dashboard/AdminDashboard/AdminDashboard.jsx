@@ -74,11 +74,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-64 bg-gray-100 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 md:ml-64 lg-2 bg-gray-100 p-6 space-y-6 overflow-y-auto">
         <h2 className="text-2xl font-bold">Admin Dashboard</h2>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center">
           <AdminSummaryCard
             icon={<FaUserGraduate />}
             label="Total Students"

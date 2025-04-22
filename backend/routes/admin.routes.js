@@ -45,14 +45,14 @@ router.post("/register", adminRegister);
 router.post("/login", adminLogin);
 router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", adminLogout);
-router.get("/students", loginAuth, adminAuth, getAllStudents);
+router.get("/students", getAllStudents);
 router.get(
   "/students/subjects/:id",
   loginAuth,
   adminAuth,
   getStudentsBySubject,
 );
-router.get("/teachers", loginAuth, adminAuth, getAllTeachers);
+router.get("/teachers", getAllTeachers);
 router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
 router.get("/teachers/:id", loginAuth, adminAuth, getTeachersById);
 router.put("/teachers/update/:id", loginAuth, adminAuth, updateTeachersDetails);
@@ -60,9 +60,9 @@ router.put("/students/:id", loginAuth, adminAuth, updateStudentsDetails);
 router.delete("/teachers/:id", loginAuth, adminAuth, deleteTeacher);
 router.delete("/students/:id", loginAuth, adminAuth, deleteStudent);
 router.post("/subjects", createSubject);
-router.put("/subjects/:id", loginAuth, adminAuth, updateSubject);
-router.get("/subjects", loginAuth, adminAuth, getAllSubjects);
-router.delete("/subjects/:id", loginAuth, adminAuth, deleteSubject);
+router.put("/subjects/:id", updateSubject);
+router.get("/subjects", getAllSubjects);
+router.delete("/subjects/:id", deleteSubject);
 router.put(
   "/subjects/add/students/:studentId",
   loginAuth,

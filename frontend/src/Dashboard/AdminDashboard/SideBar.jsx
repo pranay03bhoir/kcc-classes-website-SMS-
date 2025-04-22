@@ -1,5 +1,3 @@
-// app/components/admin/Sidebar.jsx
-
 "use client";
 
 import Link from "next/link";
@@ -12,9 +10,12 @@ import {
   FaClipboardCheck,
   FaChartBar,
   FaCog,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/admindashboard", icon: <FaHome /> },
@@ -40,41 +41,63 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false); // To toggle sidebar on mobile
 
   return (
-    <aside className="h-screen w-64 bg-gray-900 text-white flex flex-col justify-between">
+    <aside
+      className={`h-screen ${isOpen ? "w-64" : "w-2"} bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out`}
+    >
       <div className="px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
-        <nav className="space-y-2">
+        <h1
+          className={`text-2xl font-bold mb-6 transition-all duration-300 ${
+            isOpen ? "block" : "hidden"
+          }`}
+        >
+          Admin Panel
+        </h1>
+        <nav className={`space-y-2 ${isOpen ? "block" : "hidden"}`}>
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition hover:bg-gray-800 ${
+              className={`flex items-center gap-5 px-4 py-2 rounded-lg transition hover:bg-gray-800 ${
                 pathname === item.href ? "bg-gray-800" : ""
               }`}
+              onClick={() => setIsOpen(false)}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className={`text-lg`}>{item.icon}</span>
+              <span className={`${isOpen ? "block" : "hidden"}`}>
+                {item.label}
+              </span>
             </Link>
           ))}
         </nav>
       </div>
 
-      <div className="px-4 py-6 border-t border-gray-800">
-        <Card className="bg-gray-800 p-4 flex items-center gap-3">
+      <div
+        className={`px-4 py-6 border-t border-gray-800 ${isOpen ? "block" : "hidden"}`}
+      >
+        <Card className={`bg-gray-800 p-4 flex items-center gap-3`}>
           <img
             src="https://api.dicebear.com/6.x/adventurer/svg?seed=admin"
             alt="Admin"
-            className="w-10 h-10 rounded-full"
+            className={`w-10 h-10 rounded-full `}
           />
-          <div className={`space-y-2 text-center`}>
+          <div className={`space-y-2 text-center `}>
             <p className="text-sm font-medium text-white">Admin User</p>
             <p className="text-xs text-gray-400">admin@tutoracademy.com</p>
-            <Button className={`bg-red-500 hover:bg-red-800`}>Logout</Button>
           </div>
+          <Button className={`bg-red-500 hover:bg-red-800`}>Logout</Button>
         </Card>
       </div>
+
+      {/* Toggle Button for Mobile */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={` lg:hidden fixed top-4 ${isOpen ? "left-50" : "left-4"} p-2 bg-gray-800 rounded-full shadow-lg duration-300`}
+      >
+        <span className="text-white">{isOpen ? <FaTimes /> : <FaBars />}</span>
+      </button>
     </aside>
   );
 }

@@ -460,7 +460,20 @@ const deleteStudent = async (req, res) => {
 };
 const createSubject = async (req, res) => {
   try {
-    const { name, code, teachers, students } = req.body;
+    const {
+      name,
+      code,
+      category,
+      duration,
+      classesPerWeek,
+      gradeLevel,
+      rating,
+      isPopular,
+      description,
+      imageUrl,
+      teachers,
+      students,
+    } = req.body;
     const existingSubject = await Subject.findOne({
       $or: [{ name: name }, { code: code }],
     });
@@ -476,6 +489,14 @@ const createSubject = async (req, res) => {
       const subject = new Subject({
         name,
         code,
+        category,
+        duration,
+        classesPerWeek,
+        gradeLevel,
+        rating,
+        isPopular,
+        description,
+        imageUrl,
         teachers,
         students,
       });
@@ -511,7 +532,20 @@ const createSubject = async (req, res) => {
 };
 const updateSubject = async (req, res) => {
   try {
-    let { name, code, teachers, students } = req.body;
+    let {
+      name,
+      code,
+      category,
+      duration,
+      classesPerWeek,
+      gradeLevel,
+      rating,
+      isPopular,
+      description,
+      imageUrl,
+      teachers,
+      students,
+    } = req.body;
     const subjectId = req.params.id;
     if (!Array.isArray(students)) {
       students = [...students];
@@ -519,8 +553,16 @@ const updateSubject = async (req, res) => {
     const subject = await Subject.findByIdAndUpdate(
       subjectId,
       {
-        name: name,
-        code: code,
+        name,
+        code,
+        category,
+        duration,
+        classesPerWeek,
+        gradeLevel,
+        rating,
+        isPopular,
+        description,
+        imageUrl,
         $addToSet: {
           teachers: { $each: teachers },
           students: { $each: students },
@@ -561,7 +603,10 @@ const updateSubject = async (req, res) => {
 };
 const getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find({});
+    const subjects = await Subject.find({}).populate(
+      "students",
+      "name studentId",
+    );
     if (!subjects) {
       res.status(404).json({
         success: false,
