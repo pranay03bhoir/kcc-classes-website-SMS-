@@ -11,6 +11,7 @@ import {
   FaUserGraduate,
   FaUsers,
 } from "react-icons/fa";
+import AdminSummaryCard from "./components/AdminSummaryCard";
 import { toast, ToastContainer } from "react-toastify";
 import {
   Bar,
@@ -20,17 +21,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const AdminSummaryCard = ({ icon, label, value }) => (
-  <Card className="shadow-md rounded-2xl p-4 flex items-center gap-4">
-    <div className="text-2xl text-blue-600">{icon}</div>
-    <CardContent className="p-0">
-      <p className="text-sm text-gray-500">{label}</p>
-      <h3 className="text-xl font-bold">{value}</h3>
-    </CardContent>
-  </Card>
-);
-
+import { Progress } from "@/components/ui/progress";
 export default function AdminDashboard() {
   // const [summary, setSummary] = useState(null);
   const [studentCount, setStudentCount] = useState([]);
@@ -98,31 +89,69 @@ export default function AdminDashboard() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center">
-          <AdminSummaryCard
-            icon={<FaUserGraduate />}
-            label="Total Students"
-            value={studentCount}
-          />
-          <AdminSummaryCard
-            icon={<FaChalkboardTeacher />}
-            label="Total Teachers"
-            value={teacherCount}
-          />
-          <AdminSummaryCard
-            icon={<FaBook />}
-            label="Total Subjects"
-            value={subjectCount}
-          />
-          <AdminSummaryCard
-            icon={<FaUsers />}
-            label="Total Batches"
-            value={`${studentCount + teacherCount}`}
-          />
-          <AdminSummaryCard
-            icon={<FaCalendarAlt />}
-            label="Attendance Records"
-            value={"1000+"}
-          />
+          <div>
+            <AdminSummaryCard
+              icon={<FaUserGraduate />}
+              label="Total Students"
+              value={studentCount}
+            />
+            <div className={`px-10 pt-2`}>
+              <Progress value={studentCount} className="bg-red-200">
+                <div className="bg-blue-600 h-full" style={{ width: "70%" }} />
+              </Progress>
+            </div>
+          </div>
+          <div>
+            <AdminSummaryCard
+              icon={<FaChalkboardTeacher />}
+              label="Total Teachers"
+              value={teacherCount}
+            />
+            <div className={`px-10 pt-2`}>
+              <Progress value={teacherCount} className="bg-red-200">
+                <div className="bg-blue-600 h-full" style={{ width: "70%" }} />
+              </Progress>
+            </div>
+          </div>
+          <div>
+            <AdminSummaryCard
+              icon={<FaBook />}
+              label="Total Subjects"
+              value={subjectCount}
+            />
+            <div className={`px-10 pt-2`}>
+              <Progress value={subjectCount} className="bg-red-200">
+                <div className="bg-blue-600 h-full" style={{ width: "70%" }} />
+              </Progress>
+            </div>
+          </div>
+          <div>
+            <AdminSummaryCard
+              icon={<FaUsers />}
+              label="Total Batches"
+              value={`${studentCount + teacherCount}`}
+            />
+            <div className={`px-10 pt-2`}>
+              <Progress
+                value={studentCount + teacherCount}
+                className="bg-red-200"
+              >
+                <div className="bg-blue-600 h-full" style={{ width: "70%" }} />
+              </Progress>
+            </div>
+          </div>
+          <div>
+            <AdminSummaryCard
+              icon={<FaCalendarAlt />}
+              label="Attendance Records"
+              value={"1000+"}
+            />
+            <div className={`px-10 pt-2`}>
+              <Progress value={1000} className="bg-red-200">
+                <div className="bg-blue-600 h-full" style={{ width: "70%" }} />
+              </Progress>
+            </div>
+          </div>
         </div>
 
         {/* Attendance Chart */}
