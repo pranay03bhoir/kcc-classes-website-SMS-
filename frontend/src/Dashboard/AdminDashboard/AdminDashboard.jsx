@@ -1,44 +1,25 @@
 "use client";
 
+import { Card, CardContent } from "@/components/ui/card";
+import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
+import api from "@/utils/axios";
 import { useEffect, useState } from "react";
 import {
-  FaUserGraduate,
-  FaChalkboardTeacher,
   FaBook,
-  FaUsers,
   FaCalendarAlt,
+  FaChalkboardTeacher,
+  FaUserGraduate,
+  FaUsers,
 } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
-
-const mockFetchSummary = () =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        students: 80,
-        teachers: 15,
-        subjects: 10,
-        batches: 5,
-        attendanceRecords: 2300,
-        attendanceChart: [
-          { date: "Apr 01", count: 150 },
-          { date: "Apr 02", count: 160 },
-          { date: "Apr 03", count: 170 },
-          { date: "Apr 04", count: 145 },
-          { date: "Apr 05", count: 180 },
-        ],
-      });
-    }, 500);
-  });
 
 const AdminSummaryCard = ({ icon, label, value }) => (
   <Card className="shadow-md rounded-2xl p-4 flex items-center gap-4">
@@ -51,8 +32,45 @@ const AdminSummaryCard = ({ icon, label, value }) => (
 );
 
 export default function AdminDashboard() {
-  const [summary, setSummary] = useState(null);
-  const router = useRouter();
+  // const [summary, setSummary] = useState(null);
+  const [studentCount, setStudentCount] = useState([]);
+  const [teacherCount, setTeacherCount] = useState([]);
+  const [subjectCount, setSubjectCount] = useState([]);
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const toastId = toast.loading("Loading data...");
+      try {
+        const [studentCountRes, teacherCountRes, subjectCountRes, studentsRes] =
+          await Promise.all([
+            api.get("/studentscount"),
+            api.get("/teacherscount"),
+            api.get("/subjectscount"),
+            api.get("/students"),
+          ]);
+        setStudentCount(studentCountRes?.data?.studentCount || 0);
+        setTeacherCount(teacherCountRes?.data?.teacherCount || 0);
+        setSubjectCount(subjectCountRes?.data?.subjectCount || 0);
+        setStudents(studentsRes?.data?.students || []);
+        toast.update(toastId, {
+          render: "Data loaded successfully",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      } catch (e) {
+        console.error("Dashboard fetch error:", e);
+        toast.update(toastId, {
+          render: "Error loading data",
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+    };
+    fetchData();
+  }, []);
 
   // --- Auth Guard (optional) --- //
   // useEffect(() => {
@@ -60,21 +78,22 @@ export default function AdminDashboard() {
   //   if (!token) router.push("/admin/login");
   // }, [router]);
 
-  useEffect(() => {
-    mockFetchSummary().then((data) => setSummary(data));
-  }, []);
+  // useEffect(() => {
+  //   fetchData().then((data) => setSummary(data));
+  // }, []);
 
-  if (!summary) return <p className="p-6">Loading dashboard...</p>;
+  // if (!summary) return <p className="p-6">Loading dashboard...</p>;
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
+      <ToastContainer position="top-center" />
       <div className="w-64 fixed h-full">
         <Sidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-64 lg-2 bg-gray-100 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 md:ml-64 lg-2 bg-gray-100 p-6 space-y-6">
         <h2 className="text-2xl font-bold">Admin Dashboard</h2>
 
         {/* Summary Cards */}
@@ -82,27 +101,27 @@ export default function AdminDashboard() {
           <AdminSummaryCard
             icon={<FaUserGraduate />}
             label="Total Students"
-            value={summary.students}
+            value={studentCount}
           />
           <AdminSummaryCard
             icon={<FaChalkboardTeacher />}
             label="Total Teachers"
-            value={summary.teachers}
+            value={teacherCount}
           />
           <AdminSummaryCard
             icon={<FaBook />}
             label="Total Subjects"
-            value={summary.subjects}
+            value={subjectCount}
           />
           <AdminSummaryCard
             icon={<FaUsers />}
             label="Total Batches"
-            value={summary.batches}
+            value={`${studentCount + teacherCount}`}
           />
           <AdminSummaryCard
             icon={<FaCalendarAlt />}
             label="Attendance Records"
-            value={summary.attendanceRecords}
+            value={"1000+"}
           />
         </div>
 
@@ -110,7 +129,7 @@ export default function AdminDashboard() {
         <Card className="p-4">
           <h3 className="text-lg font-semibold mb-4">Attendance Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={summary.attendanceChart}>
+            <BarChart data={studentCount}>
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
@@ -128,20 +147,23 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="px-4 py-2 border-b">Name</th>
                   <th className="px-4 py-2 border-b">Grade</th>
-                  <th className="px-4 py-2 border-b">Subject</th>
+                  <th className="px-4 py-2 border-b">Admission Year</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border-b">Ravi Patil</td>
-                  <td className="px-4 py-2 border-b">10</td>
-                  <td className="px-4 py-2 border-b">Math</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border-b">Sneha Joshi</td>
-                  <td className="px-4 py-2 border-b">9</td>
-                  <td className="px-4 py-2 border-b">Science</td>
-                </tr>
+                {students.map((student) => {
+                  return (
+                    <tr className="hover:bg-gray-50" key={student._id}>
+                      <td className="px-4 py-2 border-b">{student.name}</td>
+                      <td className="px-4 py-2 border-b">
+                        {student.currentStd}
+                      </td>
+                      <td className="px-4 py-2 border-b">
+                        {student.admissionYear}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </CardContent>

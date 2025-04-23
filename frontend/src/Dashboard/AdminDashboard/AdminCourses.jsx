@@ -1,27 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  FaPlus,
-  FaTrash,
-  FaEdit,
-  FaChalkboardTeacher,
-  FaBookOpen,
-  FaGraduationCap,
-  FaStar,
-  FaClock,
-  FaLayerGroup,
-  FaUserGraduate,
-  FaSearch,
-  FaFire,
-} from "react-icons/fa";
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
-import api from "../../utils/axios";
+import { useEffect, useState } from "react";
+import {
+  FaBookOpen,
+  FaChalkboardTeacher,
+  FaClock,
+  FaEdit,
+  FaFire,
+  FaGraduationCap,
+  FaLayerGroup,
+  FaPlus,
+  FaSearch,
+  FaStar,
+  FaTrash,
+  FaUserGraduate,
+} from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
+import api from "../../utils/axios";
 
 const AdminCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -51,6 +51,7 @@ const AdminCourses = () => {
   useEffect(() => {
     // Example data initialization, ensuring arrays are not undefined
     const fetchData = async () => {
+      const toastId = toast.loading("Loading data...");
       try {
         const [CourseResponse, TeacherResponse, StudentResponse] =
           await Promise.all([
@@ -61,8 +62,19 @@ const AdminCourses = () => {
         setCourses(CourseResponse.data.subjects);
         setTeachers(TeacherResponse.data.teachers);
         setStudents(StudentResponse.data.students);
+        toast.update(toastId, {
+          render: "Data loaded successfully",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } catch (error) {
-        toast.error("Error fetching data", error);
+        toast.update(toastId, {
+          render: "Error loading data",
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
         console.log(error);
       }
     };
@@ -104,13 +116,21 @@ const AdminCourses = () => {
         updatedCourses[editingIndex] = updated.data;
         setCourses(updatedCourses);
         setEditingIndex(null);
-        toast.success(updated.message || "Course updated successfully");
+        toast.success(updated.data.message || "Course updated successfully");
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       } else {
         const created = await api.post(`/subjects`, form);
         setCourses([...courses, created.data]);
         if (created.data) {
-          toast.success(created.message || "Course created successfully");
+          toast.success(created.data.message || "Course created successfully");
+        } else {
+          toast.error(created.data.message || "Course creation failed");
         }
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       }
       setForm({
         code: "",
@@ -154,12 +174,12 @@ const AdminCourses = () => {
   // Filtered teachers and students based on search input
   const filteredTeachers = Array.isArray(teachers)
     ? teachers.filter((teacher) =>
-        teacher.name.toLowerCase().includes(teacherSearch.toLowerCase()),
+        teacher.name.toLowerCase().includes(teacherSearch.toLowerCase())
       )
     : [];
   const filteredStudents = Array.isArray(students)
     ? students?.filter((student) =>
-        student.name.toLowerCase().includes(studentSearch.toLowerCase()),
+        student.name.toLowerCase().includes(studentSearch.toLowerCase())
       )
     : [];
   if (!courses) {
@@ -250,8 +270,8 @@ const AdminCourses = () => {
                 <option value="">Select Category</option>
                 <option value="Middle School">Middle School</option>
                 <option value="High School">High School</option>
-                <option value="Science">Science Stream</option>
-                <option value="Commerce">Commerce Stream</option>
+                <option value="Science Stream">Science Stream</option>
+                <option value="Commerce Stream">Commerce Stream</option>
               </select>
             </div>
 
