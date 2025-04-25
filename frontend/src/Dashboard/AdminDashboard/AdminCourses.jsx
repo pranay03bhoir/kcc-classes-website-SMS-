@@ -123,7 +123,7 @@ const AdminCourses = () => {
       } else {
         const created = await api.post(`/subjects`, form);
         setCourses([...courses, created.data]);
-        if (created.data) {
+        if (created.status === 200) {
           toast.success(created.data.message || "Course created successfully");
         } else {
           toast.error(created.data.message || "Course creation failed");
@@ -147,7 +147,11 @@ const AdminCourses = () => {
         students: [],
       });
     } catch (e) {
-      toast.error("Error saving course", e);
+      toast.error(
+        e?.created?.data?.message ||
+          e?.updated?.data?.message ||
+          "Error occurred"
+      );
       console.error(e);
     }
   };

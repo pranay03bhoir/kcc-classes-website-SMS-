@@ -8,6 +8,7 @@ const Batch = require("../models/batch.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { sendVerificationEmail } = require("../utils/email.js");
 const adminRegister = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -196,9 +197,187 @@ const adminLogout = async (req, res) => {
     });
   }
 };
+const createStudents = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      contact,
+      parentsContact,
+      address,
+      currentStd,
+      admissionYear,
+    } = req.body;
+    const existingStudent = await Student.findOne({ email: email });
+    if (existingStudent) {
+      return res.status(400).json({
+        success: false,
+        message: `Student with email ${email} already exists.Kindly login`,
+      });
+    } else {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const student = new Student({
+        name,
+        email,
+        password: hashedPassword,
+        contact,
+        parentsContact,
+        address,
+        currentStd,
+        admissionYear,
+      });
+      await student.save();
+      const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+      await sendVerificationEmail(student.email, token);
+      if (student) {
+        res.status(200).json({
+          success: true,
+          message:
+            "Student registered successfully, A link has been sent to your email for verification",
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Error registering",
+        });
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const updateStudentDetails = async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const {
+      name,
+      password,
+      contact,
+      parentsContact,
+      address,
+      profileImage,
+      admissionYear,
+    } = req.body;
+
+    // Fetch the current student record
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // Prepare the fields to update
+    const updateFields = {
+      name,
+      password,
+      contact,
+      parentsContact,
+      address,
+      profileImage,
+      admissionYear,
+    };
+
+    // If a new password is provided, check if it's different from the current password
+    if (password) {
+      const isSamePassword = await bcrypt.compare(password, student.password);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Please enter a new password",
+        });
+      }
+      const genSalt = await bcrypt.genSalt(10);
+      updateFields.password = await bcrypt.hash(password, genSalt);
+    }
+
+    // Update the student record with new data
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      updateFields,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Details updated successfully.",
+      data: updatedStudent,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
+// const removeStudent = async (req, res) => {
+//   try {
+//     const studentId = req.params.id;
+//     const student = await Student.findByIdAndDelete(studentId);
+//     if (!student) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Student not found",
+//       });
+//     }
+//     res.status(200).json({
+//       success: true,
+//       message: "Student deleted successfully",
+//     });
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({
+//       success: false,
+//       message: "Something went wrong",
+//     });
+//   }
+// };
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({}).populate("subjects");
+    if (!students) {
+      res.status(404).json({
+        success: false,
+        message: "No students found",
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Students found",
+        students: students,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const searchAStudent = async (req, res) => {
+  try {
+    const { searchQuery } = req.params;
+    const students = await Student.find({
+      $or: [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+        { studentId: { $regex: searchQuery, $options: "i" } },
+      ],
+    });
     if (!students) {
       res.status(404).json({
         success: false,
@@ -1187,12 +1366,15 @@ const getScoresForSubject = async (req, res) => {
 };
 const createBatch = async (req, res) => {
   try {
-    const { name, classStd, timings, subjectId } = req.body;
+    const { name, classStd, timings, subjectId, teacherId, studentIds } =
+      req.body;
     const batch = new Batch({
       name,
       classStd,
       timings,
       subjectId,
+      teacherId,
+      studentIds,
     });
     await batch.save();
     if (!batch) {
@@ -1205,6 +1387,32 @@ const createBatch = async (req, res) => {
         success: true,
         message: "Batch created successfully",
         batch,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getAllBatches = async (req, res) => {
+  try {
+    const batches = await Batch.find({}).populate(
+      "subjectId teacherId studentIds",
+      "name"
+    );
+    if (!batches) {
+      return res.status(404).json({
+        success: false,
+        message: "No batches found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Batches found successfully",
+        batches,
       });
     }
   } catch (e) {
@@ -1470,7 +1678,10 @@ module.exports = {
   adminLogin,
   generateNewRefreshAccessToken,
   adminLogout,
+  createStudents,
+  updateStudentDetails,
   getAllStudents,
+  searchAStudent,
   getStudentsBySubject,
   getAllTeachers,
   getStudentsById,
@@ -1499,6 +1710,7 @@ module.exports = {
   getStudentScore,
   getScoresForSubject,
   createBatch,
+  getAllBatches,
   addStudentToBatch,
   addTeacherToBatch,
   removeStudentFromBatch,

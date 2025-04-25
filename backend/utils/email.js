@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 
 const sendVerificationEmail = async (email, token) => {
   try {
-    const verificationURL = `http://localhost:5000/api/students/verify-email?token=${token}`;
+    const verificationURL = `http://localhost:5000/api/teachers/verify-email?token=${token}`;
 
     // Read HTML template
     let template = fs.readFileSync(

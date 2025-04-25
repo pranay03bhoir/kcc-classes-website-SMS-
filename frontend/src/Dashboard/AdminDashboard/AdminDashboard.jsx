@@ -35,9 +35,9 @@ export default function AdminDashboard() {
       try {
         const [studentCountRes, teacherCountRes, subjectCountRes, studentsRes] =
           await Promise.all([
-            api.get("/studentscount"),
-            api.get("/teacherscount"),
-            api.get("/subjectscount"),
+            api.get("/students-count"),
+            api.get("/teachers-count"),
+            api.get("/subjects-count"),
             api.get("/students"),
           ]);
         setStudentCount(studentCountRes?.data?.studentCount || 0);

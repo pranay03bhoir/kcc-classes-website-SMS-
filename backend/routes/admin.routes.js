@@ -36,6 +36,10 @@ const {
   countAllStudents,
   countAllTeachers,
   countAllSubjects,
+  getAllBatches,
+  createStudents,
+  updateStudentDetails,
+  searchAStudent,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -48,7 +52,10 @@ router.post("/register", adminRegister);
 router.post("/login", adminLogin);
 router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", adminLogout);
+router.post("/create/students", createStudents);
+router.put("/update/students/:id", updateStudentDetails);
 router.get("/students", getAllStudents);
+router.get("/search/students", searchAStudent);
 router.get(
   "/students/subjects/:id",
   loginAuth,
@@ -60,14 +67,14 @@ router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
 router.get("/teachers/:id", loginAuth, adminAuth, getTeachersById);
 router.put("/teachers/update/:id", loginAuth, adminAuth, updateTeachersDetails);
 router.put("/students/:id", loginAuth, adminAuth, updateStudentsDetails);
-router.delete("/teachers/:id", loginAuth, adminAuth, deleteTeacher);
-router.delete("/students/:id", loginAuth, adminAuth, deleteStudent);
-router.get("/studentscount", countAllStudents);
-router.get("/teacherscount", countAllTeachers);
+router.delete("delete/teachers/:id", loginAuth, adminAuth, deleteTeacher);
+router.delete("/delete/students/:id", deleteStudent);
+router.get("/students-count", countAllStudents);
+router.get("/teachers-count", countAllTeachers);
 router.post("/subjects", createSubject);
 router.put("/subjects/:id", updateSubject);
 router.get("/subjects", getAllSubjects);
-router.get("/subjectscount", countAllSubjects);
+router.get("/subjects-count", countAllSubjects);
 router.delete("/subjects/:id", deleteSubject);
 router.put(
   "/subjects/add/students/:studentId",
@@ -126,7 +133,8 @@ router.get(
   adminAuth,
   getScoresForSubject
 );
-router.post("/batch", createBatch);
+router.post("/batch/create", createBatch);
+router.get("/batches", getAllBatches);
 router.post("/add/student/batch/:id", addStudentToBatch);
 router.post("/add/teacher/batch/:id", addTeacherToBatch);
 router.delete("/remove/student/batch/:id", removeStudentFromBatch);

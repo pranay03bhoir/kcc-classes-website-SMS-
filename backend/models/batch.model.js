@@ -5,9 +5,9 @@ const batchSchema = new mongoose.Schema({
   name: { type: String, required: true },
   classStd: { type: String, required: true },
   timings: { type: String, required: true },
-  courseId: {
+  subjectId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Course",
+    ref: "Subject",
     required: true,
   },
   teacherId: {
