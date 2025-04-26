@@ -83,11 +83,22 @@ const StudentManagement = ({ students }) => {
         const updatedStudent = { ...formData };
         updatedStudent[editingIndex] = response.data;
         if (response.status === 200) {
-          toast.success(response.data.message);
+          toast.update(toastId, {
+            render: response.data.message,
+            type: "success",
+            isLoading: false,
+            autoClose: 2000,
+          });
         } else {
-          toast.error(response.data.message);
+          toast.update(toastId, {
+            render: response.data.message,
+            type: "error",
+            isLoading: false,
+            autoClose: 2000,
+          });
         }
       } else {
+        // Create a new student object from formData
         const newStudent = { ...formData };
 
         // Add the new student to the list (can also make an API call to store it)
@@ -132,7 +143,6 @@ const StudentManagement = ({ students }) => {
         error.response?.data?.message || "Error submitting student";
       toast.error(message);
     }
-    // Create a new student object from formData
   };
 
   // const handleUpdateStudentDetails = async () => {
