@@ -1,13 +1,14 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
 
 const BatchManagement = ({
   students,
@@ -102,7 +102,7 @@ const BatchManagement = ({
                 console.log(
                   "Update Batch Assignment",
                   selectedStudent,
-                  selectedBatch,
+                  selectedBatch
                 )
               }
             >
@@ -125,7 +125,8 @@ const BatchManagement = ({
           <Table className={`text-start`}>
             <TableHeader>
               <TableRow>
-                <TableHead>#</TableHead>
+                <TableHead>Sr.no</TableHead>
+                <TableHead>Batch ID</TableHead>
                 <TableHead>Batch</TableHead>
               </TableRow>
             </TableHeader>
@@ -137,7 +138,18 @@ const BatchManagement = ({
                   onClick={() => setSelectedBatch(b.name)}
                 >
                   <TableCell>{index + 1}</TableCell>
+                  <TableCell>{b.batchId}</TableCell>
                   <TableCell>{b.name}</TableCell>
+                  <TableCell>
+                    <Button className={`w-full`} variant="outline">
+                      Edit
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button className={`w-full`} variant={`destructive`}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

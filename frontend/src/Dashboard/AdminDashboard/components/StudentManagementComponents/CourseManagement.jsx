@@ -1,12 +1,13 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
 
 const CourseManagement = ({
   students,
@@ -84,7 +84,7 @@ const CourseManagement = ({
                 console.log(
                   "Remove from Course",
                   selectedStudent,
-                  selectedCourse,
+                  selectedCourse
                 )
               }
             >
@@ -99,7 +99,8 @@ const CourseManagement = ({
           <Table className={`text-start`}>
             <TableHeader>
               <TableRow>
-                <TableHead>#</TableHead>
+                <TableHead>Sr.no</TableHead>
+                <TableHead>Course Code</TableHead>
                 <TableHead>Course</TableHead>
               </TableRow>
             </TableHeader>
@@ -111,7 +112,18 @@ const CourseManagement = ({
                   onClick={() => setSelectedCourse(c.name)}
                 >
                   <TableCell>{index + 1}</TableCell>
+                  <TableCell>{c.code}</TableCell>
                   <TableCell>{c.name}</TableCell>
+                  <TableCell>
+                    <Button className={`w-full`} variant="outline">
+                      Edit
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button className={`w-full`} variant={`destructive`}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

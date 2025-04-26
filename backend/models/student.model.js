@@ -39,8 +39,10 @@ const studentSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
+
+studentSchema.index({ name: "text", email: "text", studentId: "text" });
 
 studentSchema.pre("save", async function (next) {
   if (!this.studentId) {
@@ -50,7 +52,7 @@ studentSchema.pre("save", async function (next) {
         name: `Student-${year}`,
       },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true, runValidators: true },
+      { new: true, upsert: true, runValidators: true }
     );
     this.studentId = `STU-${year}-${String(counter.seq).padStart(4, "0")}`;
   }

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea"; // For address
 import api from "@/utils/axios";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaEdit, FaPlus, FaTrashAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 const StudentManagement = ({ students }) => {
@@ -31,7 +31,11 @@ const StudentManagement = ({ students }) => {
     profileImage: "",
   });
   const [editingIndex, setEditingIndex] = useState(null);
-
+  const [searchedStudent, setSearchedStudent] = useState(students || []);
+  const [searchTerm, setSearchTerm] = useState("");
+  useEffect(() => {
+    setSearchedStudent(students || []);
+  }, [students]);
   // Handle changes to the form data
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,6 +112,13 @@ const StudentManagement = ({ students }) => {
           toast.update(toastId, {
             render: response.data.message,
             type: "success",
+            isLoading: false,
+            autoClose: 2000,
+          });
+        } else if (response.status === 400) {
+          toast.update(toastId, {
+            render: response.data.message,
+            type: "error",
             isLoading: false,
             autoClose: 2000,
           });
@@ -192,6 +203,62 @@ const StudentManagement = ({ students }) => {
     setEditingIndex(index);
     formRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" }); // Scroll to the top of the page
   };
+  const handleStudentSearch = async (searchTerm) => {
+    const trimmedSearchTerm = searchTerm.trim(); // always trim first
+    const toastId = toast.loading("Searching student...");
+
+    if (trimmedSearchTerm === "") {
+      // No API call when search bar is empty
+      setSearchedStudent(students || []);
+
+      toast.update(toastId, {
+        render: "Showing all students",
+        type: "info",
+        isLoading: false,
+        autoClose: 2000,
+      });
+
+      return;
+    }
+
+    try {
+      const response = await api.get(
+        `/search/students?searchQuery=${trimmedSearchTerm}`
+      );
+
+      setSearchedStudent(response.data.students || []);
+
+      toast.update(toastId, {
+        render: response.data.message,
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (error) {
+      console.error("Error searching student:", error);
+
+      const status = error.response?.status;
+      const message =
+        error.response?.data?.message || "Error searching student";
+
+      if (status === 404) {
+        setSearchedStudent([]);
+        toast.update(toastId, {
+          render: message,
+          type: "info",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      } else {
+        toast.update(toastId, {
+          render: message,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+    }
+  };
 
   const handleDeleteStudent = async (index) => {
     try {
@@ -212,6 +279,10 @@ const StudentManagement = ({ students }) => {
       const message = error.response?.data?.message || "Error deleting student";
       toast.error(message);
     }
+  };
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // Important: prevent page reload
+    handleStudentSearch(searchTerm); // Pass the current search term
   };
 
   return (
@@ -369,20 +440,32 @@ const StudentManagement = ({ students }) => {
 
       <CardContent className="py-4">
         <h2 className="text-lg font-semibold mb-2">All Students</h2>
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <Input
+            placeholder="Search by Student ID or Name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="mb-4 input"
+          />
+          <Button type="submit">Search</Button>
+        </form>
+
         <Table className="text-start w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>#</TableHead>
+              <TableHead>Sr.no</TableHead>
+              <TableHead>Student ID</TableHead>
               <TableHead>Name</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.map((student, index) => (
+            {searchedStudent.map((student, index) => (
               <TableRow
                 key={student.studentId}
                 className="hover:bg-gray-200 cursor-pointer transition-colors"
               >
                 <TableCell>{index + 1}</TableCell>
+                <TableCell>{student.studentId}</TableCell>
                 <TableCell>{student.name}</TableCell>
                 <TableCell>
                   <Button

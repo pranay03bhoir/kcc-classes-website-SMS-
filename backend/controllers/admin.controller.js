@@ -370,15 +370,22 @@ const getAllStudents = async (req, res) => {
 };
 const searchAStudent = async (req, res) => {
   try {
-    const { searchQuery } = req.params;
-    const students = await Student.find({
+    const { searchQuery } = req.query;
+    if (!searchQuery || searchQuery.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+    const matchedStudents = await Student.find({
       $or: [
-        { name: { $regex: searchQuery, $options: "i" } },
+        { $text: { $search: searchQuery } },
         { email: { $regex: searchQuery, $options: "i" } },
         { studentId: { $regex: searchQuery, $options: "i" } },
       ],
     });
-    if (!students) {
+
+    if (!matchedStudents.length) {
       res.status(404).json({
         success: false,
         message: "No students found",
@@ -387,7 +394,7 @@ const searchAStudent = async (req, res) => {
       res.status(200).json({
         success: true,
         message: "Students found",
-        students: students,
+        students: matchedStudents,
       });
     }
   } catch (e) {
@@ -398,6 +405,7 @@ const searchAStudent = async (req, res) => {
     });
   }
 };
+
 const getStudentsBySubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
