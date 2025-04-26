@@ -16,6 +16,7 @@ import api from "@/utils/axios";
 import { useEffect, useRef, useState } from "react";
 import { FaEdit, FaPlus, FaTrashAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
+import ViewModal from "../ViewModal"; // Import the modal component
 const StudentManagement = ({ students }) => {
   // Single state object to hold the form data
   const formRef = useRef(null);
@@ -32,6 +33,8 @@ const StudentManagement = ({ students }) => {
   });
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchedStudent, setSearchedStudent] = useState(students || []);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     setSearchedStudent(students || []);
@@ -285,6 +288,12 @@ const StudentManagement = ({ students }) => {
     handleStudentSearch(searchTerm); // Pass the current search term
   };
 
+  const handleViewStudent = (index) => {
+    // Handle view action here
+    setSelectedStudent(students[index]);
+    setIsModalOpen(true);
+  };
+
   return (
     <Card
       className="mb-4 shadow-lg hover:shadow-xl transition-shadow"
@@ -471,6 +480,15 @@ const StudentManagement = ({ students }) => {
                   <Button
                     variant="outline"
                     className="w-full"
+                    onClick={() => handleViewStudent(index)}
+                  >
+                    View
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    className="w-full"
                     onClick={() => {
                       // Handle edit action here
                       handleEditStudent(index);
@@ -494,6 +512,11 @@ const StudentManagement = ({ students }) => {
             ))}
           </TableBody>
         </Table>
+        <ViewModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          student={selectedStudent}
+        />
       </CardContent>
     </Card>
   );

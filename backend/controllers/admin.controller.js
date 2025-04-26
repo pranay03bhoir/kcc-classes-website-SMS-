@@ -277,27 +277,35 @@ const updateStudentDetails = async (req, res) => {
     }
 
     // Prepare the fields to update
-    const updateFields = {
-      name,
-      password,
-      contact,
-      parentsContact,
-      address,
-      profileImage,
-      admissionYear,
-    };
+    const updateFields = {};
 
-    // If a new password is provided, check if it's different from the current password
+    // Only update fields if they are provided in the request
+    if (name) updateFields.name = name;
+    if (contact) updateFields.contact = contact;
+    if (parentsContact) updateFields.parentsContact = parentsContact;
+    if (address) updateFields.address = address;
+    if (profileImage) updateFields.profileImage = profileImage;
+    if (admissionYear) updateFields.admissionYear = admissionYear;
+
+    // If a new password is provided, handle hashing it
     if (password) {
-      const isSamePassword = await bcrypt.compare(password, student.password);
-      if (isSamePassword) {
-        return res.status(400).json({
-          success: false,
-          message: "Please enter a new password",
-        });
+      // Check if the provided password is plain text (not already hashed)
+      if (password.length < 60) {
+        // A typical bcrypt hash is 60 characters long
+        const isSamePassword = await bcrypt.compare(password, student.password);
+        if (isSamePassword) {
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a new password",
+          });
+        }
+        // Hash the password if it's plain text
+        const genSalt = await bcrypt.genSalt(10);
+        updateFields.password = await bcrypt.hash(password, genSalt);
+      } else {
+        // If the password is already a hash (length > 60), do not hash again
+        updateFields.password = password;
       }
-      const genSalt = await bcrypt.genSalt(10);
-      updateFields.password = await bcrypt.hash(password, genSalt);
     }
 
     // Update the student record with new data
@@ -544,61 +552,61 @@ const updateTeachersDetails = async (req, res) => {
     });
   }
 };
-const updateStudentsDetails = async (req, res) => {
-  try {
-    const studentId = req.params.id;
-    const existingStudent = await Student.findById(studentId);
-    if (!existingStudent) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
-    }
-    const {
-      name,
-      email,
-      password,
-      contact,
-      address,
-      subjects,
-      attendance,
-      scores,
-    } = req.body;
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const student = await Student.findByIdAndUpdate(
-      studentId,
-      {
-        name: name,
-        email: email,
-        password: hashedPassword,
-        contact: contact,
-        address: address,
-        subjects: subjects,
-        attendance: attendance,
-        scores: scores,
-      },
-      { new: true, runValidators: true }
-    );
-    if (!student) {
-      res.status(404).json({
-        success: false,
-        message: "Student update failed",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "Student details updated",
-      });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
-  }
-};
+// const updateStudentsDetails = async (req, res) => {
+//   try {
+//     const studentId = req.params.id;
+//     const existingStudent = await Student.findById(studentId);
+//     if (!existingStudent) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Student not found",
+//       });
+//     }
+//     const {
+//       name,
+//       email,
+//       password,
+//       contact,
+//       address,
+//       subjects,
+//       attendance,
+//       scores,
+//     } = req.body;
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(password, salt);
+//     const student = await Student.findByIdAndUpdate(
+//       studentId,
+//       {
+//         name: name,
+//         email: email,
+//         password: hashedPassword,
+//         contact: contact,
+//         address: address,
+//         subjects: subjects,
+//         attendance: attendance,
+//         scores: scores,
+//       },
+//       { new: true, runValidators: true }
+//     );
+//     if (!student) {
+//       res.status(404).json({
+//         success: false,
+//         message: "Student update failed",
+//       });
+//     } else {
+//       res.status(200).json({
+//         success: true,
+//         message: "Student details updated",
+//       });
+//     }
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({
+//       success: false,
+//       message: "Something went wrong",
+//     });
+//   }
+// };
 const deleteTeacher = async (req, res) => {
   try {
     const teacherId = req.params.id;

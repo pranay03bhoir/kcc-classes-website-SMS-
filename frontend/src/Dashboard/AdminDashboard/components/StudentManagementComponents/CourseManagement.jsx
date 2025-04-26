@@ -116,12 +116,7 @@ const CourseManagement = ({
                   <TableCell>{c.name}</TableCell>
                   <TableCell>
                     <Button className={`w-full`} variant="outline">
-                      Edit
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Button className={`w-full`} variant={`destructive`}>
-                      Delete
+                      Add
                     </Button>
                   </TableCell>
                 </TableRow>
