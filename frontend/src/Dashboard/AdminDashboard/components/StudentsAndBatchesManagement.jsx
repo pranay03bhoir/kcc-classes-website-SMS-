@@ -13,10 +13,6 @@ const fadeIn = {
 };
 
 const StudentsAndBatchesManagement = ({ students, courses, batches }) => {
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedBatch, setSelectedBatch] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState("");
-  const [batchName, setBatchName] = useState("");
   const [activeTab, setActiveTab] = useState("students");
 
   return (
@@ -66,14 +62,7 @@ const StudentsAndBatchesManagement = ({ students, courses, batches }) => {
                 animate="visible"
                 exit="exit"
               >
-                <CourseManagement
-                  students={students}
-                  courses={courses}
-                  selectedStudent={selectedStudent}
-                  setSelectedStudent={setSelectedStudent}
-                  selectedCourse={selectedCourse}
-                  setSelectedCourse={setSelectedCourse}
-                />
+                <CourseManagement students={students} courses={courses} />
               </motion.div>
             </TabsContent>
           )}
@@ -87,16 +76,7 @@ const StudentsAndBatchesManagement = ({ students, courses, batches }) => {
                 animate="visible"
                 exit="exit"
               >
-                <BatchManagement
-                  students={students}
-                  batches={batches}
-                  selectedStudent={selectedStudent}
-                  setSelectedStudent={setSelectedStudent}
-                  selectedBatch={selectedBatch}
-                  setSelectedBatch={setSelectedBatch}
-                  batchName={batchName}
-                  setBatchName={setBatchName}
-                />
+                <BatchManagement students={students} batches={batches} />
               </motion.div>
             </TabsContent>
           )}

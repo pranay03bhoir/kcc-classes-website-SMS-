@@ -16,17 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useState } from "react";
 
-const CourseManagement = ({
-  students,
-  courses,
-  selectedStudent,
-  setSelectedStudent,
-  selectedCourse,
-  setSelectedCourse,
-}) => {
+const CourseManagement = ({ students, courses }) => {
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const handleAddStudentToCourse = (value) => {
+    setSelectedCourse(value);
+    console.log("Selected Course:", value);
+  };
   return (
-    <div>
+    <div className="dark:bg-gray-800 bg-white p-6 rounded-lg shadow-md">
       <Card className="mb-4 shadow-lg hover:shadow-xl transition-shadow">
         <CardContent className="space-y-4 py-4">
           <h2 className="text-xl font-semibold">Manage Student Courses</h2>
@@ -63,11 +63,7 @@ const CourseManagement = ({
             </SelectContent>
           </Select>
           <div className="flex gap-2 mt-4">
-            <Button
-              onClick={() =>
-                console.log("Add to course", selectedStudent, selectedCourse)
-              }
-            >
+            <Button onClick={() => handleAddStudentToCourse(courses.name)}>
               Add to Course
             </Button>
             <Button

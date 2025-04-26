@@ -8,7 +8,6 @@ const {
   getStudentsById,
   getTeachersById,
   updateTeachersDetails,
-  updateStudentsDetails,
   deleteStudent,
   deleteTeacher,
   createSubject,
@@ -66,7 +65,6 @@ router.get("/teachers", getAllTeachers);
 router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
 router.get("/teachers/:id", loginAuth, adminAuth, getTeachersById);
 router.put("/teachers/update/:id", loginAuth, adminAuth, updateTeachersDetails);
-router.put("/students/:id", loginAuth, adminAuth, updateStudentsDetails);
 router.delete("delete/teachers/:id", loginAuth, adminAuth, deleteTeacher);
 router.delete("/delete/students/:id", deleteStudent);
 router.get("/students-count", countAllStudents);

@@ -920,7 +920,7 @@ const deleteSubject = async (req, res) => {
 const enrollStudentInSubject = async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { subjects } = req.body;
+    const { subjects } = req.query;
     const existingStudent = await Student.findById(studentId);
     if (!existingStudent) {
       return res.status(404).json({
@@ -1703,7 +1703,6 @@ module.exports = {
   getStudentsById,
   getTeachersById,
   updateTeachersDetails,
-  updateStudentsDetails,
   countAllStudents,
   countAllTeachers,
   deleteTeacher,
