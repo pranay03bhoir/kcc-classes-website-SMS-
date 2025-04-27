@@ -958,6 +958,20 @@ const enrollStudentInSubject = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    const addStudentToSubject = await Subject.findByIdAndUpdate(
+      subjects,
+      {
+        $addToSet: { students: studentId },
+      },
+      { new: true, runValidators: true }
+    );
+    if (!addStudentToSubject) {
+      return res.status(404).json({
+        success: false,
+        message: "Subject not found",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Student enrolled successfully",
@@ -1020,11 +1034,12 @@ const addTeacherToSubject = async (req, res) => {
 const removeStudentFromSubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
-    const { studentIds } = req.body;
+    const { studentIds } = req.query;
+    const studentArray = Array.isArray(studentIds) ? studentIds : [studentIds];
     const subject = await Subject.findByIdAndUpdate(
       subjectId,
       {
-        $pull: { students: { $in: studentIds } },
+        $pull: { students: { $in: studentArray } },
       },
       { new: true }
     );

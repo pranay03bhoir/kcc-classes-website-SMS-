@@ -16,14 +16,88 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import api from "@/utils/axios";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const CourseManagement = ({ students, courses }) => {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
-  const handleAddStudentToCourse = (value) => {
-    setSelectedCourse(value);
-    console.log("Selected Course:", value);
+  const handleAddStudentToCourse = async (studentId, courseId) => {
+    const toastId = toast.loading("Adding student to course...");
+    try {
+      const response = await api.put(
+        `/subjects/add/students/${studentId}?subjects=${courseId}`
+      );
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: "Student added to course successfully",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setSelectedStudent("");
+        setSelectedCourse("");
+      } else {
+        toast.update(toastId, {
+          render: response?.data?.message,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    } catch (e) {
+      console.error("Error adding student to course", e);
+      const message =
+        e.response?.data?.message || "Error adding student to course";
+      toast.update(toastId, {
+        render: message,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
+  const handleDeleteStudentFromCourse = async (studentId, courseId) => {
+    const toastId = toast.loading("Removing student from course...");
+    try {
+      const response = await api.put(
+        `/subjects/remove/students/${courseId}?studentIds=${studentId}`
+      );
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: response?.data?.message,
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setSelectedStudent("");
+        setSelectedCourse("");
+      } else {
+        toast.update(toastId, {
+          render: response?.data?.message,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    } catch (e) {
+      console.error("Error removing student from course", e);
+      const message =
+        e.response?.data?.message || "Error removing student from course";
+      toast.update(toastId, {
+        render: message,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
   };
   return (
     <div className="dark:bg-gray-800 bg-white p-6 rounded-lg shadow-md">
@@ -40,7 +114,11 @@ const CourseManagement = ({ students, courses }) => {
             </SelectTrigger>
             <SelectContent>
               {students.map((student, index) => (
-                <SelectItem key={index} value={student.name}>
+                <SelectItem
+                  key={index}
+                  value={student._id}
+                  onClick={() => setSelectedStudent(student._id)}
+                >
                   {student.name}
                 </SelectItem>
               ))}
@@ -56,32 +134,28 @@ const CourseManagement = ({ students, courses }) => {
             </SelectTrigger>
             <SelectContent>
               {courses.map((course, index) => (
-                <SelectItem key={index} value={course.name}>
+                <SelectItem
+                  key={index}
+                  value={course._id}
+                  onClick={() => setSelectedCourse(course._id)}
+                >
                   {course.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <div className="flex gap-2 mt-4">
-            <Button onClick={() => handleAddStudentToCourse(courses.name)}>
-              Add to Course
-            </Button>
             <Button
-              variant="outline"
               onClick={() =>
-                console.log("Update Course", selectedStudent, selectedCourse)
+                handleAddStudentToCourse(selectedStudent, selectedCourse)
               }
             >
-              Update Course
+              Add to Course
             </Button>
             <Button
               variant="destructive"
               onClick={() =>
-                console.log(
-                  "Remove from Course",
-                  selectedStudent,
-                  selectedCourse
-                )
+                handleDeleteStudentFromCourse(selectedStudent, selectedCourse)
               }
             >
               Remove from Course
