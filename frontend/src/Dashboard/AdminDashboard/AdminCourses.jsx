@@ -22,11 +22,13 @@ import {
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import api from "../../utils/axios";
-
+import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 const AdminCourses = () => {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [courseIndex, setCourseIndex] = useState(null);
   const [form, setForm] = useState({
     code: "",
     name: "",
@@ -165,6 +167,7 @@ const AdminCourses = () => {
 
   const handleDelete = async (index) => {
     try {
+      setDeleteModalOpen(false);
       const courseToDelete = courses[index];
       await api.delete(`/subjects/${courseToDelete._id}`);
       setCourses(courses.filter((_, i) => i !== index));
@@ -500,7 +503,10 @@ const AdminCourses = () => {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => handleDelete(index)}
+                      onClick={() => {
+                        setDeleteModalOpen(true);
+                        setCourseIndex(index);
+                      }}
                       className={`bg-red-700 text-white`}
                     >
                       <FaTrash className="mr-1" /> Delete
@@ -513,6 +519,12 @@ const AdminCourses = () => {
             <p>No courses available</p>
           )}
         </div>
+        <DeleteConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={() => handleDelete(courseIndex)}
+          itemType="Course"
+        />
       </div>
     </div>
   );

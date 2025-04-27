@@ -16,6 +16,7 @@ import api from "@/utils/axios";
 import { useEffect, useRef, useState } from "react";
 import { FaEdit, FaPlus, FaTrashAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
+import DeleteConfirmationModal from "../DeleteConfirmationModal";
 import ViewModal from "../ViewModal"; // Import the modal component
 const StudentManagement = ({ students }) => {
   // Single state object to hold the form data
@@ -34,8 +35,10 @@ const StudentManagement = ({ students }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchedStudent, setSearchedStudent] = useState(students || []);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [studentIndex, setStudentIndex] = useState(null);
   useEffect(() => {
     setSearchedStudent(students || []);
   }, [students]);
@@ -277,6 +280,7 @@ const StudentManagement = ({ students }) => {
       setTimeout(() => {
         window.location.reload();
       }, 3000);
+      setIsDeleteModalOpen(false); // Close the modal after deletion
     } catch (error) {
       console.error("Error deleting student:", error);
       const message = error.response?.data?.message || "Error deleting student";
@@ -291,7 +295,7 @@ const StudentManagement = ({ students }) => {
   const handleViewStudent = (index) => {
     // Handle view action here
     setSelectedStudent(students[index]);
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -502,7 +506,8 @@ const StudentManagement = ({ students }) => {
                     variant="destructive"
                     className="w-full"
                     onClick={() => {
-                      handleDeleteStudent(index);
+                      setStudentIndex(index); // Set the index of the student to be deleted
+                      setIsDeleteModalOpen(true); // Open the modal for confirmation
                     }}
                   >
                     Delete
@@ -513,9 +518,15 @@ const StudentManagement = ({ students }) => {
           </TableBody>
         </Table>
         <ViewModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
           student={selectedStudent}
+        />
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => handleDeleteStudent(studentIndex)}
+          itemType={"Student"}
         />
       </CardContent>
     </Card>
