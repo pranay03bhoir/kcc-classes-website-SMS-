@@ -53,15 +53,34 @@ const ViewModal = ({ isOpen, onClose, student }) => {
                       />
                     </div>
                     <h2 className="text-xl font-semibold">{student.name}</h2>
-                    <p className="text-gray-500">{student.email}</p>
-                    <p className="text-gray-500">{student.contact}</p>
+                    <p className="text-gray-500">
+                      <strong>Email: </strong>
+                      {student.email}
+                    </p>
+                    <p className="text-gray-500">
+                      <strong>Contact: </strong>
+                      {student.contact}
+                    </p>
+                    <p className="text-gray-500">
+                      {student.parentsContact.map((contact, index) => (
+                        // Display each parent's contact number
+                        // with a comma separator
+                        <p key={index}>
+                          <strong>Parents Contact {[index + 1]} : </strong>
+                          {contact}
+                          {index < student.parentsContact.length - 1
+                            ? ", "
+                            : ""}
+                        </p>
+                      ))}
+                    </p>
 
                     <div className="mt-6 flex flex-col gap-2">
                       <span className="text-sm text-gray-400">
                         Student ID: {student.studentId}
                       </span>
                       <span className="text-sm text-gray-400">
-                        Grade: {student.grade}
+                        Grade: {student.currentStd}
                       </span>
                       <span className="text-sm text-gray-400">
                         Admission Year: {student.admissionYear}

@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { IoCall } from "react-icons/io5";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,8 +11,12 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-        {/* Logo */}
-        <a href="#" className="text-2xl font-bold text-gray-800">
+        <img
+          src={`KCC-icon.jpeg`}
+          alt="KCC Classes Logo"
+          className="w-12 h-12 rounded-full"
+        />
+        <a href="#" className="md:text-2xl text-red-500 font-bold">
           KCC-CLASSES
         </a>
         <a href={`tel:+919765022022`} className={`w-[30%] md:hidden`}>
