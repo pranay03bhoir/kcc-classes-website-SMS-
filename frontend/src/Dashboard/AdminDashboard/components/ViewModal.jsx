@@ -61,7 +61,7 @@ const ViewModal = ({ isOpen, onClose, student }) => {
                       <strong>Contact: </strong>
                       {student.contact}
                     </p>
-                    <p className="text-gray-500">
+                    <strong className="text-gray-500">
                       {student.parentsContact.map((contact, index) => (
                         // Display each parent's contact number
                         // with a comma separator
@@ -73,7 +73,7 @@ const ViewModal = ({ isOpen, onClose, student }) => {
                             : ""}
                         </p>
                       ))}
-                    </p>
+                    </strong>
 
                     <div className="mt-6 flex flex-col gap-2">
                       <span className="text-sm text-gray-400">

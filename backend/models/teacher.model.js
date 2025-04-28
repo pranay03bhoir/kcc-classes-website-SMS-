@@ -25,8 +25,11 @@ const teacherSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
+
+teacherSchema.index({ name: "text", email: "text", teacherId: "text" });
+teacherSchema.index({ teacherId: 1, email: 1 }, { unique: true });
 
 teacherSchema.pre("save", async function (next) {
   if (!this.teacherId) {
@@ -34,7 +37,7 @@ teacherSchema.pre("save", async function (next) {
     const counter = await Counter.findOneAndUpdate(
       { name: `teacher-${year}` },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      { new: true, upsert: true }
     );
     this.teacherId = `Teacher-${year}-${String(counter.seq).padStart(4, "0")}`;
   }

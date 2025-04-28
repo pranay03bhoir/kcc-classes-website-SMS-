@@ -12,7 +12,12 @@ const fadeIn = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeIn" } },
 };
 
-const StudentsAndBatchesManagement = ({ students, courses, batches }) => {
+const StudentsAndBatchesManagement = ({
+  students,
+  courses,
+  batches,
+  teachers,
+}) => {
   const [activeTab, setActiveTab] = useState("students");
 
   return (
@@ -76,7 +81,12 @@ const StudentsAndBatchesManagement = ({ students, courses, batches }) => {
                 animate="visible"
                 exit="exit"
               >
-                <BatchManagement students={students} batches={batches} />
+                <BatchManagement
+                  students={students}
+                  batches={batches}
+                  teachers={teachers}
+                  subjects={courses}
+                />
               </motion.div>
             </TabsContent>
           )}

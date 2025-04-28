@@ -1,33 +1,41 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import AdminSummaryCard from "@/Dashboard/AdminDashboard/components/AdminSummaryCard";
-import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
-import { FaUserGraduate } from "react-icons/fa";
 import { Progress } from "@/components/ui/progress";
+import AdminSummaryCard from "@/Dashboard/AdminDashboard/components/AdminSummaryCard";
 import StudentsAndBatchesManagement from "@/Dashboard/AdminDashboard/components/StudentsAndBatchesManagement";
-import { toast, ToastContainer } from "react-toastify";
+import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
 import api from "@/utils/axios";
+import { useEffect, useState } from "react";
+import { FaUserGraduate } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
 
 const AdminStudentManagement = () => {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [studentCount, setStudentCount] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       const toastId = toast.loading("Fetching data...");
       try {
-        const [studentsData, coursesData, batchesData, studentCountData] =
-          await Promise.all([
-            api.get("/students"),
-            api.get("/subjects"),
-            api.get("/batches"),
-            api.get("/students-count"),
-          ]);
+        const [
+          studentsData,
+          coursesData,
+          batchesData,
+          studentCountData,
+          teachersData,
+        ] = await Promise.all([
+          api.get("/students"),
+          api.get("/subjects"),
+          api.get("/batches"),
+          api.get("/students-count"),
+          api.get("/teachers"),
+        ]);
         setStudents(studentsData.data.students);
         setCourses(coursesData.data.subjects);
         setBatches(batchesData.data.batches);
         setStudentCount(studentCountData.data.studentCount);
+        setTeachers(teachersData.data.teachers);
         // Simulate data fetching
         toast.update(toastId, {
           render: "Data loaded successfully",
@@ -54,9 +62,7 @@ const AdminStudentManagement = () => {
       <div className={`w-64 fixed h-screen`}>
         <Sidebar />
       </div>
-      <div
-        className={`flex-1 md:ml-64 lg-2  p-6 space-y-6 text-center`}
-      >
+      <div className={`flex-1 md:ml-64 lg-2  p-6 space-y-6 text-center`}>
         <div
           className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center`}
         >
@@ -78,6 +84,7 @@ const AdminStudentManagement = () => {
             students={students}
             courses={courses}
             batches={batches}
+            teachers={teachers}
           />
         </div>
       </div>

@@ -461,6 +461,41 @@ const getAllTeachers = async (req, res) => {
     });
   }
 };
+const searchATeacher = async (req, res) => {
+  try {
+    const { searchQuery } = req.query;
+    if (!searchQuery || searchQuery.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+    const matchedTeachers = await Teacher.find({
+      $or: [
+        { $text: { $search: searchQuery } },
+        { email: { $regex: searchQuery, $options: "i" } },
+        { teacherId: { $regex: searchQuery, $options: "i" } },
+      ],
+    });
+    if (!matchedTeachers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No teachers found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Teachers found",
+      teachers: matchedTeachers,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const getStudentsById = async (req, res) => {
   try {
     const studentId = req.params.studentId;
@@ -1399,6 +1434,25 @@ const createBatch = async (req, res) => {
   try {
     const { name, classStd, timings, subjectId, teacherId, studentIds } =
       req.body;
+    if (!name || !classStd || !timings || !subjectId || !teacherId) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+    // Check if the batch already exists
+    const existingBatch = await Batch.findOne({
+      name,
+      classStd,
+      timings,
+      subjectId,
+    });
+    if (existingBatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Batch already exists",
+      });
+    }
     const batch = new Batch({
       name,
       classStd,
@@ -1417,6 +1471,49 @@ const createBatch = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Batch created successfully",
+        batch,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const updateBatch = async (req, res) => {
+  try {
+    const batchId = req.params.id;
+    const { name, classStd, timings, subjectId, teacherId, studentIds } =
+      req.body;
+    if (!name || !classStd || !timings || !subjectId || !teacherId) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+    const batch = await Batch.findByIdAndUpdate(
+      batchId,
+      {
+        name,
+        classStd,
+        timings,
+        subjectId,
+        teacherId,
+        studentIds,
+      },
+      { new: true, runValidators: true }
+    );
+    if (!batch) {
+      return res.status(404).json({
+        success: false,
+        message: "Batch not found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Batch updated successfully",
         batch,
       });
     }
@@ -1713,6 +1810,7 @@ module.exports = {
   updateStudentDetails,
   getAllStudents,
   searchAStudent,
+  searchATeacher,
   getStudentsBySubject,
   getAllTeachers,
   getStudentsById,
@@ -1740,6 +1838,7 @@ module.exports = {
   getStudentScore,
   getScoresForSubject,
   createBatch,
+  updateBatch,
   getAllBatches,
   addStudentToBatch,
   addTeacherToBatch,
