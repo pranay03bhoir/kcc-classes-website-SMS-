@@ -1,17 +1,16 @@
 "use client";
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PasswordInput } from "@/components/ui/password-input";
-import { motion } from "framer-motion";
-import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-export default function RegistrationPage() {
+import { useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+const TeacherRegister = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -19,9 +18,9 @@ export default function RegistrationPage() {
     password: "",
     confirmPassword: "",
     contact: "",
-    parentsContact: "",
+    alternateContact: "",
     address: "",
-    admissionYear: "",
+    joiningYear: "",
     agree: false,
   });
   const [step, setStep] = useState(0);
@@ -48,14 +47,14 @@ export default function RegistrationPage() {
     if (currentStep === 2) {
       if (!formData.contact.match(/^\d{10}$/))
         newErrors.contact = "Enter a valid 10-digit contact number";
-      if (!formData.parentsContact.match(/^\d{10}$/))
-        newErrors.parentsContact =
+      if (!formData.alternateContact.match(/^\d{10}$/))
+        newErrors.alternateContact =
           "Enter a valid 10-digit parent’s contact number";
     }
 
     if (currentStep === 3) {
-      if (!formData.admissionYear.match(/^\d{4}$/))
-        newErrors.admissionYear = "Enter a valid year";
+      if (!formData.joiningYear.match(/^\d{4}$/))
+        newErrors.joiningYear = "Enter a valid year";
       if (!formData.address.trim()) newErrors.address = "Address is required";
       if (!formData.agree) newErrors.agree = "You must agree to the terms";
     }
@@ -97,11 +96,11 @@ export default function RegistrationPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/students/register",
+        "http://localhost:5000/api/teacher/register",
         formData,
         {
           headers: { "Content-Type": "application/json" },
-        },
+        }
       );
 
       // console.log("API Response:", response.data);
@@ -189,33 +188,33 @@ export default function RegistrationPage() {
         </p>
       ),
       <Input
-        key="parentsContact"
+        key="alternateContact"
         type="tel"
-        name="parentsContact"
-        placeholder="Parent's Contact"
+        name="alternateContact"
+        placeholder="Alternate Contact"
         onChange={handleChange}
         required
         pattern="\d{10}"
       />,
-      errors.parentsContact && (
-        <p key="parentsContact-error" className="text-red-500 text-sm">
-          {errors.parentsContact}
+      errors.alternateContact && (
+        <p key="alternateContact-error" className="text-red-500 text-sm">
+          {errors.alternateContact}
         </p>
       ),
     ],
     [
       <Input
-        key="admissionYear"
+        key="joiningYear"
         type="number"
-        name="admissionYear"
-        placeholder="Admission Year"
+        name="joiningYear"
+        placeholder="Joining Year"
         onChange={handleChange}
         required
         pattern="\d{4}"
       />,
-      errors.admissionYear && (
-        <p key="admissionYear-error" className="text-red-500 text-sm">
-          {errors.admissionYear}
+      errors.joiningYear && (
+        <p key="joiningYear-error" className="text-red-500 text-sm">
+          {errors.joiningYear}
         </p>
       ),
       <Textarea
@@ -239,9 +238,8 @@ export default function RegistrationPage() {
         <label className="text-sm">
           I agree to the{" "}
           <a href="#" className="text-blue-600">
-            Terms, Privacy Policy
+            Terms, Privacy Policy.
           </a>
-          , and Fees.
         </label>
       </div>,
       errors.agree && (
@@ -251,12 +249,13 @@ export default function RegistrationPage() {
       ),
     ],
   ];
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-200 via-blue-200 to-pink-200">
-      <Card className="w-full max-w-md p-6 bg-white rounded-2xl shadow-md">
+      <Card className="w-full max-w-md p-6 bg-white rounded-2xl shadow-md z-10">
         <CardContent>
-          <h2 className="text-2xl font-semibold text-center mb-4">Sign Up</h2>
+          <h2 className="text-2xl font-semibold text-center mb-4">
+            Sign Up As Teacher
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <motion.div
               key={step}
@@ -279,7 +278,7 @@ export default function RegistrationPage() {
               {step < steps.length - 1 ? (
                 <Button
                   onClick={handleNext}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+                  className="bg-green-600 hover:bg-green-900 text-white px-4 py-2 rounded-lg"
                 >
                   Next
                 </Button>
@@ -301,6 +300,16 @@ export default function RegistrationPage() {
           </p>
         </CardContent>
       </Card>
+      <div
+        className="absolute right-0 top-0 bottom-0 w-full bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://plus.unsplash.com/premium_photo-1683121152928-787ececd7359?q=80&w=2075&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+        }}
+      ></div>
+      <ToastContainer position={`top-center`} />
     </div>
   );
-}
+};
+
+export default TeacherRegister;

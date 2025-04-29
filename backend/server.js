@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 connectToDb();
-app.use("/api/students", studentRoutes);
-app.use("/api/teachers", teacherRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/teacher", teacherRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.listen(process.env.PORT, () => {

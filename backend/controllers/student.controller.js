@@ -175,13 +175,13 @@ const studentLogin = async (req, res) => {
           ? 30 * 24 * 60 * 60 * 1000
           : 1 * 60 * 60 * 1000;
         res.cookie("accessToken", accessToken, {
-          httpOnly: true,
+          httpOnly: process.env.NODE_ENV === "PRODUCTION" ? true : false,
           secure: process.env.NODE_ENV === "PRODUCTION",
           sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
           maxAge: 60 * 60 * 1000,
         });
         res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
+          httpOnly: process.env.NODE_ENV === "PRODUCTION" ? true : false,
           secure: process.env.NODE_ENV === "PRODUCTION",
           sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
           maxAge: cookieExpiration,
@@ -235,7 +235,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
         const newAccessToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" },
+          { expiresIn: "1h" }
         );
         const newRefreshToken = jwt.sign(
           {
@@ -244,7 +244,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
             role: user.role,
           },
           process.env.JWT_REFRESH_SECRET,
-          { expiresIn: "30d" },
+          { expiresIn: "30d" }
         );
         student.refreshToken = newRefreshToken;
         await student.save();
@@ -265,7 +265,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
           message: "New access token generated",
           newAccessToken,
         });
-      },
+      }
     );
   } catch (e) {
     console.error(e);
@@ -283,7 +283,7 @@ const studentLogout = async (req, res) => {
     }
     await Student.updateOne(
       { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } },
+      { $unset: { refreshToken: "" } }
     );
     const cookiesToClear = ["accessToken", "refreshToken"];
     cookiesToClear.forEach((cookie) => {
@@ -306,6 +306,36 @@ const studentLogout = async (req, res) => {
     });
   }
 };
+const getStudentDetails = async (req, res) => {
+  try {
+    const studentId = req.userInfo.id;
+    const student = await Student.findById(studentId)
+      .select(
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage"
+      )
+      .populate("subjects", "name description teachers")
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: student,
+    });
+  } catch (e) {
+    console.error("Error in getStudentDetails:", e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 const updateStudentProfile = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
@@ -350,7 +380,7 @@ const updateStudentProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
 
     return res.status(200).json({
@@ -398,6 +428,7 @@ module.exports = {
   studentLogin,
   generateNewRefreshAccessToken,
   studentLogout,
+  getStudentDetails,
   updateStudentProfile,
   getStudentSubjects,
 };

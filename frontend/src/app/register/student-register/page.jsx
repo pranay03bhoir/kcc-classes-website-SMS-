@@ -1,10 +1,10 @@
 import React from "react";
-import Register from "@/components/LoginComponent/Register";
+import StudentRegister from "@/components/LoginComponent/register/StudentRegister";
 
 const RegisterForm = () => {
   return (
     <div className={`bg-black`}>
-      <Register />
+      <StudentRegister />
     </div>
   );
 };

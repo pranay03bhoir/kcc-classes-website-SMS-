@@ -1,12 +1,7 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-export default function ProfileCard() {
-  const student = {
-    name: "Aarav Deshmukh",
-    email: "aarav@example.com",
-    enrollmentNo: "STU123456",
-  };
-
+export default function ProfileCard({ student }) {
   return (
     <Card>
       <CardHeader>
@@ -20,9 +15,12 @@ export default function ProfileCard() {
           <strong>Email:</strong> {student.email}
         </p>
         <p>
-          <strong>Enrollment No:</strong> {student.enrollmentNo}
+          <strong>Enrollment No:</strong> {student.studentId}
         </p>
       </CardContent>
+      <div className="flex justify-between items-center p-2">
+        <Button className={`w-26 `}>View More</Button>
+      </div>
     </Card>
   );
 }

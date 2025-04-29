@@ -1,15 +1,15 @@
 "use client";
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 // import { motion } from "framer-motion";
-import { FcGoogle } from "react-icons/fc";
+import api from "@/utils/student-axios";
+import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
-import axios from "axios";
-
-export default function LoginPage() {
+export default function StudentLogin({ role }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -32,15 +32,26 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const toastId = toast.loading("Logging in...");
     try {
-      const myURL = "http://localhost:5000/api/students/login";
-      const response = await axios.post(myURL, formData, {
-        headers: { "Content-Type": "application/json" },
+      const response = await api.post(`/login/${role}`, formData);
+      toast.update(toastId, {
+        render: response.data.message || "Login successful",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
       });
-      toast.success(response.data.message || "Login successfully");
+      if (response) {
+        router.push("/studentdashboard"); // Redirect to home page after successful login
+      }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Login failed");
+      toast.update(toastId, {
+        render: err.response.data.message || "Login failed",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
     }
     console.log(formData);
   };
@@ -50,7 +61,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md p-8 bg-white rounded-2xl shadow-md relative z-10">
         <CardContent>
           <h2 className="text-2xl font-semibold text-center mb-4">
-            Welcome back
+            WELCOME BACK {role.toUpperCase()}
           </h2>
           <p className="text-center text-gray-500 mb-2">
             Sign in with your email
@@ -94,8 +105,11 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       <div
-        className="absolute right-0 top-0 bottom-0 w-1/2 bg-cover bg-center rounded-l-2xl"
-        style={{ backgroundImage: "url('/path-to-your-background-image.jpg')" }}
+        className="absolute right-0 top-0 bottom-0 w-full bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+        }}
       ></div>
     </div>
   );
