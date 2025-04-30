@@ -1,7 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ViewModal from "@/Dashboard/AdminDashboard/components/ViewModal";
+import { useState } from "react";
 export default function ProfileCard({ student }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <Card>
       <CardHeader>
@@ -19,7 +22,14 @@ export default function ProfileCard({ student }) {
         </p>
       </CardContent>
       <div className="flex justify-between items-center p-2">
-        <Button className={`w-26 `}>View More</Button>
+        <Button className={`w-26 `} onClick={() => setIsOpen(true)}>
+          View More
+        </Button>
+        <ViewModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          student={student}
+        />
       </div>
     </Card>
   );

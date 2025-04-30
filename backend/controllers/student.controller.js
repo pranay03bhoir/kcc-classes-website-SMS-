@@ -148,7 +148,7 @@ const studentLogin = async (req, res) => {
     if (!existingStudent) {
       return res.status(400).json({
         success: false,
-        message: "Please register first",
+        message: "Invalid credentials or register to continue",
       });
     } else if (!existingStudent.isVerified) {
       return res.status(400).json({
@@ -174,18 +174,21 @@ const studentLogin = async (req, res) => {
         const cookieExpiration = rememberMe
           ? 30 * 24 * 60 * 60 * 1000
           : 1 * 60 * 60 * 1000;
-        res.cookie("accessToken", accessToken, {
-          httpOnly: process.env.NODE_ENV === "PRODUCTION" ? true : false,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: 60 * 60 * 1000,
+        const isProd = process.env.NODE_ENV === "PRODUCTION";
+        const isCrossSite = process.env.CROSS_SITE === "true"; // you set this in .env
+
+        const getCookieOptions = (maxAge) => ({
+          httpOnly: true,
+          secure: isProd, // must be true in production
+          sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+          maxAge,
         });
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: process.env.NODE_ENV === "PRODUCTION" ? true : false,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: cookieExpiration,
-        });
+        res.cookie("accessToken", accessToken, getCookieOptions(60 * 60 * 100));
+        res.cookie(
+          "refreshToken",
+          refreshToken,
+          getCookieOptions(cookieExpiration)
+        );
         return res.status(200).json({
           success: true,
           message: `Welcome back ${existingStudent.name}`,
@@ -215,6 +218,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
         message: "Access denied",
       });
     }
+
     const student = await Student.findOne({ refreshToken: refreshToken });
     if (!student) {
       return res.status(403).json({
@@ -222,6 +226,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
         message: "Invalid refresh token",
       });
     }
+
     jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET,
@@ -229,41 +234,51 @@ const generateNewRefreshAccessToken = async (req, res) => {
         if (err) {
           return res.status(401).json({
             success: false,
-            message: "Invalid token or Expired token",
+            message: "Invalid or expired token",
           });
         }
+
         const newAccessToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
           { expiresIn: "1h" }
         );
+
         const newRefreshToken = jwt.sign(
-          {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-          },
+          { id: user.id, email: user.email, role: user.role },
           process.env.JWT_REFRESH_SECRET,
           { expiresIn: "30d" }
         );
+
         student.refreshToken = newRefreshToken;
         await student.save();
-        res.cookie("refreshToken", newRefreshToken, {
+
+        const isProd = process.env.NODE_ENV === "PRODUCTION";
+        const isCrossSite = process.env.CROSS_SITE === "true"; // ensure this is set in your .env
+
+        const getCookieOptions = (maxAge) => ({
           httpOnly: true,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: 30 * 24 * 60 * 60 * 1000,
+          secure: isProd, // only true in production
+          sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+          maxAge,
         });
-        res.cookie("accessToken", newAccessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: 60 * 60 * 100,
-        });
+
+        res.cookie(
+          "accessToken",
+          newAccessToken,
+          getCookieOptions(60 * 60 * 1000)
+        ); // 1 hour
+        res.cookie(
+          "refreshToken",
+          newRefreshToken,
+          getCookieOptions(30 * 24 * 60 * 60 * 1000)
+        ); // 30 days
+
         return res.status(200).json({
           success: true,
           message: "New access token generated",
           newAccessToken,
+          data: student,
         });
       }
     );
@@ -275,6 +290,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
     });
   }
 };
+
 const studentLogout = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -311,9 +327,12 @@ const getStudentDetails = async (req, res) => {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select(
-        "studentId name email contact parentsContact address currentStd admissionYear profileImage"
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects"
       )
-      .populate("subjects", "name description teachers")
+      .populate(
+        "subjects",
+        "name code description teachers category duration gradeLevel"
+      )
       .lean();
 
     if (!student) {

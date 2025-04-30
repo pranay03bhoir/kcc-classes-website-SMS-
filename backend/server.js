@@ -9,7 +9,9 @@ const adminRoutes = require("./routes/admin.routes");
 const app = express();
 
 const allowedOrigin =
-  process.env.NODE_ENV === "PRODUCTION" ? process.env.FRONTEND_URL : "*";
+  process.env.NODE_ENV === "PRODUCTION"
+    ? process.env.FRONTEND_URL
+    : "http://localhost:3000";
 
 app.use(express.json());
 app.use(cookieParser());

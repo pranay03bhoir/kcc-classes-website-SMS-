@@ -37,6 +37,7 @@ const StudentManagement = ({ students }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [studentIndex, setStudentIndex] = useState(null);
   useEffect(() => {
@@ -82,13 +83,13 @@ const StudentManagement = ({ students }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const toastId = toast.loading(
-      editingIndex ? "Updating student..." : "Adding student..."
+      editingIndex ? "Updating student..." : "Adding student...",
     );
     try {
       if (editingIndex !== null) {
         const response = await api.put(
           `/update/students/${formData._id}`,
-          formData
+          formData,
         );
         const updatedStudent = { ...formData };
         updatedStudent[editingIndex] = response.data;
@@ -229,7 +230,7 @@ const StudentManagement = ({ students }) => {
 
     try {
       const response = await api.get(
-        `/search/students?searchQuery=${trimmedSearchTerm}`
+        `/search/students?searchQuery=${trimmedSearchTerm}`,
       );
 
       setSearchedStudent(response.data.students || []);
@@ -295,7 +296,7 @@ const StudentManagement = ({ students }) => {
   const handleViewStudent = (index) => {
     // Handle view action here
     setSelectedStudent(students[index]);
-    setIsEditModalOpen(true);
+    setIsViewModalOpen(true);
   };
 
   return (
@@ -518,8 +519,8 @@ const StudentManagement = ({ students }) => {
           </TableBody>
         </Table>
         <ViewModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
           student={selectedStudent}
         />
         <DeleteConfirmationModal
