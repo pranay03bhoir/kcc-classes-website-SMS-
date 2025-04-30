@@ -14,7 +14,7 @@ const StudentEnrolledCourses = () => {
         const response = await api.get("/get/student/details");
         setSubjects(response.data.data.subjects);
         setStudent(response.data.data);
-        console.log("Student Data:", response?.status);
+      
 
         if (response.status === 200) {
           toast.update(toastId, {
