@@ -209,6 +209,33 @@ const studentLogin = async (req, res) => {
     });
   }
 };
+const studentAuthCheck = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (tokenIsValid(token)) {
+      const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+      return res.status(200).json({
+        success: true,
+        message: "Access granted",
+        data: {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+        },
+      });
+    }
+    return res.status(403).json({
+      success: false,
+      message: "Access denied",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 const generateNewRefreshAccessToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
@@ -445,6 +472,7 @@ module.exports = {
   studentVerifyEmail,
   resendVerificationEmail,
   studentLogin,
+  studentAuthCheck,
   generateNewRefreshAccessToken,
   studentLogout,
   getStudentDetails,

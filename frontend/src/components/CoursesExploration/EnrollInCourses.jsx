@@ -1,10 +1,10 @@
 "use client";
-import React from "react";
-import { motion } from "framer-motion";
-import CustomHeading from "@/components/Heading/CustomHeading";
 import CourseCard from "@/components/CardComponent/CourseCard";
+import CustomHeading from "@/components/Heading/CustomHeading";
 import { Button } from "@/components/ui/button";
-
+import api from "@/utils/common-axios";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 const EnrollInCourses = () => {
   const buttonData = [
     { id: 1, title: "ALL Subjects" },
@@ -13,6 +13,27 @@ const EnrollInCourses = () => {
     { id: 4, title: "Science" },
     { id: 5, title: "Commerce" },
   ];
+
+  const [courseData, setCourseData] = useState([]);
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await api.get("/get/courses");
+        setCourseData(response.data.courses);
+        if (response.status === 200) {
+          // Handle successful response
+          console.log("Courses fetched successfully:", response.data);
+        }
+        if (response.status >= 400) {
+          // Handle bad request
+          console.error("Bad request:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   return (
     <motion.div
@@ -80,7 +101,7 @@ const EnrollInCourses = () => {
         transition={{ duration: 1 }}
         viewport={{ once: true }}
       >
-        {[...Array(3)].map((_, index) => (
+        {courseData.map((course, index) => (
           <motion.div
             key={index}
             initial={{ y: 50, opacity: 0 }}
@@ -89,18 +110,34 @@ const EnrollInCourses = () => {
             viewport={{ once: true }}
           >
             <CourseCard
-              title="Mathematics Foundation"
-              description="Build a strong mathematical foundation with our comprehensive course covering arithmetic, algebra, geometry, and more."
-              duration="3 months"
-              classesPerWeek="2 per week"
-              gradeLevel="Class 5-8"
-              rating={5}
+              title={course.name}
+              description={course.description}
+              duration={course.duration}
+              category={course.category}
+              classesPerWeek={course.classesPerWeek}
+              gradeLevel={course.gradeLevel}
+              rating={course.rating}
               buttonText="Enroll Now"
-              isPopular={true}
-              iconUrl="/images/KCC-CLASSES.png"
+              isPopular={course.isPopular}
+              iconUrl={course.imageUrl}
             />
           </motion.div>
         ))}
+      </motion.div>
+
+      <motion.div
+        className="flex justify-center items-center pt-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+      >
+        <Button
+          className={`h-12 w-[20%] bg-blue-600 hover:bg-blue-900 duration-200`}
+        >
+          View More
+        </Button>
       </motion.div>
     </motion.div>
   );

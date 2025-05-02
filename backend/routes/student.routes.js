@@ -9,6 +9,7 @@ const {
   getStudentSubjects,
   generateNewRefreshAccessToken,
   getStudentDetails,
+  studentAuthCheck,
 } = require("../controllers/student.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware.js");
 const router = express.Router();
@@ -17,6 +18,7 @@ router.post("/register", studentRegister);
 router.get("/verify-email", studentVerifyEmail);
 router.post("/resend-verification-email", resendVerificationEmail);
 router.post("/login/student", studentLogin);
+router.get("/auth/check/student", studentAuthCheck);
 router.post("/refresh", generateNewRefreshAccessToken);
 router.post("/logout", studentLogout);
 router.get("/get/student/details", loginAuth, getStudentDetails);

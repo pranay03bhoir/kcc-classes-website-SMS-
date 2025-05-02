@@ -2,11 +2,10 @@
 import Sidebar from "@/Dashboard/StudentDashboard/SideBar";
 import api from "@/utils/student-axios";
 import { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 const StudentEnrolledCourses = () => {
   const [subjects, setSubjects] = useState([]);
-  const [student, setStudent] = useState(null);
-  console.log("Subjects:", subjects);
+  const [student, setStudent] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       const toastId = toast.loading("Loading student data...");
@@ -14,7 +13,6 @@ const StudentEnrolledCourses = () => {
         const response = await api.get("/get/student/details");
         setSubjects(response.data.data.subjects);
         setStudent(response.data.data);
-      
 
         if (response.status === 200) {
           toast.update(toastId, {
@@ -173,11 +171,15 @@ const StudentEnrolledCourses = () => {
             )
         )
       ) : (
+        <div>
+          <Sidebar student={student} />
+        </div>
+      )}
+      {Array.isArray(subjects) && subjects.length === 0 && (
         <p className="text-gray-600 mx-auto mt-[20%] text-4xl font-extrabold">
           No courses enrolled.
         </p>
       )}
-      <ToastContainer position="top-center" />
     </div>
   );
 };

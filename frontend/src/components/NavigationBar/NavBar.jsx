@@ -1,14 +1,35 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import api from "@/utils/common-axios";
 import { motion } from "framer-motion";
 import { ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoCall } from "react-icons/io5";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await api.get("/auth/check");
+        if (response.status === 200) {
+          setIsLoggedIn(response.data.loggedIn);
+          setUserRole(response.data.role);
+          // if (response.data.loggedIn) {
+          //   window.location.href = `/${response.data.role}dashboard`;
+          // }
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
@@ -49,46 +70,70 @@ const Navbar = () => {
               Call us <IoCall />
             </Button>
           </a>
-          <div className="relative inline-block text-left">
-            <button
-              onClick={() => setLoginOpen(!loginOpen)}
-              className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center gap-2"
+          {isLoggedIn ? (
+            <Link
+              href={
+                userRole === "admin"
+                  ? "/admindashboard"
+                  : userRole === "teacher"
+                  ? "/teacherdashboard"
+                  : "/studentdashboard"
+              }
+              target="_blank"
+              className="px-4 py-2 bg-white text-white rounded-lg  transition"
             >
-              Login <ChevronDown size={16} />
-            </button>
+              <Button className="h-10 text-md w-40 bg-red-600 cursor-pointer">
+                {userRole === "admin"
+                  ? "Admin Panel"
+                  : userRole === "teacher"
+                  ? "Teacher Dashboard"
+                  : "Student Dashboard"}
+              </Button>
+            </Link>
+          ) : (
+            <div className="relative inline-block text-left">
+              <button
+                onClick={() => setLoginOpen(!loginOpen)}
+                className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center gap-2"
+              >
+                Login <ChevronDown size={16} />
+              </button>
 
-            {loginOpen && (
-              <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border">
-                <div className="py-1">
-                  <Link
-                    href="/login/student"
-                    target="_blank"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
-                  >
-                    Student Login
-                  </Link>
-                  <Link
-                    href="/login/teacher"
-                    target="_blank"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
-                  >
-                    Teacher Login
-                  </Link>
-                  <Link
-                    href="/login/admin"
-                    target="_blank"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
-                  >
-                    Admin Login
-                  </Link>
+              {loginOpen && (
+                <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border">
+                  <div className="py-1">
+                    <Link
+                      href="/login/student"
+                      target="_blank"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                    >
+                      Student Login
+                    </Link>
+                    <Link
+                      href="/login/teacher"
+                      target="_blank"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                    >
+                      Teacher Login
+                    </Link>
+                    <Link
+                      href="/login/admin"
+                      target="_blank"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                    >
+                      Admin Login
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
           <div className="relative inline-block text-left">
             <button
               onClick={() => setRegisterOpen(!registerOpen)}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center gap-2"
+              className={`px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center gap-2 ${
+                isLoggedIn ? "hidden" : ""
+              }`}
             >
               Register <ChevronDown size={16} />
             </button>
@@ -110,13 +155,13 @@ const Navbar = () => {
                   >
                     Teacher Register
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/register/admin-register"
                     target="_blank"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
                   >
                     Admin Register
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             )}
@@ -157,13 +202,13 @@ const Navbar = () => {
           {/*</a>*/}
           <div className="relative inline-block text-left">
             <button
-              onClick={() => setOpen(!open)}
-              className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center gap-2"
+              onClick={() => setLoginOpen(!loginOpen)}
+              className="w-full px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center gap-2"
             >
               Login <ChevronDown size={16} />
             </button>
 
-            {open && (
+            {loginOpen && (
               <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border">
                 <div className="py-1">
                   <Link
@@ -191,13 +236,44 @@ const Navbar = () => {
               </div>
             )}
           </div>
-          <Link
-            href={`/register`}
-            target="_blank"
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Register
-          </Link>
+          <div className="relative inline-block text-left">
+            <button
+              onClick={() => setRegisterOpen(!registerOpen)}
+              className={`w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center gap-2 ${
+                isLoggedIn ? "hidden" : ""
+              }`}
+            >
+              Register <ChevronDown size={16} />
+            </button>
+
+            {registerOpen && (
+              <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border">
+                <div className="py-1">
+                  <Link
+                    href="/register/student-register"
+                    target="_blank"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                  >
+                    Student Register
+                  </Link>
+                  <Link
+                    href="/register/teacher-register"
+                    target="_blank"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                  >
+                    Teacher Register
+                  </Link>
+                  {/* <Link
+                    href="/register/admin-register"
+                    target="_blank"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100"
+                  >
+                    Admin Register
+                  </Link> */}
+                </div>
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
     </nav>

@@ -3,24 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
-export default function StudentRegister() {
+export default function AdminRegister() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    contact: "",
-    parentsContact: "",
-    address: "",
-    admissionYear: "",
+    role: "",
     agree: false,
   });
   const [step, setStep] = useState(0);
@@ -40,23 +35,14 @@ export default function StudentRegister() {
         newErrors.password = "Password must be at least 8 characters";
       if (formData.confirmPassword.length < 8)
         newErrors.confirmPassword = "Password must be at least 8 characters";
-      if (formData.confirmPassword.trim() !== formData.password.trim())
+      if (formData.confirmPassword.trim() !== formData.password.trim()) {
         newErrors.confirmPassword = "Passwords do not match";
+        toast.error("Passwords do not match.");
+      }
     }
-
     if (currentStep === 2) {
-      if (!formData.contact.match(/^\d{10}$/))
-        newErrors.contact = "Enter a valid 10-digit contact number";
-      if (!formData.parentsContact.match(/^\d{10}$/))
-        newErrors.parentsContact =
-          "Enter a valid 10-digit parent’s contact number";
-    }
-
-    if (currentStep === 3) {
-      if (!formData.admissionYear.match(/^\d{4}$/))
-        newErrors.admissionYear = "Enter a valid year";
-      if (!formData.address.trim()) newErrors.address = "Address is required";
       if (!formData.agree) newErrors.agree = "You must agree to the terms";
+      toast.error("Please agree to the terms and conditions.");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Proceed only if no errors
@@ -93,10 +79,10 @@ export default function StudentRegister() {
     }
 
     console.log("Validation passed. Submitting form...");
-    const toastId = toast.loading("Registering...");
+
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/student/register",
+        "http://localhost:5000/api/students/register",
         formData,
         {
           headers: { "Content-Type": "application/json" },
@@ -104,23 +90,13 @@ export default function StudentRegister() {
       );
 
       // console.log("API Response:", response.data);
-      toast.update(toastId, {
-        render: response.data.message || "Registered successfully.",
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
-      });
+      toast.success(response.data.message || "Registered successfully.");
       if (response) {
-        router.push("/login/student");
+        router.push("/login");
       }
     } catch (error) {
       console.error("API Request Failed:", error);
-      toast.update(toastId, {
-        render: error.response?.data?.message || "Registration failed.",
-        type: "error",
-        isLoading: false,
-        autoClose: 3000,
-      });
+      toast.error(error.response?.data?.message || "Registration failed.");
     }
   };
 
@@ -183,62 +159,6 @@ export default function StudentRegister() {
       ),
     ],
     [
-      <Input
-        key="contact"
-        type="tel"
-        name="contact"
-        placeholder="Your Contact"
-        onChange={handleChange}
-        required
-        pattern="\d{10}"
-      />,
-      errors.contact && (
-        <p key="contact-error" className="text-red-500 text-sm">
-          {errors.contact}
-        </p>
-      ),
-      <Input
-        key="parentsContact"
-        type="tel"
-        name="parentsContact"
-        placeholder="Parent's Contact"
-        onChange={handleChange}
-        required
-        pattern="\d{10}"
-      />,
-      errors.parentsContact && (
-        <p key="parentsContact-error" className="text-red-500 text-sm">
-          {errors.parentsContact}
-        </p>
-      ),
-    ],
-    [
-      <Input
-        key="admissionYear"
-        type="number"
-        name="admissionYear"
-        placeholder="Admission Year"
-        onChange={handleChange}
-        required
-        pattern="\d{4}"
-      />,
-      errors.admissionYear && (
-        <p key="admissionYear-error" className="text-red-500 text-sm">
-          {errors.admissionYear}
-        </p>
-      ),
-      <Textarea
-        key="address"
-        name="address"
-        placeholder="Address"
-        onChange={handleChange}
-        required
-      />,
-      errors.address && (
-        <p key="address-error" className="text-red-500 text-sm">
-          {errors.address}
-        </p>
-      ),
       <div key="checkbox" className="flex items-center space-x-2">
         <Checkbox
           name="agree"
@@ -316,7 +236,7 @@ export default function StudentRegister() {
         className="absolute right-0 top-0 bottom-0 w-full bg-cover bg-center"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+            "url('https://images.unsplash.com/photo-1632406898177-95f7acd8854f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
         }}
       ></div>
       <ToastContainer position={`top-center`} />

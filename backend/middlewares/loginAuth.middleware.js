@@ -18,6 +18,8 @@ const loginAuthorizationMiddleware = (req, res, next) => {
     }
 
     // Verify token
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // req.userInfo = decoded;
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         if (err.name === "TokenExpiredError") {

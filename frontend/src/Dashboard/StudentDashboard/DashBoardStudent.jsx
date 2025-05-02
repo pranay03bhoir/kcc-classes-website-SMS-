@@ -29,7 +29,7 @@ const DashBoardStudent = () => {
           });
         }
       } catch (err) {
-        if (err?.response?.status === 401) {
+        if (err?.response?.status >= 400) {
           // If the access token expired, attempt to refresh using cookies
           const toastId = toast.loading("Session expired. Refreshing...");
           const refreshSession = await api.post(

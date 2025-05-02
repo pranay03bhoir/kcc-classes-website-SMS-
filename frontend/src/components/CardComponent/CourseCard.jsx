@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
-
 /**
  * Reusable course card component
  * @param {Object} props
  * @param {string} props.title - Course title
  * @param {string} props.description - Brief course description
  * @param {string} props.duration - Course duration (e.g., "3 months")
+ * @param {string} props.category - Course category (e.g., "Mathematics")
  * @param {string} props.classesPerWeek - Number of classes per week (e.g., "2 per week")
  * @param {string} props.gradeLevel - The grade/class level (e.g., "Class 5-8")
  * @param {number} props.rating - Star rating out of 5
@@ -19,6 +18,7 @@ export default function CourseCard({
   title = "Mathematics Foundation",
   description = "Build a strong mathematical foundation with our comprehensive course covering arithmetic, algebra, geometry, and more.",
   duration = "3 months",
+  category = "",
   classesPerWeek = "2 per week",
   gradeLevel = "Class 5-8",
   rating = 5,
@@ -50,6 +50,9 @@ export default function CourseCard({
       {/* Grade Level Pill */}
       <span className="inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full mb-2">
         {gradeLevel}
+      </span>
+      <span className="ms-2 inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+        {category}
       </span>
 
       {/* Title & Rating */}

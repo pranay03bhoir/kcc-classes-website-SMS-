@@ -6,6 +6,7 @@ const connectToDb = require("./database/db.connection");
 const studentRoutes = require("./routes/student.routes");
 const teacherRoutes = require("./routes/teacher.routes");
 const adminRoutes = require("./routes/admin.routes");
+const commonRoutes = require("./routes/common.routes");
 const app = express();
 
 const allowedOrigin =
@@ -20,6 +21,7 @@ connectToDb();
 app.use("/api/student", studentRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/common", commonRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running at Port ${process.env.PORT}`);
