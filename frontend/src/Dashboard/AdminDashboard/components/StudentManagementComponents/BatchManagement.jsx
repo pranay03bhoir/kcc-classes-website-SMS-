@@ -27,6 +27,8 @@ import api from "@/utils/axios";
 
 import { useState } from "react";
 import { toast } from "react-toastify";
+import BatchDetailsModal from "@/Dashboard/AdminDashboard/components/BatchDetailsModal";
+
 const BatchManagement = ({ students, batches, teachers, subjects }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -39,8 +41,11 @@ const BatchManagement = ({ students, batches, teachers, subjects }) => {
   const [selectedStudents, setSelectedStudents] = useState(formData.studentIds);
   const [searchTerm, setSearchTerm] = useState(""); // State to hold the search term
   const [selectedBatch, setSelectedBatch] = useState({});
+  const [selectStudentID, setSelectStudentID] = useState("");
+  const [selectBatchID, setSelectBatchID] = useState("");
+  const [viewBatch, setViewBatch] = useState(false);
   const filteredStudents = students.filter((student) =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleCheckboxChange = (studentId, checked) => {
@@ -133,6 +138,68 @@ const BatchManagement = ({ students, batches, teachers, subjects }) => {
       ...batch,
     });
     setSelectedStudents(batch.studentIds);
+  };
+  const handleAddStudentToBatch = async () => {
+    const toastId = toast.loading("Adding student to batch...");
+    const student = selectStudentID;
+    const batchId = selectBatchID;
+    console.log("Selected student id:", selectStudentID);
+    console.log("Selected batch id:", selectBatchID);
+    console.log("Selected student:", student);
+    console.log("Selected batch ID:", batchId);
+    try {
+      const response = await api.put(
+        `/add/student/batch/${student}?batchId=${batchId}`,
+      );
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render:
+            response?.data?.message || "Student added to batch successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        setFormData({
+          name: "",
+          classStandard: "",
+          timings: "",
+          subjectId: "",
+          teacherId: "",
+          studentIds: [],
+        });
+        setSelectedStudents([]);
+      } else {
+        toast.update(toastId, {
+          render: response?.data?.message,
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding student to batch:", error);
+      const message = error.response?.data?.message || "An error occurred";
+      toast.update(toastId, {
+        render: message,
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
+  };
+  const getStudentId = (studentId) => {
+    setSelectStudentID(studentId);
+    console.log("Selected student ID:", studentId);
+  };
+
+  const getBatchId = (batchId) => {
+    setSelectBatchID(batchId);
+    console.log("Selected batch ID:", batchId);
+  };
+  const getBatch = (batch) => {
+    console.log("Batch to view:", batch);
+    console.log("batch to view", selectedBatch);
+    setSelectedBatch(batch);
   };
 
   return (
@@ -251,41 +318,41 @@ const BatchManagement = ({ students, batches, teachers, subjects }) => {
             </Button>
           </div>
           <Select
-            // onValueChange={setSelectedStudent}
-            // value={selectedStudent}
+            onValueChange={getStudentId}
+            value={selectStudentID}
             className="w-full"
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Student" />
             </SelectTrigger>
             <SelectContent>
-              {students.map((student, index) => (
-                <SelectItem key={index} value={student.name}>
+              {students.map((student) => (
+                <SelectItem key={student._id} value={student._id}>
                   {student.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <Select
-            // onValueChange={setSelectedBatch}
-            // value={selectedBatch}
+            onValueChange={getBatchId}
+            value={selectBatchID}
             className="w-full"
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Batch" />
             </SelectTrigger>
             <SelectContent>
-              {batches.map((batch, index) => (
-                <SelectItem key={index} value={batch.name}>
+              {batches.map((batch) => (
+                <SelectItem key={batch._id} value={batch._id}>
                   {batch.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <div className="flex gap-2 flex-wrap mt-4">
-            <Button onClick={() => console.log("Add to Batch")}>
-              Add to Batch
-            </Button>
+            <Button onClick={handleAddStudentToBatch}>Add to Batch</Button>
             <Button
               variant="destructive"
               onClick={() => console.log("Remove from Batch")}
@@ -311,11 +378,23 @@ const BatchManagement = ({ students, batches, teachers, subjects }) => {
                 <TableRow
                   key={index}
                   className="hover:bg-gray-200 cursor-pointer transition-colors"
-                  onClick={() => setSelectedBatch(b.name)}
+                  // onClick={() => setSelectedBatch(b.name)}
                 >
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{b.batchId}</TableCell>
                   <TableCell>{b.name}</TableCell>
+                  <TableCell>
+                    <Button
+                      className={`w-full`}
+                      variant="outline"
+                      onClick={() => {
+                        setViewBatch(true);
+                        getBatch(b);
+                      }}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
                   <TableCell>
                     <Button
                       className={`w-full`}
@@ -336,6 +415,14 @@ const BatchManagement = ({ students, batches, teachers, subjects }) => {
           </Table>
         </CardContent>
       </Card>
+      <BatchDetailsModal
+        open={!!viewBatch}
+        onClose={() => setViewBatch(false)}
+        batch={selectedBatch}
+        subjects={selectedBatch?.subjectId || []}
+        teachers={selectedBatch?.teacherId || []}
+        students={selectedBatch?.studentIds || []}
+      />
     </div>
   );
 };

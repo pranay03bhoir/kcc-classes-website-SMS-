@@ -129,8 +129,8 @@ router.get(
 router.post("/batch/create", createBatch);
 router.put("/batch/update/:id", updateBatch);
 router.get("/batches", getAllBatches);
-router.post("/add/student/batch/:id", addStudentToBatch);
-router.post("/add/teacher/batch/:id", addTeacherToBatch);
+router.put("/add/student/batch/:id", addStudentToBatch);
+router.put("/add/teacher/batch/:id", addTeacherToBatch);
 router.delete("/remove/student/batch/:id", removeStudentFromBatch);
 router.delete("/remove/teacher/batch/:id", removeTeacherFromBatch);
 module.exports = router;

@@ -1551,7 +1551,6 @@ const getAllBatches = async (req, res) => {
   try {
     const batches = await Batch.find({}).populate(
       "subjectId teacherId studentIds",
-      "name",
     );
     if (!batches) {
       return res.status(404).json({
