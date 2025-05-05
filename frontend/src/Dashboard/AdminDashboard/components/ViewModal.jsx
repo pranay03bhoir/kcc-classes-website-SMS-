@@ -117,7 +117,11 @@ const ViewModal = ({ isOpen, onClose, student }) => {
                       <h3 className="text-lg font-semibold mb-2">Batches</h3>
                       {student.batches.length > 0 ? (
                         <p className="text-sm text-gray-700">
-                          {student.batches.join(", ")}
+                          {student.batches.map((batch, index) => (
+                            <span key={index} className="block">
+                              • {batch.name}
+                            </span>
+                          ))}
                         </p>
                       ) : (
                         <p className="text-gray-400">No batches assigned</p>

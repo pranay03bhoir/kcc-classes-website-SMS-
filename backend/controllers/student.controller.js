@@ -187,7 +187,7 @@ const studentLogin = async (req, res) => {
         res.cookie(
           "refreshToken",
           refreshToken,
-          getCookieOptions(cookieExpiration)
+          getCookieOptions(cookieExpiration),
         );
         return res.status(200).json({
           success: true,
@@ -268,13 +268,13 @@ const generateNewRefreshAccessToken = async (req, res) => {
         const newAccessToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" }
+          { expiresIn: "1h" },
         );
 
         const newRefreshToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_REFRESH_SECRET,
-          { expiresIn: "30d" }
+          { expiresIn: "30d" },
         );
 
         student.refreshToken = newRefreshToken;
@@ -293,12 +293,12 @@ const generateNewRefreshAccessToken = async (req, res) => {
         res.cookie(
           "accessToken",
           newAccessToken,
-          getCookieOptions(60 * 60 * 1000)
+          getCookieOptions(60 * 60 * 1000),
         ); // 1 hour
         res.cookie(
           "refreshToken",
           newRefreshToken,
-          getCookieOptions(30 * 24 * 60 * 60 * 1000)
+          getCookieOptions(30 * 24 * 60 * 60 * 1000),
         ); // 30 days
 
         return res.status(200).json({
@@ -307,7 +307,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
           newAccessToken,
           data: student,
         });
-      }
+      },
     );
   } catch (e) {
     console.error(e);
@@ -326,7 +326,7 @@ const studentLogout = async (req, res) => {
     }
     await Student.updateOne(
       { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } }
+      { $unset: { refreshToken: "" } },
     );
     const cookiesToClear = ["accessToken", "refreshToken"];
     cookiesToClear.forEach((cookie) => {
@@ -354,12 +354,13 @@ const getStudentDetails = async (req, res) => {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select(
-        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects"
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects",
       )
       .populate(
         "subjects",
-        "name code description teachers category duration gradeLevel"
+        "name code description teachers category duration gradeLevel",
       )
+      .populate("batches", "name classStd timings subjectId teacherId batchId")
       .lean();
 
     if (!student) {
@@ -426,7 +427,7 @@ const updateStudentProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     return res.status(200).json({
