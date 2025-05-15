@@ -1,21 +1,21 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  FaHome,
-  FaBook,
-  FaUserGraduate,
-  FaChalkboardTeacher,
-  FaClipboardCheck,
-  FaChartBar,
-  FaCog,
-  FaBars,
-  FaTimes,
-} from "react-icons/fa";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import {
+  FaBars,
+  FaBook,
+  FaChalkboardTeacher,
+  FaChartBar,
+  FaClipboardCheck,
+  FaCog,
+  FaHome,
+  FaTimes,
+  FaUserGraduate,
+} from "react-icons/fa";
 
 const navItems = [
   { label: "Dashboard", href: "/admindashboard", icon: <FaHome /> },
@@ -32,7 +32,7 @@ const navItems = [
   },
   {
     label: "Attendance",
-    href: "/admin/attendance",
+    href: "/admindashboard/attendance",
     icon: <FaClipboardCheck />,
   },
   { label: "Reports", href: "/admin/reports", icon: <FaChartBar /> },
@@ -45,7 +45,9 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`h-screen ${isOpen ? "w-64" : "w-2"} bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out`}
+      className={`h-screen ${
+        isOpen ? "w-64" : "w-2"
+      } bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out`}
     >
       <div className="px-4 py-6">
         <h1
@@ -75,7 +77,9 @@ export default function Sidebar() {
       </div>
 
       <div
-        className={`px-4 py-6 border-t border-gray-800 ${isOpen ? "block" : "hidden"}`}
+        className={`px-4 py-6 border-t border-gray-800 ${
+          isOpen ? "block" : "hidden"
+        }`}
       >
         <Card className={`bg-gray-800 p-4 flex items-center gap-3`}>
           <img
@@ -94,7 +98,9 @@ export default function Sidebar() {
       {/* Toggle Button for Mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={` fixed top-4 ${isOpen ? "left-50" : "left-4"} p-2 bg-gray-800 rounded-full shadow-lg duration-300`}
+        className={` fixed top-4 ${
+          isOpen ? "left-50" : "left-4"
+        } p-2 bg-gray-800 rounded-full shadow-lg duration-300`}
       >
         <span className="text-white">{isOpen ? <FaTimes /> : <FaBars />}</span>
       </button>

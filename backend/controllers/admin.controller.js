@@ -136,7 +136,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
         process.env.JWT_REFRESH_SECRET,
         {
           expiresIn: "30d",
-        },
+        }
       );
       admin.refreshToken = newRefreshToken;
       await admin.save();
@@ -174,7 +174,7 @@ const adminLogout = async (req, res) => {
     }
     await Admin.updateOne(
       { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } },
+      { $unset: { refreshToken: "" } }
     );
     const clearCookies = ["accessToken", "refreshToken"];
     clearCookies.forEach((cookie) => {
@@ -337,7 +337,7 @@ const updateStudentDetails = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
 
     return res.status(200).json({
@@ -377,8 +377,13 @@ const updateStudentDetails = async (req, res) => {
 // };
 const getAllStudents = async (req, res) => {
   try {
+    // const { page, limit } = req.query;
+    // const pageNumber = parseInt(page) || 1;
+    // const limitNumber = parseInt(limit) || 10;
+    // const skip = (pageNumber - 1) * limitNumber;
+    // const totalStudents = await Student.countDocuments();
     const students = await Student.find({}).populate("subjects");
-    if (!students) {
+    if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
         message: "No students found",
@@ -388,6 +393,38 @@ const getAllStudents = async (req, res) => {
         success: true,
         message: "Students found",
         students: students,
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getAllStudentsWithPagination = async (req, res) => {
+  try {
+    const { page, limit } = req.query;
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+    const totalStudents = await Student.countDocuments();
+    const students = await Student.find({})
+      .skip(skip)
+      .limit(limit)
+      .populate("subjects");
+    if (!students || students.length === 0) {
+      res.status(404).json({
+        success: false,
+        message: "No students found",
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Students found",
+        students: students,
+        totalStudents: totalStudents,
       });
     }
   } catch (e) {
@@ -588,7 +625,7 @@ const updateTeachersDetails = async (req, res) => {
         contact: contact,
         address: address,
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!teacher) {
       res.status(404).json({
@@ -790,7 +827,7 @@ const createSubject = async (req, res) => {
         },
         {
           $addToSet: { subjects: subject },
-        },
+        }
       );
       const teacher = await Teacher.updateMany(
         {
@@ -798,7 +835,7 @@ const createSubject = async (req, res) => {
         },
         {
           $addToSet: { subjects: subject },
-        },
+        }
       );
       await subject.save();
       res.status(200).json({
@@ -852,14 +889,14 @@ const updateSubject = async (req, res) => {
           students: { $each: students },
         },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     const student = await Student.updateMany(
       { _id: { $in: students } },
       {
         $addToSet: { subjects: subject },
       },
-      { new: true },
+      { new: true }
     );
     if (student.modifiedCount === 0) {
       console.log("no students were updated");
@@ -889,7 +926,7 @@ const getAllSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find({}).populate(
       "students",
-      "name studentId",
+      "name studentId"
     );
     if (!subjects) {
       res.status(404).json({
@@ -953,13 +990,13 @@ const deleteSubject = async (req, res) => {
     // Remove subjectId from students
     await Student.updateMany(
       { _id: { $in: studentIds } },
-      { $pull: { subjects: subjectId } },
+      { $pull: { subjects: subjectId } }
     );
 
     // Remove subjectId from teachers
     await Teacher.updateMany(
       { _id: { $in: teacherIds } },
-      { $pull: { subjects: subjectId } },
+      { $pull: { subjects: subjectId } }
     );
 
     res.status(200).json({
@@ -997,7 +1034,7 @@ const enrollStudentInSubject = async (req, res) => {
     const isAlreadyEnrolled = subjectsArray.some((subject) =>
       existingStudent.subjects
         .map((c) => c.toString())
-        .includes(subject.toString()),
+        .includes(subject.toString())
     );
 
     if (isAlreadyEnrolled) {
@@ -1012,7 +1049,7 @@ const enrollStudentInSubject = async (req, res) => {
       {
         $addToSet: { subjects: { $each: subjectsArray } },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
 
     const addStudentToSubject = await Subject.findByIdAndUpdate(
@@ -1020,7 +1057,7 @@ const enrollStudentInSubject = async (req, res) => {
       {
         $addToSet: { students: studentId },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!addStudentToSubject) {
       return res.status(404).json({
@@ -1058,7 +1095,7 @@ const addTeacherToSubject = async (req, res) => {
       const isAlreadyAdded = subjectArray.some((subject) =>
         existingTeacher.subjects
           .map((c) => c.toString())
-          .includes(subject.toString()),
+          .includes(subject.toString())
       );
       if (isAlreadyAdded) {
         return res.status(400).json({
@@ -1071,7 +1108,7 @@ const addTeacherToSubject = async (req, res) => {
           {
             $addToSet: { subjects: { $each: subjectArray } },
           },
-          { new: true, runValidators: true },
+          { new: true, runValidators: true }
         );
         return res.status(200).json({
           success: true,
@@ -1098,7 +1135,7 @@ const removeStudentFromSubject = async (req, res) => {
       {
         $pull: { students: { $in: studentArray } },
       },
-      { new: true },
+      { new: true }
     );
     if (!subject) {
       return res.status(404).json({
@@ -1111,7 +1148,7 @@ const removeStudentFromSubject = async (req, res) => {
           _id: { $in: studentIds },
         },
         { $pull: { subjects: subjectId } },
-        { new: true },
+        { new: true }
       ).lean();
       res.status(200).json({
         success: true,
@@ -1136,7 +1173,7 @@ const removeTeacherFromSubject = async (req, res) => {
       {
         $pull: { teachers: { $in: teacherIds } },
       },
-      { new: true },
+      { new: true }
     );
     if (!teacher) {
       return res.status(404).json({
@@ -1149,7 +1186,7 @@ const removeTeacherFromSubject = async (req, res) => {
         {
           $pull: { subjects: subjectId },
         },
-        { new: true },
+        { new: true }
       );
       if (!teachers) {
         return res.status(404).json({
@@ -1184,7 +1221,7 @@ const markStudentAttendance = async (req, res) => {
       {
         $addToSet: { attendance: attendance },
       },
-      { new: true },
+      { new: true }
     );
     await attendance.save();
     return res.status(200).json({
@@ -1201,8 +1238,18 @@ const markStudentAttendance = async (req, res) => {
 };
 const getAttendanceRecords = async (req, res) => {
   try {
-    const attendance = await Attendance.find({}).populate("student");
-    if (!attendance) {
+    const { page } = req.query;
+    const { limit } = req.query;
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+    const attendance = await Attendance.find({})
+      .skip(skip)
+      .limit(limitNumber)
+      .populate("student");
+    const totalAttendance = await Attendance.countDocuments();
+    const totalPages = Math.ceil(totalAttendance / limitNumber);
+    if (!attendance || attendance.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Attendance not found",
@@ -1212,6 +1259,8 @@ const getAttendanceRecords = async (req, res) => {
         success: true,
         message: "Attendance found",
         attendance,
+        totalAttendance,
+        totalPages,
       });
     }
   } catch (e) {
@@ -1326,7 +1375,7 @@ const addGradesToStudent = async (req, res) => {
       {
         $addToSet: { scores: addScores },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     // Save the updated student record
     await addScores.save();
@@ -1374,7 +1423,7 @@ const updateStudentScore = async (req, res) => {
     const updatedScore = await Score.findOneAndUpdate(
       { studentId, subject: subjectId, examType },
       { $set: { score, updatedAt: Date.now() } },
-      { new: true, upsert: true },
+      { new: true, upsert: true }
     );
 
     return res.status(200).json({
@@ -1402,7 +1451,7 @@ const getStudentScore = async (req, res) => {
     } else {
       const scores = await Score.find({ studentId }).populate(
         "subject",
-        "name",
+        "name"
       );
       if (!scores || scores.length === 0) {
         return res.status(404).json({
@@ -1525,7 +1574,7 @@ const updateBatch = async (req, res) => {
         teacherId,
         studentIds,
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!batch) {
       return res.status(404).json({
@@ -1550,7 +1599,7 @@ const updateBatch = async (req, res) => {
 const getAllBatches = async (req, res) => {
   try {
     const batches = await Batch.find({}).populate(
-      "subjectId teacherId studentIds",
+      "subjectId teacherId studentIds"
     );
     if (!batches) {
       return res.status(404).json({
@@ -1612,7 +1661,7 @@ const addStudentToBatch = async (req, res) => {
     const batch = await Batch.findByIdAndUpdate(
       batchId,
       { $addToSet: { studentIds: studentId } },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!batch) {
       return res.status(400).json({
@@ -1625,7 +1674,7 @@ const addStudentToBatch = async (req, res) => {
     const student = await Student.findByIdAndUpdate(
       studentId,
       { $addToSet: { batches: batchId } },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!student) {
       return res.status(400).json({
@@ -1673,7 +1722,7 @@ const addTeacherToBatch = async (req, res) => {
       });
     }
     const teacherTeachesSubject = existingTeacher.subjects.includes(
-      subject._id,
+      subject._id
     );
     if (!teacherTeachesSubject) {
       return res.status(400).json({
@@ -1687,7 +1736,7 @@ const addTeacherToBatch = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
     await addTeacherInSubject.save();
     if (!addTeacherInSubject) {
@@ -1701,7 +1750,7 @@ const addTeacherToBatch = async (req, res) => {
       {
         $addToSet: { batches: batch },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     await addBatchToTeacher.save();
     return res.status(200).json({
@@ -1746,7 +1795,7 @@ const removeStudentFromBatch = async (req, res) => {
       {
         $pull: { studentId: student._id },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     await removeStudentFromBatch.save();
     const removeBatchFromStudent = await Student.findByIdAndDelete(
@@ -1754,7 +1803,7 @@ const removeStudentFromBatch = async (req, res) => {
       {
         $pull: { batches: batch._id },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     await removeBatchFromStudent.save();
     return res.status(200).json({
@@ -1799,7 +1848,7 @@ const removeTeacherFromBatch = async (req, res) => {
       {
         $pull: { batches: batch._id },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     await removeTeacherFromTheBatch.save();
     const removeBatchFromTeacher = await Batch.findByIdAndUpdate(
@@ -1807,7 +1856,7 @@ const removeTeacherFromBatch = async (req, res) => {
       {
         $pull: { teacherId: existingTeacher._id },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     await removeBatchFromTeacher.save();
     return res.status(200).json({
@@ -1831,6 +1880,7 @@ module.exports = {
   createStudents,
   updateStudentDetails,
   getAllStudents,
+  getAllStudentsWithPagination,
   searchAStudent,
   searchATeacher,
   getStudentsBySubject,

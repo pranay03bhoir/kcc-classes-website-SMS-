@@ -42,6 +42,7 @@ const {
   searchATeacher,
   updateBatch,
   getAdminDetails,
+  getAllStudentsWithPagination,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -58,13 +59,14 @@ router.get("/get/admin/details", getAdminDetails);
 router.post("/create/students", createStudents);
 router.put("/update/students/:id", updateStudentDetails);
 router.get("/students", getAllStudents);
+router.get("/all/students", getAllStudentsWithPagination);
 router.get("/search/students", searchAStudent);
 router.get("/search/teachers", searchATeacher);
 router.get(
   "/students/subjects/:id",
   loginAuth,
   adminAuth,
-  getStudentsBySubject,
+  getStudentsBySubject
 );
 router.get("/teachers", getAllTeachers);
 router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
@@ -84,27 +86,27 @@ router.put(
   "/subjects/add/teachers/:teacherId",
   loginAuth,
   adminAuth,
-  addTeacherToSubject,
+  addTeacherToSubject
 );
 router.put("/subjects/remove/students/:id", removeStudentFromSubject);
 router.put(
   "/subjects/teachers/:id",
   loginAuth,
   adminAuth,
-  removeTeacherFromSubject,
+  removeTeacherFromSubject
 );
 router.post(
   "/students/attendance",
   loginAuth,
   adminAuth,
-  markStudentAttendance,
+  markStudentAttendance
 );
-router.get("/all/attendance", loginAuth, adminAuth, getAttendanceRecords);
+router.get("/all/attendance", getAttendanceRecords);
 router.get(
   "/attendance/students/:id",
   loginAuth,
   adminAuth,
-  getStudentByAttendance,
+  getStudentByAttendance
 );
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
 router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
@@ -112,19 +114,19 @@ router.put(
   "/scores/students/:studentId/:subjectId/:examType",
   loginAuth,
   adminAuth,
-  updateStudentScore,
+  updateStudentScore
 );
 router.get(
   "/scores/students/:studentId",
   loginAuth,
   adminAuth,
-  getStudentScore,
+  getStudentScore
 );
 router.get(
   "/scores/subjects/:subjectId",
   loginAuth,
   adminAuth,
-  getScoresForSubject,
+  getScoresForSubject
 );
 router.post("/batch/create", createBatch);
 router.put("/batch/update/:id", updateBatch);
