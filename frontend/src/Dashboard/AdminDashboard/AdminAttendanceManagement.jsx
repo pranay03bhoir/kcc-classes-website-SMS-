@@ -10,12 +10,14 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { FaSearch } from "react-icons/fa";
 import Sidebar from "./SideBar";
+
 const localizer = momentLocalizer(moment);
-const attendanceOptions = ["None", "Present", "Absent", "Late"];
+const attendanceOptions = ["Absent", "Present", "Late", "Other"];
 
 const AdminAttendanceManagement = () => {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
+  const [customNotes, setCustomNotes] = useState({});
   const [events, setEvents] = useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,9 +35,7 @@ const AdminAttendanceManagement = () => {
       setStudents(res.data.students);
       setTotalStudents(res.data.totalStudents);
 
-      // Set default attendance state
       const defaultAttendance = {};
-
       setAttendance(defaultAttendance);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -52,15 +52,25 @@ const AdminAttendanceManagement = () => {
     setAttendance((prev) => ({ ...prev, [id]: value }));
   };
 
+  const handleNoteChange = (id, note) => {
+    setCustomNotes((prev) => ({ ...prev, [id]: note }));
+  };
+
   const handleSubmit = () => {
     const today = startOfDay(new Date());
-    const newEvents = students.map((student) => ({
-      title: `Name: ${student.name}, ID: ${student.studentId}`,
-      start: today,
-      end: today,
-      status: student.status,
-      allDay: true,
-    }));
+    const newEvents = students.map((student) => {
+      const status = attendance[student._id];
+      const note = customNotes[student._id];
+      return {
+        title: `Name: ${student.name}, ID: ${student.studentId}${
+          status === "Other" && note ? `, Note: ${note}` : ""
+        }`,
+        start: today,
+        end: today,
+        status,
+        allDay: true,
+      };
+    });
     setEvents((prev) => [...prev, ...newEvents]);
     alert("Attendance submitted!");
   };
@@ -107,19 +117,33 @@ const AdminAttendanceManagement = () => {
                         </td>
                         <td className="px-4 py-2 border">{student.name}</td>
                         <td className="text-center px-4 py-2 border">
-                          <select
-                            value={attendance[student._id]}
-                            onChange={(e) =>
-                              handleChange(student._id, e.target.value)
-                            }
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            {attendanceOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="flex flex-col items-center">
+                            <select
+                              value={attendance[student._id] || ""}
+                              onChange={(e) =>
+                                handleChange(student._id, e.target.value)
+                              }
+                              className="border rounded px-2 py-1 text-sm"
+                            >
+                              {attendanceOptions.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+
+                            {attendance[student._id] === "Other" && (
+                              <input
+                                type="text"
+                                placeholder="Enter note"
+                                value={customNotes[student._id] || ""}
+                                onChange={(e) =>
+                                  handleNoteChange(student._id, e.target.value)
+                                }
+                                className="mt-2 border rounded px-2 py-1 text-sm w-full"
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
