@@ -6,6 +6,7 @@ const {
   teacherLogout,
   getAllStudents,
   getStudentById,
+  updateStudentDetails,
   addStudentAttendance,
   updateStudentAttendance,
   getAllAttendance,
@@ -13,6 +14,7 @@ const {
   addStudentScores,
   updateStudentScores,
   generateNewAccessRefreshToken,
+  getAllBatches,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
@@ -24,27 +26,29 @@ router.get("/verify-email", teacherVerifyEmail);
 
 router.post("/refresh", generateNewAccessRefreshToken);
 router.post("/logout", teacherLogout);
-router.get("/students", loginAuth, teacherAuth, getAllStudents);
+router.get("/students", getAllStudents);
 router.get("/students/:studentId", loginAuth, teacherAuth, getStudentById);
+router.put("/update/student/:id", updateStudentDetails);
 router.post(
   "/students/attendance",
   loginAuth,
   teacherAuth,
-  addStudentAttendance,
+  addStudentAttendance
 );
 router.put(
   "/students/:studentId/attendance/:attendanceId",
   loginAuth,
   teacherAuth,
-  updateStudentAttendance,
+  updateStudentAttendance
 );
 router.get(
   "/students/all/attendance",
   loginAuth,
   teacherAuth,
-  getAllAttendance,
+  getAllAttendance
 );
 router.get("/students/:studentId/attendance", getAttendanceForStudent);
 router.post("/students/scores", addStudentScores);
 router.put("/students/update/scores/:scoreId", updateStudentScores);
+router.get("/get/batches", getAllBatches);
 module.exports = router;

@@ -3,6 +3,7 @@ const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
 const Attendance = require("../models/attendance.model");
 const Score = require("../models/score.model");
+const Batch = require("../models/batch.model");
 // const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -198,7 +199,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
       const newAccessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn: "1h" }
       );
       const newRefreshToken = jwt.sign(
         {
@@ -209,7 +210,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
         process.env.JWT_REFRESH_SECRET,
         {
           expiresIn: "30d",
-        },
+        }
       );
       teacher.refreshToken = newRefreshToken;
       await teacher.save();
@@ -230,7 +231,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
         message: "New access token generated",
         newAccessToken,
       });
-    },
+    }
   );
 };
 const teacherLogout = async (req, res) => {
@@ -267,9 +268,12 @@ const teacherLogout = async (req, res) => {
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
-      .select("name email contact parentsContact address subjects attendance")
+      .select(
+        "name email contact parentsContact address subjects attendance batches studentId"
+      )
       .populate("subjects", "name")
-      .populate("attendance", "subject status date");
+      .populate("attendance", "subject status date")
+      .populate("batches", "batchId name timing");
     if (students.length === 0) {
       return res.status(404).json({
         success: false,
@@ -317,6 +321,53 @@ const getStudentById = async (req, res) => {
     });
   }
 };
+const updateStudentDetails = async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const { name, email, contact, address, batches } = req.body;
+
+    // Fetch the current student record
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // Prepare the fields to update
+    const updateFields = {};
+
+    // Only update fields if they are provided in the request
+    if (name) updateFields.name = name;
+    if (contact) updateFields.contact = contact;
+    if (email) updateFields.email = email;
+    if (batches) updateFields.batches = batches;
+    if (address) updateFields.address = address;
+
+    // Update the student record with new data
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      updateFields,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      message: "Details updated successfully.",
+      data: updatedStudent,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
 // ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
@@ -353,7 +404,7 @@ const addStudentAttendance = async (req, res) => {
       {
         $addToSet: { attendance: attendance },
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     )
       .select("name email contact parentsContact address subjects attendance")
       .populate("attendance", "student subject status date");
@@ -395,7 +446,7 @@ const updateStudentAttendance = async (req, res) => {
       {
         status,
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
     if (!updatedAttendance) {
       return res.status(400).json({
@@ -512,7 +563,7 @@ const addStudentScores = async (req, res) => {
         {
           $addToSet: { scores: studentScore },
         },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       )
         .select("name email contact parentsContact address subjects scores")
         .populate("subjects", "name");
@@ -560,7 +611,7 @@ const updateStudentScores = async (req, res) => {
         {
           score: score,
         },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       )
         .select("studentId subject examType score date")
         .populate("subject", "name")
@@ -586,6 +637,27 @@ const updateStudentScores = async (req, res) => {
     });
   }
 };
+const getAllBatches = async (req, res) => {
+  try {
+    const batches = await Batch.find({});
+    if (!batches || batches.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Batches not found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Batches found",
+      batches,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -593,6 +665,7 @@ module.exports = {
   generateNewAccessRefreshToken,
   teacherLogout,
   getAllStudents,
+  updateStudentDetails,
   getStudentById,
   addStudentAttendance,
   updateStudentAttendance,
@@ -600,4 +673,5 @@ module.exports = {
   getAttendanceForStudent,
   addStudentScores,
   updateStudentScores,
+  getAllBatches,
 };
