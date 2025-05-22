@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-
+import SaveConfirmationModal from "./SaveConfirmationModal";
 export default function EditStudentModal({
   isOpen,
   onClose,
@@ -17,7 +17,8 @@ export default function EditStudentModal({
     address: "",
   });
 
-  const [selectedBatch, setSelectedBatch] = useState("");
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+
   useEffect(() => {
     if (student) {
       setFormData({
@@ -49,11 +50,12 @@ export default function EditStudentModal({
   };
 
   const handleSubmit = () => {
-    const payload = {
-      ...formData,
-      batches: selectedBatch,
-    };
-    onSave(payload);
+    // const payload = {
+    //   ...formData,
+    //   batches: selectedBatch,
+    // };
+
+    onSave({ ...formData });
   };
 
   return (
@@ -96,18 +98,14 @@ export default function EditStudentModal({
             {/* Batch */}
             <label className="block text-sm font-medium mb-1">Batch</label>
             <select
-              name="batch"
+              name="batches"
               value={formData.batches}
               onChange={handleChange}
               className="w-full border rounded-md p-2 mb-3"
             >
               <option value="">Select Batch</option>
               {batchList.map((batch) => (
-                <option
-                  key={batch._id}
-                  value={batch.name}
-                  onClick={() => setSelectedBatch(batch._id)}
-                >
+                <option key={batch._id} value={batch._id}>
                   {batch.name}
                 </option>
               ))}
@@ -118,7 +116,7 @@ export default function EditStudentModal({
               Phone Number
             </label>
             <input
-              name="phone"
+              name="contact"
               value={formData.contact}
               onChange={handleChange}
               className="w-full border rounded-md p-2 mb-3"
@@ -144,13 +142,21 @@ export default function EditStudentModal({
                 Cancel
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={() => setConfirmSaveOpen(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Save
               </button>
             </div>
           </motion.div>
+          <SaveConfirmationModal
+            isOpen={confirmSaveOpen}
+            onCancel={() => setConfirmSaveOpen(false)}
+            onConfirm={() => {
+              setConfirmSaveOpen(false);
+              handleSubmit();
+            }}
+          />
         </motion.div>
       )}
     </AnimatePresence>

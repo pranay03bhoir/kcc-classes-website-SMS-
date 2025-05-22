@@ -382,7 +382,9 @@ const getAllStudents = async (req, res) => {
     // const limitNumber = parseInt(limit) || 10;
     // const skip = (pageNumber - 1) * limitNumber;
     // const totalStudents = await Student.countDocuments();
-    const students = await Student.find({}).populate("subjects");
+    const students = await Student.find({})
+      .populate("subjects")
+      .populate("batches");
     if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
