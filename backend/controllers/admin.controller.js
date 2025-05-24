@@ -415,7 +415,8 @@ const getAllStudentsWithPagination = async (req, res) => {
     const students = await Student.find({})
       .skip(skip)
       .limit(limit)
-      .populate("subjects");
+      .populate("subjects")
+      .populate("batches");
     if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
