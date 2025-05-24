@@ -1084,7 +1084,7 @@ const enrollStudentInSubject = async (req, res) => {
 const addTeacherToSubject = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const { subjects } = req.body;
+    const { subjects } = req.query;
     const existingTeacher = await Teacher.findById(teacherId);
     if (!existingTeacher) {
       return res.status(404).json({
@@ -1702,13 +1702,15 @@ const addTeacherToBatch = async (req, res) => {
   try {
     const teacherId = req.params.id;
     const batchId = req.query.batchId;
-    const existingTeacher = await Teacher.findById(teacherId);
+
+    const existingTeacher = await Teacher.findById(teacherId); // FIXED
     if (!existingTeacher) {
       return res.status(404).json({
         success: false,
         message: "Teacher not found",
       });
     }
+
     const batch = await Batch.findById(batchId);
     if (!batch) {
       return res.status(404).json({
@@ -1716,6 +1718,7 @@ const addTeacherToBatch = async (req, res) => {
         message: "Batch not found",
       });
     }
+
     const subject = await Subject.findById(batch.subjectId);
     if (!subject) {
       return res.status(404).json({
@@ -1723,38 +1726,38 @@ const addTeacherToBatch = async (req, res) => {
         message: "Subject not found",
       });
     }
+
     const teacherTeachesSubject = existingTeacher.subjects.includes(
       subject._id
     );
     if (!teacherTeachesSubject) {
       return res.status(400).json({
         success: false,
-        message: `${existingTeacher.name} does not teach for the subject ${subject.name}`,
+        message: `${existingTeacher.name} does not teach the subject ${subject.name}`,
       });
     }
-    const addTeacherInSubject = await Batch.findByIdAndUpdate(
+
+    // ✅ Add teacher ID to batch
+    const updatedBatch = await Batch.findByIdAndUpdate(
       batchId,
-      existingTeacher,
-      {
-        new: true,
-        runValidators: true,
-      }
+      { $addToSet: { teachers: teacherId } },
+      { new: true, runValidators: true }
     );
-    await addTeacherInSubject.save();
-    if (!addTeacherInSubject) {
+
+    if (!updatedBatch) {
       return res.status(400).json({
         success: false,
         message: "Teacher not added to batch",
       });
     }
-    const addBatchToTeacher = await Teacher.findByIdAndUpdate(
+
+    // ✅ Add batch ID to teacher
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
       teacherId,
-      {
-        $addToSet: { batches: batch },
-      },
+      { $addToSet: { batches: batchId } },
       { new: true, runValidators: true }
     );
-    await addBatchToTeacher.save();
+
     return res.status(200).json({
       success: true,
       message: "Teacher added successfully to batch",
@@ -1767,6 +1770,7 @@ const addTeacherToBatch = async (req, res) => {
     });
   }
 };
+
 const removeStudentFromBatch = async (req, res) => {
   try {
     const studentId = req.params.id;

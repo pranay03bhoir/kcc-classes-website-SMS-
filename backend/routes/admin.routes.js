@@ -82,12 +82,7 @@ router.get("/subjects", getAllSubjects);
 router.get("/subjects-count", countAllSubjects);
 router.delete("/subjects/:id", deleteSubject);
 router.put("/subjects/add/students/:studentId", enrollStudentInSubject);
-router.put(
-  "/subjects/add/teachers/:teacherId",
-  loginAuth,
-  adminAuth,
-  addTeacherToSubject
-);
+router.put("/subjects/add/teachers/:teacherId", addTeacherToSubject);
 router.put("/subjects/remove/students/:id", removeStudentFromSubject);
 router.put(
   "/subjects/teachers/:id",
