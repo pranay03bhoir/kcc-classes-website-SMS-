@@ -10,11 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import api from "@/utils/teacher-axios";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
 import Sidebar from "../SideBar";
 import MarkAttendanceModal from "./Modals/AddAttendanceModal";
-import api from "@/utils/teacher-axios";
 
 const studentsData = [
   {
@@ -62,7 +62,7 @@ const studentsData = [
 export default function AttendancePage() {
   const fetchStudentData = async () => {
     try {
-        const response = await api.get()
+      const response = await api.get("/students/attendance");
     } catch (error) {
       console.error(error);
     }
