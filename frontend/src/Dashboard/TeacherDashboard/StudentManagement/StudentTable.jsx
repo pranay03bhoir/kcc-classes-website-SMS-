@@ -153,7 +153,17 @@ export default function StudentTable({ students }) {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <div>{student.attendance}</div>
+                  <div
+                    className={`${student.attendance.map((status) =>
+                      status.status === "Present"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    )} rounded-full px-2 py-1 text-xs font-semibold text-center`}
+                  >
+                    {student.attendance
+                      .map((status) => status.status)
+                      .join(", ")}
+                  </div>
                   <div className="text-sm text-gray-500">
                     {student.attendedDays}
                   </div>

@@ -12,70 +12,86 @@ import {
 } from "@/components/ui/select";
 import api from "@/utils/teacher-axios";
 import { Calendar } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Sidebar from "../SideBar";
 import MarkAttendanceModal from "./Modals/AddAttendanceModal";
 
-const studentsData = [
-  {
-    name: "John Smith",
-    email: "john.smith@example.com",
-    id: "ST12345",
-    batch: "Batch A",
-    status: "Present",
-    time: "9:30 AM",
-  },
-  {
-    name: "Alice Davis",
-    email: "alice.davis@example.com",
-    id: "ST12346",
-    batch: "Batch B",
-    status: "Present",
-    time: "9:15 AM",
-  },
-  {
-    name: "Robert Johnson",
-    email: "robert.johnson@example.com",
-    id: "ST12347",
-    batch: "Batch A",
-    status: "Absent",
-    time: "-",
-  },
-  {
-    name: "Emma Wilson",
-    email: "emma.wilson@example.com",
-    id: "ST12348",
-    batch: "Batch C",
-    status: "Present",
-    time: "9:45 AM",
-  },
-  {
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    id: "ST12349",
-    batch: "Batch B",
-    status: "Absent",
-    time: "-",
-  },
-];
-
 export default function AttendancePage() {
-  const fetchStudentData = async () => {
-    try {
-      const response = await api.get("/students/attendance");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const [date, setDate] = useState("");
   const [batch, setBatch] = useState("All Batches");
   const [showModal, setShowModal] = useState(false);
-  const [students, setStudents] = useState(studentsData);
-  const presentCount = studentsData.filter(
-    (s) => s.status === "Present"
+  const [students, setStudents] = useState([]);
+  const fetchStudentData = async () => {
+    const toastId = toast.loading("Loading students...");
+    try {
+      const response = await api.get("/students");
+      setStudents(response.data.students);
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: response?.data?.message || "Students loaded successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      const message =
+        error?.response?.data?.message || "Failed to load students.";
+      toast.update(toastId, {
+        render: message,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
+
+  const addAttendance = async (attendanceData) => {
+    const toastId = toast.loading("Adding attendance...");
+    try {
+      const response = await api.post("/students/attendance", attendanceData);
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: response?.data?.message || "Attendance added successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setShowModal(false);
+        fetchStudentData(); // Refresh student data after adding attendance
+      }
+    } catch (error) {
+      console.error("Error adding attendance:", error);
+      const message =
+        error?.response?.data?.message || "Failed to add attendance.";
+      toast.update(toastId, {
+        render: message,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
+  useEffect(() => {
+    fetchStudentData();
+  }, []);
+  // console.log(
+  //   "Students Data:",
+  //   students.map(
+  //     (student) =>
+  //       student.attendance?.[student.attendance.length - 1]?.status ===
+  //       "Present"
+  //   )
+  // );
+
+  const presentCount = students.filter((student) =>
+    student.attendance?.some(
+      (record) => record.status === "Present" || record.status === "Late"
+    )
   ).length;
-  const absentCount = studentsData.length - presentCount;
+  const absentCount = students.length - presentCount;
   const monthlyAvg = 92;
 
   return (
@@ -122,8 +138,7 @@ export default function AttendancePage() {
               <p className="text-gray-500">Present Today</p>
               <h2 className="text-2xl font-bold">{presentCount}</h2>
               <p className="text-sm text-green-600">
-                {((presentCount / studentsData.length) * 100).toFixed(0)}% of
-                total
+                {((presentCount / students.length) * 100).toFixed(0)}% of total
               </p>
             </CardContent>
           </Card>
@@ -132,8 +147,7 @@ export default function AttendancePage() {
               <p className="text-gray-500">Absent Today</p>
               <h2 className="text-2xl font-bold">{absentCount}</h2>
               <p className="text-sm text-red-600">
-                {((absentCount / studentsData.length) * 100).toFixed(0)}% of
-                total
+                {((absentCount / students.length) * 100).toFixed(0)}% of total
               </p>
             </CardContent>
           </Card>
@@ -159,7 +173,7 @@ export default function AttendancePage() {
               </tr>
             </thead>
             <tbody>
-              {studentsData.map((student, idx) => (
+              {students.map((student, idx) => (
                 <tr key={idx} className="border-t">
                   <td className="p-3">
                     <div>
@@ -169,21 +183,26 @@ export default function AttendancePage() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">{student.id}</td>
+                  <td className="p-3">{student.studentId}</td>
                   <td className="p-3">
                     <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
-                      {student.batch}
+                      {student.batches.map((batch) => batch.name).join(", ")}
                     </span>
                   </td>
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        student.status === "Present"
+                        student.attendance?.[student.attendance.length - 1]
+                          ?.status === "Present"
                           ? "bg-green-100 text-green-700"
+                          : student.attendance?.[student.attendance.length - 1]
+                              ?.status === "Late"
+                          ? "bg-yellow-100 text-yellow-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {student.status}
+                      {student.attendance?.[student.attendance.length - 1]
+                        ?.status || "N/A"}
                     </span>
                   </td>
                   <td className="p-3">{student.time}</td>
@@ -202,7 +221,7 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex justify-between items-center pt-4 text-sm text-gray-600">
-          <span>Showing 1 to 5 of {studentsData.length} results</span>
+          <span>Showing 1 to 5 of {students.length} results</span>
           <div className="flex items-center space-x-1">
             <Button variant="outline" size="sm">
               &lt;
@@ -226,6 +245,7 @@ export default function AttendancePage() {
         onClose={() => setShowModal(false)}
         students={students}
         setStudents={setStudents}
+        onSaveAttendance={addAttendance}
       />
     </div>
   );

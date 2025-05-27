@@ -7,7 +7,7 @@ const attendanceSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
-    course: {
+    subject: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,

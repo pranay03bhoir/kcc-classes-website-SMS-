@@ -354,7 +354,7 @@ const updateStudentDetails = async (req, res) => {
         runValidators: true,
       }
     );
-    
+
     return res.status(200).json({
       success: true,
       message: "Details updated successfully.",
@@ -371,56 +371,46 @@ const updateStudentDetails = async (req, res) => {
 // ADDED FEATURE WHERE ATTENDANCE CANNOT BE ADDED FOR SAME COURSE.
 const addStudentAttendance = async (req, res) => {
   try {
-    const { student, subject, status } = req.body;
+    const { student, subject, status, note } = req.body;
 
-    const studentExists = await Student.findById(student);
-    if (!studentExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
+    if (!student || !subject || !status) {
+      return res
+        .status(400)
+        .json({ message: "student, subject, and status are required." });
     }
 
-    // ✅ Create new attendance record
+    // Normalize today's date to midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if attendance already exists for today
+    const existing = await Attendance.findOne({
+      student,
+      subject,
+      date: { $gte: today },
+    });
+
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Attendance already marked for today." });
+    }
+
     const attendance = new Attendance({
       student,
       subject,
       status,
+      note: note || "",
     });
-    const existingAttendance = await Attendance.findOne({
-      student,
-      subject,
-    });
-    if (existingAttendance) {
-      return res.status(400).json({
-        success: false,
-        message: "Attendance already exists for this subject",
-      });
-    }
+
     await attendance.save();
 
-    const updatedStudent = await Student.findByIdAndUpdate(
-      student,
-      {
-        $addToSet: { attendance: attendance },
-      },
-      { new: true, runValidators: true }
-    )
-      .select("name email contact parentsContact address subjects attendance")
-      .populate("attendance", "student subject status date");
-
-    res.status(200).json({
-      success: true,
-      message: "Student attendance added successfully",
-      student: updatedStudent,
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-      error: e.message,
-    });
+    res
+      .status(201)
+      .json({ message: "Attendance marked successfully.", attendance });
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 const updateStudentAttendance = async (req, res) => {

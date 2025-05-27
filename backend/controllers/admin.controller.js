@@ -1213,30 +1213,46 @@ const removeTeacherFromSubject = async (req, res) => {
 };
 const markStudentAttendance = async (req, res) => {
   try {
-    const { student, subject, status } = req.body;
+    const { student, subject, status, note } = req.body;
+
+    if (!student || !subject || !status) {
+      return res
+        .status(400)
+        .json({ message: "student, subject, and status are required." });
+    }
+
+    // Normalize today's date to midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if attendance already exists for today
+    const existing = await Attendance.findOne({
+      student,
+      subject,
+      date: { $gte: today },
+    });
+
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Attendance already marked for today." });
+    }
+
     const attendance = new Attendance({
       student,
       subject,
       status,
+      note: note || "",
     });
-    const studentAttendance = await Student.findByIdAndUpdate(
-      student,
-      {
-        $addToSet: { attendance: attendance },
-      },
-      { new: true }
-    );
+
     await attendance.save();
-    return res.status(200).json({
-      success: true,
-      message: "Student attendance added successfully",
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
+
+    res
+      .status(201)
+      .json({ message: "Attendance marked successfully.", attendance });
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };
 const getAttendanceRecords = async (req, res) => {

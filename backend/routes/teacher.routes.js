@@ -29,12 +29,7 @@ router.post("/logout", teacherLogout);
 router.get("/students", getAllStudents);
 router.get("/students/:studentId", loginAuth, teacherAuth, getStudentById);
 router.put("/update/student/:id", updateStudentDetails);
-router.post(
-  "/students/attendance",
-  loginAuth,
-  teacherAuth,
-  addStudentAttendance
-);
+router.post("/students/attendance", addStudentAttendance);
 router.put(
   "/students/:studentId/attendance/:attendanceId",
   loginAuth,

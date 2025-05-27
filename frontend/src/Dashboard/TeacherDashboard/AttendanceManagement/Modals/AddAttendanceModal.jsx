@@ -14,12 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useState } from "react";
 export default function MarkAttendanceModal({
   open,
   onClose,
   students,
   setStudents,
+  onSaveAttendance,
 }) {
+  const [formData, setFormData] = useState({
+    student: "",
+    subject: "",
+    status: "",
+    note: "",
+  });
+
   const handleStatusChange = (index, value) => {
     const updated = [...students];
     updated[index].status = value;
@@ -33,7 +42,8 @@ export default function MarkAttendanceModal({
   };
 
   const handleSave = () => {
-    console.log("Saved attendance:", students);
+    onSaveAttendance(students);
+    // Reset students' status and notes after saving
     onClose();
   };
 
@@ -68,10 +78,10 @@ export default function MarkAttendanceModal({
                       <div className="font-medium">{student.name}</div>
                     </div>
                   </td>
-                  <td>{student.id}</td>
+                  <td>{student.studentId}</td>
                   <td>
                     <span className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-1">
-                      {student.batch}
+                      {student.batches.map((batch) => batch.name).join(", ")}
                     </span>
                   </td>
                   <td>
