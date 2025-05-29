@@ -15,13 +15,14 @@ const {
   updateStudentScores,
   generateNewAccessRefreshToken,
   getAllBatches,
+  getTeacherDetails,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
 const router = express.Router();
 
 router.post("/register", teacherRegister);
-router.post("/login", teacherLogin);
+router.post("/login/teacher", teacherLogin);
 router.get("/verify-email", teacherVerifyEmail);
 
 router.post("/refresh", generateNewAccessRefreshToken);
@@ -46,4 +47,5 @@ router.get("/students/:studentId/attendance", getAttendanceForStudent);
 router.post("/students/scores", addStudentScores);
 router.put("/students/update/scores/:scoreId", updateStudentScores);
 router.get("/get/batches", getAllBatches);
+router.get("/get/teacher/details", loginAuth, teacherAuth, getTeacherDetails);
 module.exports = router;

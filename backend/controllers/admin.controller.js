@@ -68,18 +68,21 @@ const adminLogin = async (req, res) => {
         });
         existingUser.refreshToken = refreshToken;
         await existingUser.save();
-        res.cookie("accessToken", accessToken, {
+        const isProd = process.env.NODE_ENV === "PRODUCTION";
+        const isCrossSite = process.env.CROSS_SITE === "true"; // you set this in .env
+
+        const getCookieOptions = (maxAge) => ({
           httpOnly: true,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: 60 * 60 * 1000,
+          secure: isProd, // must be true in production
+          sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+          maxAge,
         });
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: cookieExpiration,
-        });
+        res.cookie("accessToken", accessToken, getCookieOptions(60 * 60 * 100));
+        res.cookie(
+          "refreshToken",
+          refreshToken,
+          getCookieOptions(cookieExpiration)
+        );
         res.status(200).json({
           success: true,
           message: "Login successfully",

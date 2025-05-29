@@ -8,8 +8,10 @@ const TeacherDashboard = () => {
   const fetchData = async () => {
     const toastId = toast.loading("Loading students.....");
     try {
-      const response = await api.get("/students");
-      setStudent(response.data.students); // likely you want to use response.data
+      const response = await api.get("get/teacher/details");
+      console.log(response.data.teacher.batches);
+
+      setStudent(response.data.teacher.batches); // likely you want to use response.data
       if (response.status === 200) {
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",

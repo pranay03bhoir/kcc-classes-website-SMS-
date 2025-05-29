@@ -135,12 +135,6 @@ const teacherLogin = async (req, res) => {
         const cookieExpiration = rememberMe
           ? 30 * 24 * 60 * 60 * 1000
           : 1 * 60 * 60 * 1000;
-        const options = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "PRODUCTION",
-          sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-          maxAge: cookieExpiration,
-        };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: "1h",
         });
@@ -149,8 +143,21 @@ const teacherLogin = async (req, res) => {
         });
         existingTeacher.refreshToken = refreshToken;
         existingTeacher.save();
-        res.cookie("accessToken", accessToken, options);
-        res.cookie("refreshToken", refreshToken, options);
+        const isProd = process.env.NODE_ENV === "PRODUCTION";
+        const isCrossSite = process.env.CROSS_SITE === "true"; // you set this in .env
+
+        const getCookieOptions = (maxAge) => ({
+          httpOnly: true,
+          secure: isProd, // must be true in production
+          sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+          maxAge,
+        });
+        res.cookie("accessToken", accessToken, getCookieOptions(60 * 60 * 100));
+        res.cookie(
+          "refreshToken",
+          refreshToken,
+          getCookieOptions(cookieExpiration)
+        );
         return res.status(200).json({
           success: true,
           message: `Welcome back ${existingTeacher.name}`,
@@ -648,6 +655,53 @@ const getAllBatches = async (req, res) => {
     });
   }
 };
+
+const getTeacherDetails = async (req, res) => {
+  try {
+    const teacherId = req.userInfo.id; // Assuming userInfo is set by the auth middleware
+    if (!teacherId) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher ID is required",
+      });
+    }
+    // Fetch teacher details along with populated batches
+    // and their respective subjects and students
+    const teacher = await Teacher.findById(teacherId)
+      .select("name email contact alternateContact address joiningYear")
+      .populate({
+        path: "batches",
+        select: "batchId name timing subjectId studentIds",
+        populate: {
+          path: "studentIds",
+          select: "name email contact attendance",
+          populate: {
+            path: "attendance",
+            select: "subject status date",
+          },
+        },
+      });
+
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Teacher details retrieved successfully",
+      teacher,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -664,4 +718,5 @@ module.exports = {
   addStudentScores,
   updateStudentScores,
   getAllBatches,
+  getTeacherDetails,
 };

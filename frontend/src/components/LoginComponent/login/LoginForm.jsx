@@ -5,7 +5,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 // import { motion } from "framer-motion";
+import apiA from "@/utils/axios";
 import api from "@/utils/student-axios";
+import apiT from "@/utils/teacher-axios";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 export default function StudentLogin({ role }) {
@@ -15,7 +17,7 @@ export default function StudentLogin({ role }) {
     password: "",
     rememberMe: false,
   });
-
+  const [useData, setUserData] = useState("");
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -33,27 +35,46 @@ export default function StudentLogin({ role }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const toastId = toast.loading("Logging in...");
+    let response;
+
     try {
-      const response = await api.post(`/login/${role}`, formData);
+      if (role === "student") {
+        response = await api.post(`/login/${role}`, formData);
+      } else if (role === "teacher") {
+        response = await apiT.post(`/login/${role}`, formData);
+      } else {
+        response = await apiA.post(`/login/${role}`, formData);
+      }
+
+      const data = response.data;
+      setUserData(data);
+
       toast.update(toastId, {
-        render: response.data.message || "Login successful",
+        render: data.message || "Login successful",
         type: "success",
         isLoading: false,
         autoClose: 2000,
       });
-      if (response) {
-        router.push("/studentdashboard"); // Redirect to home page after successful login
-      }
+
+      // Dynamic dashboard redirection
+      const redirectMap = {
+        student: "/studentdashboard",
+        teacher: "/teacherDashboard/students",
+        admin: "/admindashboard",
+      };
+
+      router.push(redirectMap[role] || "/");
     } catch (err) {
       console.error(err);
       toast.update(toastId, {
-        render: err.response.data.message || "Login failed",
+        render: err?.response?.data?.message || "Login failed",
         type: "error",
         isLoading: false,
         autoClose: 2000,
       });
     }
-    console.log(formData);
+
+    // console.log(formData);
   };
 
   return (

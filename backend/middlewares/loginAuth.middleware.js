@@ -35,6 +35,8 @@ const loginAuthorizationMiddleware = (req, res, next) => {
       }
 
       req.userInfo = decoded; // Attach decoded user data to request
+      // console.log("User Info:", req.userInfo);
+
       next();
     });
   } catch (e) {

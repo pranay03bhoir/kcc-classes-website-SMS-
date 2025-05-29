@@ -69,7 +69,7 @@ export default function MarkAttendanceModal({
             </thead>
             <tbody>
               {students.map((student, index) => (
-                <tr key={student.id} className="border-b py-2">
+                <tr key={student._id} className="border-b py-2">
                   <td className="flex items-center gap-3 py-3">
                     <div className="bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium text-gray-700">
                       {student.initials}

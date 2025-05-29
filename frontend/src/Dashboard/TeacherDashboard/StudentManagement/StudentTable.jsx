@@ -19,6 +19,24 @@ export default function StudentTable({ students }) {
       console.error("Error fetching batches:", error);
     }
   };
+
+  // const fetchStudents = async () => {
+  //   const toastId = toast.loading("Loading students...");
+  //   try {
+  //     const response = await api.get("/get/teacher/details");
+  //     setStudentList(response.data.teacher.batches.studentIds);
+  //   } catch (error) {
+  //     console.error("Error fetching students:", error);
+  //     const message =
+  //       error?.response?.data?.message || "Failed to load students.";
+  //     toast.update(toastId, {
+  //       render: message,
+  //       type: "error",
+  //       isLoading: false,
+  //       autoClose: 2000,
+  //     });
+  //   }
+  // };
   const handleSaveEdit = async (updatedData) => {
     const toastId = toast.loading("Updating student...");
     try {
@@ -56,9 +74,11 @@ export default function StudentTable({ students }) {
   };
   useEffect(() => {
     fetchBatches();
+    // fetchStudents();
   }, []);
+  const studentList = students.flatMap((student) => student.studentIds);
 
-  const filteredStudents = students.filter((student) => {
+  const filteredStudents = studentList.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(search.toLowerCase()) ||
       student.email.toLowerCase().includes(search.toLowerCase());
@@ -69,6 +89,11 @@ export default function StudentTable({ students }) {
 
     return matchesSearch && matchesBatch;
   });
+  console.log("Filtered Students:", filteredStudents);
+  console.log(
+    "student data",
+    students.flatMap((student) => student.studentIds)
+  );
 
   return (
     <div>
@@ -97,9 +122,11 @@ export default function StudentTable({ students }) {
               onChange={(e) => setSelectedBatch(e.target.value)}
             >
               <option value="All">All Batches</option>
-              <option>Batch A</option>
-              <option>Batch B</option>
-              <option>Batch C</option>
+              {students.map((batch) => (
+                <option key={batch._id || batch.name} value={batch.name}>
+                  {batch.name}
+                </option>
+              ))}
             </select>
             <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
               + Add Student
@@ -142,7 +169,7 @@ export default function StudentTable({ students }) {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
-                    {student.batches.map((batch) => (
+                    {students.map((batch) => (
                       <span
                         key={batch._id || batch.name}
                         className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full"
