@@ -5,6 +5,10 @@ import { toast, ToastContainer } from "react-toastify";
 import StudentTable from "./StudentManagement/StudentTable";
 const TeacherDashboard = () => {
   const [student, setStudent] = useState([]);
+  /**
+   * The function `fetchData` asynchronously fetches teacher details and updates a toast notification
+   * based on the response status.
+   */
   const fetchData = async () => {
     const toastId = toast.loading("Loading students.....");
     try {
@@ -28,6 +32,19 @@ const TeacherDashboard = () => {
         });
       }
     } catch (error) {
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        console.log("401 detected — attempting refresh");
+        const refreshSession = await api.post(
+          "/refresh",
+          {},
+          { withCredentials: true }
+        );
+        console.log("Refresh response:", refreshSession);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1);
+      }
+
       console.error("Error fetching data:", error);
       const message =
         error?.response?.data?.message || "Failed to load students.";

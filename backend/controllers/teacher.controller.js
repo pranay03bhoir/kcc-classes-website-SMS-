@@ -179,7 +179,7 @@ const teacherLogin = async (req, res) => {
   }
 };
 const generateNewAccessRefreshToken = async (req, res) => {
-  const refreshToken = req.params.refreshToken;
+  const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
     return res.status(400).json({
       success: false,
@@ -221,18 +221,26 @@ const generateNewAccessRefreshToken = async (req, res) => {
       );
       teacher.refreshToken = newRefreshToken;
       await teacher.save();
-      res.cookie("refreshToken", newRefreshToken, {
+      const isProd = process.env.NODE_ENV === "PRODUCTION";
+      const isCrossSite = process.env.CROSS_SITE === "true"; // ensure this is set in your .env
+
+      const getCookieOptions = (maxAge) => ({
         httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: isProd, // only true in production
+        sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+        maxAge,
       });
-      res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-        maxAge: 60 * 60 * 100,
-      });
+
+      res.cookie(
+        "accessToken",
+        newAccessToken,
+        getCookieOptions(60 * 60 * 1000)
+      ); // 1 hour
+      res.cookie(
+        "refreshToken",
+        newRefreshToken,
+        getCookieOptions(30 * 24 * 60 * 60 * 1000)
+      ); // 30 days
       return res.status(200).json({
         success: true,
         message: "New access token generated",
@@ -674,7 +682,8 @@ const getTeacherDetails = async (req, res) => {
         select: "batchId name timing subjectId studentIds",
         populate: {
           path: "studentIds",
-          select: "name email contact attendance",
+          select:
+            "name email contact attendance address studentId admissionYear createdAt profileImage",
           populate: {
             path: "attendance",
             select: "subject status date",

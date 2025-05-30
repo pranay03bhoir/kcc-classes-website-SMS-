@@ -3,14 +3,20 @@ import api from "@/utils/teacher-axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Sidebar from "../SideBar";
+import StudentDetailsViewModal from "./modals/StudentDetailsViewModal";
 import EditStudentModal from "./modals/StudentUpdateModal";
 
 export default function StudentTable({ students }) {
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("All");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [batchList, setBatchList] = useState([]);
+  /**
+   * The function fetches batches data from an API endpoint and sets the batch list in the component
+   * state.
+   */
   const fetchBatches = async () => {
     try {
       const response = await api.get("get/batches"); // ✅ Added await
@@ -37,6 +43,10 @@ export default function StudentTable({ students }) {
   //     });
   //   }
   // };
+  /**
+   * The function `handleSaveEdit` is an asynchronous function that updates a student's data via an API
+   * call and displays a toast notification based on the response status.
+   */
   const handleSaveEdit = async (updatedData) => {
     const toastId = toast.loading("Updating student...");
     try {
@@ -77,7 +87,6 @@ export default function StudentTable({ students }) {
     // fetchStudents();
   }, []);
   const studentList = students.flatMap((student) => student.studentIds);
-
   const filteredStudents = studentList.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -197,7 +206,13 @@ export default function StudentTable({ students }) {
                 </td>
                 <td className="px-4 py-3">{student.avgScore}</td>
                 <td className="px-4 py-3 space-x-3 text-sm">
-                  <button className="text-blue-600 font-medium hover:underline cursor-pointer">
+                  <button
+                    className="text-blue-600 font-medium hover:underline cursor-pointer"
+                    onClick={() => {
+                      setSelectedStudent(student);
+                      setIsViewModalOpen(true);
+                    }}
+                  >
                     View
                   </button>
                   <button
@@ -249,6 +264,13 @@ export default function StudentTable({ students }) {
         onClose={() => setIsEditModalOpen(false)}
         student={selectedStudent}
         onSave={handleSaveEdit}
+        batchList={batchList}
+      />
+
+      <StudentDetailsViewModal
+        open={isViewModalOpen}
+        onOpenChange={setIsViewModalOpen}
+        student={selectedStudent}
         batchList={batchList}
       />
     </div>
