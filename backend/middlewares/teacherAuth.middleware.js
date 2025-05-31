@@ -1,7 +1,7 @@
 const teacherAuthMiddleware = (req, res, next) => {
   try {
     const userRole = req.userInfo.role;
-    console.log("User role:", userRole);
+    // console.log("User role:", userRole);
     if (userRole !== "teacher" && userRole !== "admin") {
       res.status(400).json({
         success: false,

@@ -14,37 +14,103 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 export default function MarkAttendanceModal({
   open,
   onClose,
   students,
   setStudents,
   onSaveAttendance,
+  batch,
 }) {
-  const [formData, setFormData] = useState({
-    student: "",
-    subject: "",
-    status: "",
-    note: "",
-  });
+  const [attendanceData, setAttendanceData] = useState([]);
 
+  // ✅ Initialize attendanceData for each student
+  useEffect(() => {
+    if (Array.isArray(students) && students.length > 0) {
+      // Get the first batch's subjectId since we're marking attendance for one subject at a time
+      const subjectId = Array.isArray(batch)
+        ? batch[0]?.subjectId
+        : batch?.subjectId;
+
+      if (!subjectId) {
+        console.error("No subject ID found in batch data");
+        return;
+      }
+
+      const initialized = students.map((student) => ({
+        student: student._id,
+        subject: subjectId,
+        status: "",
+        note: "",
+      }));
+      setAttendanceData(initialized);
+    } else {
+      setAttendanceData([]);
+    }
+  }, [students, batch]);
+
+  // ✅ Handle status change per student
   const handleStatusChange = (index, value) => {
-    const updated = [...students];
-    updated[index].status = value;
-    setStudents(updated);
+    setAttendanceData((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        status: value,
+      };
+      return updated;
+    });
   };
 
-  const handleNoteChange = (index, value) => {
-    const updated = [...students];
-    updated[index].notes = value;
-    setStudents(updated);
+  // ✅ Handle note change per student
+  const handleNoteChange = (index, e) => {
+    const { value } = e.target;
+    setAttendanceData((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        note: value,
+      };
+      return updated;
+    });
   };
 
-  const handleSave = () => {
-    onSaveAttendance(students);
-    // Reset students' status and notes after saving
-    onClose();
+  // ✅ Save attendance
+  const handleSave = async () => {
+    let hasError = false;
+    const entriesToSubmit = attendanceData.filter(
+      (entry) => entry.status && entry.student && entry.subject
+    );
+
+    if (entriesToSubmit.length === 0) {
+      console.error("No valid attendance entries to submit");
+      return;
+    }
+
+    for (const entry of entriesToSubmit) {
+      try {
+        console.log("Submitting attendance for:", {
+          student: entry.student,
+          subject: entry.subject,
+          status: entry.status,
+          note: entry.note,
+        });
+
+        await onSaveAttendance(entry);
+      } catch (error) {
+        hasError = true;
+        console.error(
+          "Error submitting attendance:",
+          entry,
+          error?.response?.data
+        );
+      }
+    }
+
+    if (!hasError) {
+      onClose();
+    }
   };
 
   return (
@@ -52,7 +118,12 @@ export default function MarkAttendanceModal({
       <DialogContent className="max-w-3xl p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Mark Attendance - May 15, 2023
+            Mark Attendance -{" "}
+            {new Date().toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
           </DialogTitle>
         </DialogHeader>
 
@@ -81,13 +152,17 @@ export default function MarkAttendanceModal({
                   <td>{student.studentId}</td>
                   <td>
                     <span className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-1">
-                      {student.batches.map((batch) => batch.name).join(", ")}
+                      {Array.isArray(batch)
+                        ? batch.map((b) => b.name).join(", ")
+                        : batch?.name}
                     </span>
                   </td>
                   <td>
                     <Select
-                      value={student.status}
-                      onValueChange={(val) => handleStatusChange(index, val)}
+                      value={attendanceData[index]?.status || ""}
+                      onValueChange={(value) =>
+                        handleStatusChange(index, value)
+                      }
                     >
                       <SelectTrigger className="w-[120px] text-sm">
                         <SelectValue placeholder="Status" />
@@ -96,13 +171,14 @@ export default function MarkAttendanceModal({
                         <SelectItem value="Present">Present</SelectItem>
                         <SelectItem value="Absent">Absent</SelectItem>
                         <SelectItem value="Late">Late</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
                   <td>
                     <Input
-                      value={student.notes}
-                      onChange={(e) => handleNoteChange(index, e.target.value)}
+                      value={attendanceData[index]?.note || ""}
+                      onChange={(e) => handleNoteChange(index, e)}
                       placeholder="Add notes..."
                       className="w-full text-sm"
                     />

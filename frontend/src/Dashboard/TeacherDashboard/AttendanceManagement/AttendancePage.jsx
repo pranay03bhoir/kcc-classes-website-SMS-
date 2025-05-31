@@ -1,4 +1,3 @@
-// components/AttendancePage.jsx
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,24 +12,25 @@ import {
 import api from "@/utils/teacher-axios";
 import { Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../SideBar";
 import MarkAttendanceModal from "./Modals/AddAttendanceModal";
 
 export default function AttendancePage() {
   const [date, setDate] = useState("");
-  const [batch, setBatch] = useState("All Batches");
+  const [batch, setBatch] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
- /**
-  * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
-  * loading message, success message, or error message using a toast notification.
-  */
+  /**
+   * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
+   * loading message, success message, or error message using a toast notification.
+   */
   const fetchStudentData = async () => {
     const toastId = toast.loading("Loading students...");
     try {
-      const response = await api.get("/students");
-      setStudents(response.data.students);
+      const response = await api.get("get/teacher/details");
+      setStudents(response.data.teacher.batches);
+      setBatch(response.data.teacher.batches);
       if (response.status === 200) {
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",
@@ -41,6 +41,12 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error(error);
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        const refreshSession = await api.post("/refresh");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1);
+      }
       const message =
         error?.response?.data?.message || "Failed to load students.";
       toast.update(toastId, {
@@ -52,11 +58,20 @@ export default function AttendancePage() {
     }
   };
 
+  /**
+   * The function `addAttendance` is an asynchronous function that adds attendance data for students and
+   * displays corresponding toast messages based on the success or failure of the operation.
+   */
   const addAttendance = async (attendanceData) => {
+    // console.log("Starting addAttendance with data:", attendanceData);
     const toastId = toast.loading("Adding attendance...");
     try {
+      console.log("Making API request to /students/attendance");
       const response = await api.post("/students/attendance", attendanceData);
-      if (response.status === 200) {
+      console.log("API Response:", response);
+
+      if (response.status === 200 || response.status === 201) {
+        console.log("Attendance added successfully");
         toast.update(toastId, {
           render: response?.data?.message || "Attendance added successfully!",
           type: "success",
@@ -78,6 +93,7 @@ export default function AttendancePage() {
       });
     }
   };
+
   useEffect(() => {
     fetchStudentData();
   }, []);
@@ -89,17 +105,29 @@ export default function AttendancePage() {
   //       "Present"
   //   )
   // );
-
-  const presentCount = students.filter((student) =>
+  const studentList = students.flatMap((student) => student.studentIds);
+  const presentCount = studentList.filter((student) =>
     student.attendance?.some(
       (record) => record.status === "Present" || record.status === "Late"
     )
   ).length;
-  const absentCount = students.length - presentCount;
+  const absentCount = studentList.length - presentCount;
   const monthlyAvg = 92;
 
   return (
     <div>
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="fixed">
         <Sidebar />
       </div>
@@ -177,7 +205,7 @@ export default function AttendancePage() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, idx) => (
+              {studentList.map((student, idx) => (
                 <tr key={idx} className="border-t">
                   <td className="p-3">
                     <div>
@@ -190,20 +218,19 @@ export default function AttendancePage() {
                   <td className="p-3">{student.studentId}</td>
                   <td className="p-3">
                     <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
-                      {student.batches.map((batch) => batch.name).join(", ")}
+                      {batch.map((batch) => batch.name).join(", ")}
                     </span>
                   </td>
                   <td className="p-3">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        student.attendance?.[student.attendance.length - 1]
-                          ?.status === "Present"
-                          ? "bg-green-100 text-green-700"
-                          : student.attendance?.[student.attendance.length - 1]
-                              ?.status === "Late"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs ${student.attendance.map(
+                        (attendance) =>
+                          attendance.status === "Absent"
+                            ? "bg-red-100/50 text-red-800"
+                            : attendance.status === "Late"
+                            ? "bg-yellow-100/50 text-yellow-800"
+                            : "bg-green-100/50 text-green-800"
+                      )}`}
                     >
                       {student.attendance?.[student.attendance.length - 1]
                         ?.status || "N/A"}
@@ -225,7 +252,7 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex justify-between items-center pt-4 text-sm text-gray-600">
-          <span>Showing 1 to 5 of {students.length} results</span>
+          <span>Showing 1 to 5 of {studentList.length} results</span>
           <div className="flex items-center space-x-1">
             <Button variant="outline" size="sm">
               &lt;
@@ -247,9 +274,10 @@ export default function AttendancePage() {
       <MarkAttendanceModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        students={students}
+        students={studentList}
         setStudents={setStudents}
         onSaveAttendance={addAttendance}
+        batch={batch}
       />
     </div>
   );

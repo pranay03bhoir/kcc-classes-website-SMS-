@@ -9,7 +9,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     subject: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
+      ref: "Subject",
       required: true,
     },
     date: { type: Date, default: Date.now },

@@ -39,10 +39,11 @@ const TeacherDashboard = () => {
           {},
           { withCredentials: true }
         );
-        console.log("Refresh response:", refreshSession);
-        setTimeout(() => {
-          window.location.reload();
-        }, 1);
+        fetchData(); // Retry fetching data after refreshing session
+        // console.log("Refresh response:", refreshSession);
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 1);
       }
 
       console.error("Error fetching data:", error);

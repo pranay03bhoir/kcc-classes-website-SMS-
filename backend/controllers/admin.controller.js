@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Admin controller containing all admin-related operations including user management,
+ * attendance tracking, subject management, and batch operations.
+ */
+
 const Admin = require("../models/admin.model");
 const Student = require("../models/student.model");
 const Teacher = require("../models/teacher.model");
@@ -9,6 +14,20 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { sendVerificationEmail } = require("../utils/email.js");
+
+/**
+ * Registers a new admin user in the system
+ * @async
+ * @function adminRegister
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing admin details
+ * @param {string} req.body.name - Admin's full name
+ * @param {string} req.body.email - Admin's email address
+ * @param {string} req.body.password - Admin's password (will be hashed)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success status and message
+ * @throws {Error} If registration fails or user already exists
+ */
 const adminRegister = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -40,6 +59,20 @@ const adminRegister = async (req, res) => {
     });
   }
 };
+
+/**
+ * Authenticates an admin user and generates access/refresh tokens
+ * @async
+ * @function adminLogin
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing login credentials
+ * @param {string} req.body.email - Admin's email address
+ * @param {string} req.body.password - Admin's password
+ * @param {boolean} req.body.rememberMe - Whether to extend token expiration
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with tokens and success message
+ * @throws {Error} If authentication fails or user not found
+ */
 const adminLogin = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -103,6 +136,18 @@ const adminLogin = async (req, res) => {
     });
   }
 };
+
+/**
+ * Generates new access and refresh tokens using existing refresh token
+ * @async
+ * @function generateNewRefreshAccessToken
+ * @param {Object} req - Express request object
+ * @param {Object} req.cookies - Request cookies containing refresh token
+ * @param {string} req.cookies.refreshToken - Current refresh token
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with new tokens
+ * @throws {Error} If token refresh fails or token invalid
+ */
 const generateNewRefreshAccessToken = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -169,6 +214,18 @@ const generateNewRefreshAccessToken = async (req, res) => {
     });
   }
 };
+
+/**
+ * Logs out an admin user by clearing tokens
+ * @async
+ * @function adminLogout
+ * @param {Object} req - Express request object
+ * @param {Object} req.cookies - Request cookies containing refresh token
+ * @param {string} req.cookies.refreshToken - Current refresh token
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If logout process fails
+ */
 const adminLogout = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -200,6 +257,18 @@ const adminLogout = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves details of the currently logged-in admin
+ * @async
+ * @function getAdminDetails
+ * @param {Object} req - Express request object
+ * @param {Object} req.userInfo - User info from auth middleware
+ * @param {string} req.userInfo.id - Admin's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with admin details
+ * @throws {Error} If admin not found or retrieval fails
+ */
 const getAdminDetails = async (req, res) => {
   try {
     const adminId = req.userInfo.id;
@@ -222,6 +291,25 @@ const getAdminDetails = async (req, res) => {
     });
   }
 };
+
+/**
+ * Creates a new student account in the system
+ * @async
+ * @function createStudents
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing student details
+ * @param {string} req.body.name - Student's full name
+ * @param {string} req.body.email - Student's email address
+ * @param {string} req.body.password - Student's password
+ * @param {string} req.body.contact - Student's contact number
+ * @param {string} req.body.parentsContact - Parent's contact number
+ * @param {string} req.body.address - Student's address
+ * @param {string} req.body.currentStd - Current standard/grade
+ * @param {string} req.body.admissionYear - Year of admission
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If student creation fails or email already exists
+ */
 const createStudents = async (req, res) => {
   try {
     const {
@@ -279,6 +367,26 @@ const createStudents = async (req, res) => {
     });
   }
 };
+
+/**
+ * Updates details of an existing student
+ * @async
+ * @function updateStudentDetails
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Student's ID
+ * @param {Object} req.body - Request body containing updated details
+ * @param {string} [req.body.name] - Updated student name
+ * @param {string} [req.body.password] - Updated password
+ * @param {string} [req.body.contact] - Updated contact number
+ * @param {string} [req.body.parentsContact] - Updated parent's contact
+ * @param {string} [req.body.address] - Updated address
+ * @param {string} [req.body.profileImage] - Updated profile image URL
+ * @param {string} [req.body.admissionYear] - Updated admission year
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated student details
+ * @throws {Error} If update fails or student not found
+ */
 const updateStudentDetails = async (req, res) => {
   try {
     const studentId = req.params.id;
@@ -356,28 +464,16 @@ const updateStudentDetails = async (req, res) => {
     });
   }
 };
-// const removeStudent = async (req, res) => {
-//   try {
-//     const studentId = req.params.id;
-//     const student = await Student.findByIdAndDelete(studentId);
-//     if (!student) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Student not found",
-//       });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: "Student deleted successfully",
-//     });
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({
-//       success: false,
-//       message: "Something went wrong",
-//     });
-//   }
-// };
+
+/**
+ * Retrieves all students with optional pagination
+ * @async
+ * @function getAllStudents
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of students
+ * @throws {Error} If retrieval fails or no students found
+ */
 const getAllStudents = async (req, res) => {
   try {
     // const { page, limit } = req.query;
@@ -408,6 +504,19 @@ const getAllStudents = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves all students with pagination support
+ * @async
+ * @function getAllStudentsWithPagination
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {number} [req.query.page=1] - Page number
+ * @param {number} [req.query.limit=10] - Items per page
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with paginated students list
+ * @throws {Error} If retrieval fails or no students found
+ */
 const getAllStudentsWithPagination = async (req, res) => {
   try {
     const { page, limit } = req.query;
@@ -441,6 +550,18 @@ const getAllStudentsWithPagination = async (req, res) => {
     });
   }
 };
+
+/**
+ * Searches for students based on a query string
+ * @async
+ * @function searchAStudent
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.searchQuery - Search term
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with matching students
+ * @throws {Error} If search fails or no matches found
+ */
 const searchAStudent = async (req, res) => {
   try {
     const { searchQuery } = req.query;
@@ -479,6 +600,17 @@ const searchAStudent = async (req, res) => {
   }
 };
 
+/**
+ * Retrieves students enrolled in a specific subject
+ * @async
+ * @function getStudentsBySubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Subject ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of enrolled students
+ * @throws {Error} If retrieval fails or no students found
+ */
 const getStudentsBySubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
@@ -503,6 +635,16 @@ const getStudentsBySubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves all teachers in the system
+ * @async
+ * @function getAllTeachers
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of teachers
+ * @throws {Error} If retrieval fails or no teachers found
+ */
 const getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find({});
@@ -526,6 +668,18 @@ const getAllTeachers = async (req, res) => {
     });
   }
 };
+
+/**
+ * Searches for teachers based on a query string
+ * @async
+ * @function searchATeacher
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.searchQuery - Search term
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with matching teachers
+ * @throws {Error} If search fails or no matches found
+ */
 const searchATeacher = async (req, res) => {
   try {
     const { searchQuery } = req.query;
@@ -561,6 +715,18 @@ const searchATeacher = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves a specific student by ID
+ * @async
+ * @function getStudentsById
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.studentId - Student ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with student details
+ * @throws {Error} If student not found or retrieval fails
+ */
 const getStudentsById = async (req, res) => {
   try {
     const studentId = req.params.studentId;
@@ -585,6 +751,18 @@ const getStudentsById = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves a specific teacher by ID
+ * @async
+ * @function getTeachersById
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Teacher ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with teacher details
+ * @throws {Error} If teacher not found or retrieval fails
+ */
 const getTeachersById = async (req, res) => {
   try {
     const teacherId = req.params.id;
@@ -609,6 +787,24 @@ const getTeachersById = async (req, res) => {
     });
   }
 };
+
+/**
+ * Updates details of an existing teacher
+ * @async
+ * @function updateTeachersDetails
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Teacher ID
+ * @param {Object} req.body - Request body containing updated details
+ * @param {string} req.body.name - Updated teacher name
+ * @param {string} req.body.email - Updated email
+ * @param {string} req.body.password - Updated password
+ * @param {string} req.body.contact - Updated contact number
+ * @param {string} req.body.address - Updated address
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If update fails or teacher not found
+ */
 const updateTeachersDetails = async (req, res) => {
   try {
     const teacherId = req.params.id;
@@ -652,61 +848,18 @@ const updateTeachersDetails = async (req, res) => {
     });
   }
 };
-// const updateStudentsDetails = async (req, res) => {
-//   try {
-//     const studentId = req.params.id;
-//     const existingStudent = await Student.findById(studentId);
-//     if (!existingStudent) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Student not found",
-//       });
-//     }
-//     const {
-//       name,
-//       email,
-//       password,
-//       contact,
-//       address,
-//       subjects,
-//       attendance,
-//       scores,
-//     } = req.body;
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-//     const student = await Student.findByIdAndUpdate(
-//       studentId,
-//       {
-//         name: name,
-//         email: email,
-//         password: hashedPassword,
-//         contact: contact,
-//         address: address,
-//         subjects: subjects,
-//         attendance: attendance,
-//         scores: scores,
-//       },
-//       { new: true, runValidators: true }
-//     );
-//     if (!student) {
-//       res.status(404).json({
-//         success: false,
-//         message: "Student update failed",
-//       });
-//     } else {
-//       res.status(200).json({
-//         success: true,
-//         message: "Student details updated",
-//       });
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({
-//       success: false,
-//       message: "Something went wrong",
-//     });
-//   }
-// };
+
+/**
+ * Deletes a teacher from the system
+ * @async
+ * @function deleteTeacher
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Teacher ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If deletion fails or teacher not found
+ */
 const deleteTeacher = async (req, res) => {
   try {
     const teacherId = req.params.id;
@@ -730,6 +883,18 @@ const deleteTeacher = async (req, res) => {
     });
   }
 };
+
+/**
+ * Deletes a student from the system
+ * @async
+ * @function deleteStudent
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Student ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If deletion fails or student not found
+ */
 const deleteStudent = async (req, res) => {
   try {
     const studentId = req.params.id;
@@ -753,6 +918,16 @@ const deleteStudent = async (req, res) => {
     });
   }
 };
+
+/**
+ * Counts total number of students in the system
+ * @async
+ * @function countAllStudents
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with student count
+ * @throws {Error} If count operation fails
+ */
 const countAllStudents = async (req, res) => {
   try {
     const studentCount = await Student.countDocuments();
@@ -769,6 +944,16 @@ const countAllStudents = async (req, res) => {
     });
   }
 };
+
+/**
+ * Counts total number of teachers in the system
+ * @async
+ * @function countAllTeachers
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with teacher count
+ * @throws {Error} If count operation fails
+ */
 const countAllTeachers = async (req, res) => {
   try {
     const teacherCount = await Teacher.countDocuments();
@@ -785,6 +970,29 @@ const countAllTeachers = async (req, res) => {
     });
   }
 };
+
+/**
+ * Creates a new subject in the system
+ * @async
+ * @function createSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing subject details
+ * @param {string} req.body.name - Subject name
+ * @param {string} req.body.code - Subject code
+ * @param {string} req.body.category - Subject category
+ * @param {string} req.body.duration - Course duration
+ * @param {number} req.body.classesPerWeek - Number of classes per week
+ * @param {string} req.body.gradeLevel - Grade level
+ * @param {number} req.body.rating - Subject rating
+ * @param {boolean} req.body.isPopular - Whether subject is popular
+ * @param {string} req.body.description - Subject description
+ * @param {string} req.body.imageUrl - Subject image URL
+ * @param {Array<string>} req.body.teachers - Array of teacher IDs
+ * @param {Array<string>} req.body.students - Array of student IDs
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If creation fails or subject already exists
+ */
 const createSubject = async (req, res) => {
   try {
     const {
@@ -857,6 +1065,31 @@ const createSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Updates an existing subject
+ * @async
+ * @function updateSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Subject ID
+ * @param {Object} req.body - Request body containing updated details
+ * @param {string} req.body.name - Updated subject name
+ * @param {string} req.body.code - Updated subject code
+ * @param {string} req.body.category - Updated category
+ * @param {string} req.body.duration - Updated duration
+ * @param {number} req.body.classesPerWeek - Updated classes per week
+ * @param {string} req.body.gradeLevel - Updated grade level
+ * @param {number} req.body.rating - Updated rating
+ * @param {boolean} req.body.isPopular - Updated popularity status
+ * @param {string} req.body.description - Updated description
+ * @param {string} req.body.imageUrl - Updated image URL
+ * @param {Array<string>} req.body.teachers - Updated teacher IDs
+ * @param {Array<string>} req.body.students - Updated student IDs
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If update fails or subject not found
+ */
 const updateSubject = async (req, res) => {
   try {
     let {
@@ -928,6 +1161,16 @@ const updateSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves all subjects in the system
+ * @async
+ * @function getAllSubjects
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of subjects
+ * @throws {Error} If retrieval fails or no subjects found
+ */
 const getAllSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find({}).populate(
@@ -954,6 +1197,16 @@ const getAllSubjects = async (req, res) => {
     });
   }
 };
+
+/**
+ * Counts total number of subjects in the system
+ * @async
+ * @function countAllSubjects
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with subject count
+ * @throws {Error} If count operation fails
+ */
 const countAllSubjects = async (req, res) => {
   try {
     const subjectCount = await Subject.countDocuments();
@@ -971,6 +1224,21 @@ const countAllSubjects = async (req, res) => {
     });
   }
 };
+
+/**
+ * Deletes a subject from the system
+ * @async
+ * @function deleteSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Subject ID
+ * @param {Object} req.body - Request body
+ * @param {Array<string>} req.body.studentIds - Array of student IDs to remove from subject
+ * @param {Array<string>} req.body.teacherIds - Array of teacher IDs to remove from subject
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If deletion fails or subject not found
+ */
 const deleteSubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
@@ -1017,6 +1285,20 @@ const deleteSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Enrolls a student in one or more subjects
+ * @async
+ * @function enrollStudentInSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.studentId - Student ID
+ * @param {Object} req.query - Query parameters
+ * @param {string|Array<string>} req.query.subjects - Subject ID(s) to enroll in
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If enrollment fails, student not found, or already enrolled
+ */
 const enrollStudentInSubject = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -1085,6 +1367,20 @@ const enrollStudentInSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Adds a teacher to one or more subjects
+ * @async
+ * @function addTeacherToSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.teacherId - Teacher ID
+ * @param {Object} req.query - Query parameters
+ * @param {string|Array<string>} req.query.subjects - Subject ID(s) to add teacher to
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If addition fails, teacher not found, or already added
+ */
 const addTeacherToSubject = async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -1131,6 +1427,20 @@ const addTeacherToSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Removes a student from one or more subjects
+ * @async
+ * @function removeStudentFromSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Subject ID
+ * @param {Object} req.query - Query parameters
+ * @param {string|Array<string>} req.query.studentIds - Student ID(s) to remove
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If removal fails or subject not found
+ */
 const removeStudentFromSubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
@@ -1170,6 +1480,20 @@ const removeStudentFromSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Removes a teacher from one or more subjects
+ * @async
+ * @function removeTeacherFromSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Subject ID
+ * @param {Object} req.body - Request body
+ * @param {Array<string>} req.body.teacherIds - Teacher ID(s) to remove
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If removal fails or subject not found
+ */
 const removeTeacherFromSubject = async (req, res) => {
   try {
     const { id: subjectId } = req.params;
@@ -1214,6 +1538,21 @@ const removeTeacherFromSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Marks attendance for a student in a subject
+ * @async
+ * @function markStudentAttendance
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.student - Student ID
+ * @param {string} req.body.subject - Subject ID
+ * @param {string} req.body.status - Attendance status (Present/Absent/Late)
+ * @param {string} [req.body.note] - Optional note about attendance
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If marking fails, attendance already marked, or invalid data
+ */
 const markStudentAttendance = async (req, res) => {
   try {
     const { student, subject, status, note } = req.body;
@@ -1258,6 +1597,19 @@ const markStudentAttendance = async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 };
+
+/**
+ * Retrieves attendance records with pagination
+ * @async
+ * @function getAttendanceRecords
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {number} [req.query.page=1] - Page number
+ * @param {number} [req.query.limit=10] - Items per page
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with paginated attendance records
+ * @throws {Error} If retrieval fails or no records found
+ */
 const getAttendanceRecords = async (req, res) => {
   try {
     const { page } = req.query;
@@ -1293,6 +1645,18 @@ const getAttendanceRecords = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves students by attendance record
+ * @async
+ * @function getStudentByAttendance
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Attendance record ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of students
+ * @throws {Error} If retrieval fails or no students found
+ */
 const getStudentByAttendance = async (req, res) => {
   try {
     const { id: attendanceId } = req.params;
@@ -1317,6 +1681,18 @@ const getStudentByAttendance = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves attendance records for a specific date
+ * @async
+ * @function getAttendanceByDate
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.date - Date to get attendance for (YYYY-MM-DD)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with attendance records
+ * @throws {Error} If retrieval fails or no records found
+ */
 const getAttendanceByDate = async (req, res) => {
   try {
     const { date } = req.body;
@@ -1356,6 +1732,21 @@ const getAttendanceByDate = async (req, res) => {
     });
   }
 };
+
+/**
+ * Adds grades/scores for a student in a subject
+ * @async
+ * @function addGradesToStudent
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.studentId - Student ID
+ * @param {string} req.body.subject - Subject ID
+ * @param {string} req.body.examType - Type of exam (Midterm/Final/Quiz/Assignment)
+ * @param {number} req.body.score - Score obtained
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If adding grades fails, student not found, or not enrolled
+ */
 const addGradesToStudent = async (req, res) => {
   try {
     const { studentId, subject, examType, score } = req.body;
@@ -1414,6 +1805,22 @@ const addGradesToStudent = async (req, res) => {
     });
   }
 };
+
+/**
+ * Updates a student's score for a subject
+ * @async
+ * @function updateStudentScore
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.studentId - Student ID
+ * @param {string} req.params.subjectId - Subject ID
+ * @param {string} req.params.examType - Type of exam
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.score - Updated score
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated score
+ * @throws {Error} If update fails, invalid IDs, or invalid exam type
+ */
 const updateStudentScore = async (req, res) => {
   try {
     const { studentId, subjectId, examType } = req.params;
@@ -1461,6 +1868,18 @@ const updateStudentScore = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves scores for a specific student
+ * @async
+ * @function getStudentScore
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.studentId - Student ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with student's scores
+ * @throws {Error} If retrieval fails or student not found
+ */
 const getStudentScore = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -1497,6 +1916,18 @@ const getStudentScore = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves scores for a specific subject
+ * @async
+ * @function getScoresForSubject
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.subjectId - Subject ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with subject scores
+ * @throws {Error} If retrieval fails or no scores found
+ */
 const getScoresForSubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
@@ -1523,6 +1954,23 @@ const getScoresForSubject = async (req, res) => {
     });
   }
 };
+
+/**
+ * Creates a new batch in the system
+ * @async
+ * @function createBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.name - Batch name
+ * @param {string} req.body.classStd - Class/Standard
+ * @param {string} req.body.timings - Batch timings
+ * @param {string} req.body.subjectId - Subject ID
+ * @param {string} req.body.teacherId - Teacher ID
+ * @param {Array<string>} [req.body.studentIds] - Array of student IDs
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with created batch
+ * @throws {Error} If creation fails or batch already exists
+ */
 const createBatch = async (req, res) => {
   try {
     const { name, classStd, timings, subjectId, teacherId, studentIds } =
@@ -1575,6 +2023,25 @@ const createBatch = async (req, res) => {
     });
   }
 };
+
+/**
+ * Updates an existing batch
+ * @async
+ * @function updateBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Batch ID
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.name - Updated batch name
+ * @param {string} req.body.classStd - Updated class/standard
+ * @param {string} req.body.timings - Updated timings
+ * @param {string} req.body.subjectId - Updated subject ID
+ * @param {string} req.body.teacherId - Updated teacher ID
+ * @param {Array<string>} req.body.studentIds - Updated student IDs
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated batch
+ * @throws {Error} If update fails or batch not found
+ */
 const updateBatch = async (req, res) => {
   try {
     const batchId = req.params.id;
@@ -1618,6 +2085,16 @@ const updateBatch = async (req, res) => {
     });
   }
 };
+
+/**
+ * Retrieves all batches in the system
+ * @async
+ * @function getAllBatches
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with list of batches
+ * @throws {Error} If retrieval fails or no batches found
+ */
 const getAllBatches = async (req, res) => {
   try {
     const batches = await Batch.find({}).populate(
@@ -1643,6 +2120,20 @@ const getAllBatches = async (req, res) => {
     });
   }
 };
+
+/**
+ * Adds a student to a batch
+ * @async
+ * @function addStudentToBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Student ID
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.batchId - Batch ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If addition fails, student/batch not found, or already in batch
+ */
 const addStudentToBatch = async (req, res) => {
   try {
     const studentId = req.params.id; // Fix extraction of studentId
@@ -1718,6 +2209,20 @@ const addStudentToBatch = async (req, res) => {
     });
   }
 };
+
+/**
+ * Adds a teacher to a batch
+ * @async
+ * @function addTeacherToBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Teacher ID
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.batchId - Batch ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If addition fails, teacher/batch/subject not found, or not teaching subject
+ */
 const addTeacherToBatch = async (req, res) => {
   try {
     const teacherId = req.params.id;
@@ -1791,6 +2296,19 @@ const addTeacherToBatch = async (req, res) => {
   }
 };
 
+/**
+ * Removes a student from a batch
+ * @async
+ * @function removeStudentFromBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Student ID
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.batchId - Batch ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If removal fails, student/batch not found, or not in batch
+ */
 const removeStudentFromBatch = async (req, res) => {
   try {
     const studentId = req.params.id;
@@ -1844,6 +2362,20 @@ const removeStudentFromBatch = async (req, res) => {
     });
   }
 };
+
+/**
+ * Removes a teacher from a batch
+ * @async
+ * @function removeTeacherFromBatch
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Teacher ID
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.batchId - Batch ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * @throws {Error} If removal fails, teacher/batch not found, or not in batch
+ */
 const removeTeacherFromBatch = async (req, res) => {
   try {
     const teacherId = req.params.id;
@@ -1897,6 +2429,7 @@ const removeTeacherFromBatch = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   adminRegister,
   adminLogin,

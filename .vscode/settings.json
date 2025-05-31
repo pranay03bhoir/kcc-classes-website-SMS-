@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
         "admindashboard"
-    ]
+    ],
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true
 }
