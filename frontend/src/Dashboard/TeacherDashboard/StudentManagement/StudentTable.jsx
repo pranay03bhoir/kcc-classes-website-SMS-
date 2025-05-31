@@ -6,13 +6,14 @@ import Sidebar from "../SideBar";
 import StudentDetailsViewModal from "./modals/StudentDetailsViewModal";
 import EditStudentModal from "./modals/StudentUpdateModal";
 
-export default function StudentTable({ students }) {
+export default function StudentTable({ students, teacher }) {
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("All");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [batchList, setBatchList] = useState([]);
+  
   /**
    * The function fetches batches data from an API endpoint and sets the batch list in the component
    * state.
@@ -107,7 +108,7 @@ export default function StudentTable({ students }) {
   return (
     <div>
       <div className="fixed h-screen bg-gray-100">
-        <Sidebar />
+        <Sidebar teacher={teacher} />
       </div>
       <div className="p-6 ms-64">
         <h1 className="text-2xl font-bold mb-1">Students</h1>

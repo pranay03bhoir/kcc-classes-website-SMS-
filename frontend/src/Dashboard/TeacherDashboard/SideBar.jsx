@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import api from "@/utils/teacher-axios";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   FaBars,
   FaBook,
-  FaChalkboardTeacher,
   FaChartBar,
   FaClipboardCheck,
   FaCog,
@@ -16,6 +16,7 @@ import {
   FaTimes,
   FaUserGraduate,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const navItems = [
   { label: "Dashboard", href: "/teacherDashboard", icon: <FaHome /> },
@@ -34,9 +35,35 @@ const navItems = [
   { label: "Settings", href: "/admin/settings", icon: <FaCog /> },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ teacher }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true); // To toggle sidebar on mobile
+
+  const handleLogout = async () => {
+    const toastId = toast.loading("Logging out...");
+    try {
+      const logout = await api.post("/logout");
+      if (logout.status === 200) {
+        toast.update(toastId, {
+          render: logout?.data?.message || "Logged out successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        // Optionally redirect to login page or clear user state
+        window.location.href = "/login/teacher"; // Redirect to login page
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.update(toastId, {
+        render: error?.response?.data?.message || "Logout failed",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+    console.log("Logout clicked");
+  };
 
   return (
     <aside
@@ -79,14 +106,19 @@ export default function Sidebar() {
         <Card className={`bg-gray-800 p-4 flex items-center gap-3`}>
           <img
             src="https://api.dicebear.com/6.x/adventurer/svg?seed=admin"
-            alt="Admin"
+            alt="Teacher"
             className={`w-10 h-10 rounded-full `}
           />
           <div className={`space-y-2 text-center `}>
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-gray-400">admin@tutoracademy.com</p>
+            <p className="text-sm font-medium text-white">{teacher?.name}</p>
+            <p className="text-xs text-gray-400">{teacher?.email}</p>
           </div>
-          <Button className={`bg-red-500 hover:bg-red-800`}>Logout</Button>
+          <Button
+            className={`bg-red-500 hover:bg-red-800`}
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
         </Card>
       </div>
 

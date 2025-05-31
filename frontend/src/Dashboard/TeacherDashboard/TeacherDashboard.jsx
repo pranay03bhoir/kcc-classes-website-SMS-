@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import StudentTable from "./StudentManagement/StudentTable";
 const TeacherDashboard = () => {
   const [student, setStudent] = useState([]);
+  const [teacher, setTeacher] = useState([]);
   /**
    * The function `fetchData` asynchronously fetches teacher details and updates a toast notification
    * based on the response status.
@@ -12,10 +13,26 @@ const TeacherDashboard = () => {
   const fetchData = async () => {
     const toastId = toast.loading("Loading students.....");
     try {
+      console.log("Fetching teacher details...");
       const response = await api.get("get/teacher/details");
-      console.log(response.data.teacher.batches);
+      // console.log("Full API Response:", response);
+      // console.log("Response data:", response.data);
+      // console.log("Teacher data:", response.data.teacher);
 
-      setStudent(response.data.teacher.batches); // likely you want to use response.data
+      if (!response.data.teacher) {
+        console.error("Teacher data is undefined in response");
+        toast.update(toastId, {
+          render: "Error: Teacher data not found in response",
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        return;
+      }
+
+      setStudent(response.data.teacher.batches);
+      setTeacher(response.data.teacher);
+
       if (response.status === 200) {
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",
@@ -32,6 +49,13 @@ const TeacherDashboard = () => {
         });
       }
     } catch (error) {
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
       if (error?.response?.status >= 400 && error?.response?.status < 500) {
         console.log("401 detected — attempting refresh");
         const refreshSession = await api.post(
@@ -65,7 +89,7 @@ const TeacherDashboard = () => {
   return (
     <div>
       <ToastContainer position="top-center" />
-      <StudentTable students={student} />
+      <StudentTable students={student} teacher={teacher} />
     </div>
   );
 };

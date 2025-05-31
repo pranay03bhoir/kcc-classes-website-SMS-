@@ -21,6 +21,7 @@ export default function AttendancePage() {
   const [batch, setBatch] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
+  const [teacher, setTeacher] = useState([]);
   /**
    * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
    * loading message, success message, or error message using a toast notification.
@@ -31,6 +32,7 @@ export default function AttendancePage() {
       const response = await api.get("get/teacher/details");
       setStudents(response.data.teacher.batches);
       setBatch(response.data.teacher.batches);
+      setTeacher(response.data.teacher);
       if (response.status === 200) {
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",
@@ -129,7 +131,7 @@ export default function AttendancePage() {
         theme="light"
       />
       <div className="fixed">
-        <Sidebar />
+        <Sidebar teacher={teacher} />
       </div>
       <div className="p-6 space-y-6 ms-64">
         <h1 className="text-2xl font-bold">Attendance</h1>
