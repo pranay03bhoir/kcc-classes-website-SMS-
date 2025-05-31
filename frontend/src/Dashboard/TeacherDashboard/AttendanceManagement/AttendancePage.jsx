@@ -22,6 +22,10 @@ export default function AttendancePage() {
   const [batch, setBatch] = useState("All Batches");
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
+ /**
+  * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
+  * loading message, success message, or error message using a toast notification.
+  */
   const fetchStudentData = async () => {
     const toastId = toast.loading("Loading students...");
     try {
