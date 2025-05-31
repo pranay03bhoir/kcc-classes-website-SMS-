@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../SideBar";
 import MarkAttendanceModal from "./Modals/AddAttendanceModal";
+import EditIndividualStudentModal from "./Modals/EditIndivisualStudent";
 
 export default function AttendancePage() {
   const [date, setDate] = useState("");
@@ -22,6 +23,7 @@ export default function AttendancePage() {
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   /**
    * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
    * loading message, success message, or error message using a toast notification.
@@ -281,6 +283,7 @@ export default function AttendancePage() {
         onSaveAttendance={addAttendance}
         batch={batch}
       />
+      <EditIndividualStudentModal />
     </div>
   );
 }

@@ -115,8 +115,8 @@ export default function MarkAttendanceModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl p-6">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] w-[1200px] p-6 max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl font-semibold">
             Mark Attendance -{" "}
             {new Date().toLocaleDateString("en-IN", {
@@ -127,69 +127,102 @@ export default function MarkAttendanceModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-gray-500 text-xs border-b">
-              <tr>
-                <th className="text-left py-2">STUDENT</th>
-                <th className="text-left py-2">ID</th>
-                <th className="text-left py-2">BATCH</th>
-                <th className="text-left py-2">STATUS</th>
-                <th className="text-left py-2">NOTES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student, index) => (
-                <tr key={student._id} className="border-b py-2">
-                  <td className="flex items-center gap-3 py-3">
-                    <div className="bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium text-gray-700">
-                      {student.initials}
-                    </div>
-                    <div>
-                      <div className="font-medium">{student.name}</div>
-                    </div>
-                  </td>
-                  <td>{student.studentId}</td>
-                  <td>
-                    <span className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-1">
-                      {Array.isArray(batch)
-                        ? batch.map((b) => b.name).join(", ")
-                        : batch?.name}
-                    </span>
-                  </td>
-                  <td>
-                    <Select
-                      value={attendanceData[index]?.status || ""}
-                      onValueChange={(value) =>
-                        handleStatusChange(index, value)
-                      }
-                    >
-                      <SelectTrigger className="w-[120px] text-sm">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Present">Present</SelectItem>
-                        <SelectItem value="Absent">Absent</SelectItem>
-                        <SelectItem value="Late">Late</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td>
-                    <Input
-                      value={attendanceData[index]?.note || ""}
-                      onChange={(e) => handleNoteChange(index, e)}
-                      placeholder="Add notes..."
-                      className="w-full text-sm"
-                    />
-                  </td>
+        <div className="flex-1 overflow-y-auto mt-4">
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500 text-xs sticky top-0">
+                <tr>
+                  <th className="text-left py-3 px-4 min-w-[250px]">STUDENT</th>
+                  <th className="text-left py-3 px-4 min-w-[120px]">ID</th>
+                  <th className="text-left py-3 px-4 min-w-[150px]">BATCH</th>
+                  <th className="text-left py-3 px-4 min-w-[120px]">STATUS</th>
+                  <th className="text-left py-3 px-4 min-w-[200px]">NOTES</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {students.map((student, index) => (
+                  <tr key={student._id} className="hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium text-gray-700">
+                          {student.profileImage ? (
+                            <img
+                              src={student.profileImage}
+                              alt="Profile"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-gray-500">
+                              {student.name
+                                .split(" ")
+                                .splice(0, 3)
+                                .map((word) => word[0].toUpperCase())
+                                .join("")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">
+                            {student.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {student.studentId}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(batch) ? (
+                          batch.map((b, idx) => (
+                            <span
+                              key={idx}
+                              className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-1 whitespace-nowrap"
+                            >
+                              {b.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-1 whitespace-nowrap">
+                            {batch?.name}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Select
+                        value={attendanceData[index]?.status || ""}
+                        onValueChange={(value) =>
+                          handleStatusChange(index, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[120px] text-sm">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Present">Present</SelectItem>
+                          <SelectItem value="Absent">Absent</SelectItem>
+                          <SelectItem value="Late">Late</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Input
+                        value={attendanceData[index]?.note || ""}
+                        onChange={(e) => handleNoteChange(index, e)}
+                        placeholder="Add notes..."
+                        className="w-full text-sm"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-end gap-2 mt-4 pt-4 border-t flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
