@@ -158,9 +158,6 @@ npm start
 - **Mobile App (React Native)**
 - **More Payment Gateway Options**
 
-## Contributing
-We welcome contributions! Feel free to open issues or submit pull requests.
-
 ## License
 MIT License
 
