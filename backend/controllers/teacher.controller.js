@@ -183,7 +183,7 @@ const teacherLogin = async (req, res) => {
         res.cookie(
           "refreshToken",
           refreshToken,
-          getCookieOptions(cookieExpiration)
+          getCookieOptions(cookieExpiration),
         );
         return res.status(200).json({
           success: true,
@@ -248,7 +248,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
       const newAccessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1h" },
       );
       const newRefreshToken = jwt.sign(
         {
@@ -259,7 +259,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
         process.env.JWT_REFRESH_SECRET,
         {
           expiresIn: "30d",
-        }
+        },
       );
       teacher.refreshToken = newRefreshToken;
       await teacher.save();
@@ -276,19 +276,19 @@ const generateNewAccessRefreshToken = async (req, res) => {
       res.cookie(
         "accessToken",
         newAccessToken,
-        getCookieOptions(60 * 60 * 1000)
+        getCookieOptions(60 * 60 * 1000),
       ); // 1 hour
       res.cookie(
         "refreshToken",
         newRefreshToken,
-        getCookieOptions(30 * 24 * 60 * 60 * 1000)
+        getCookieOptions(30 * 24 * 60 * 60 * 1000),
       ); // 30 days
       return res.status(200).json({
         success: true,
         message: "New access token generated",
         newAccessToken,
       });
-    }
+    },
   );
 };
 /**
@@ -357,7 +357,7 @@ const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
       .select(
-        "name email contact parentsContact address subjects attendance batches studentId"
+        "name email contact parentsContact address subjects attendance batches studentId",
       )
       .populate("subjects", "name")
       .populate("attendance", "subject status date")
@@ -468,7 +468,7 @@ const updateStudentDetails = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     return res.status(200).json({
@@ -550,7 +550,7 @@ const addStudentAttendance = async (req, res) => {
       {
         new: true, // Return the updated document
         // Don't use $set as it would replace the entire array
-      }
+      },
     ).populate({
       path: "attendance",
       select: "subject status date",
@@ -776,7 +776,7 @@ const addStudentScores = async (req, res) => {
         {
           $addToSet: { scores: studentScore },
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       )
         .select("name email contact parentsContact address subjects scores")
         .populate("subjects", "name");
@@ -841,7 +841,7 @@ const updateStudentScores = async (req, res) => {
         {
           score: score,
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       )
         .select("studentId subject examType score date")
         .populate("subject", "name")
