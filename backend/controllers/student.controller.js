@@ -1,9 +1,18 @@
+/**
+ * @fileoverview Student controller handling all student-related operations including registration,
+ * authentication, profile management, and subject enrollment.
+ */
+
 const joi = require("joi");
 const Student = require("../models/student.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../utils/email");
 
+/**
+ * Joi validation schema for student registration
+ * @type {joi.ObjectSchema}
+ */
 const studentSchema = joi.object({
   name: joi.string().required(),
   email: joi.string().email().required(),
@@ -16,6 +25,25 @@ const studentSchema = joi.object({
   profileImage: joi.string().optional(),
 });
 
+/**
+ * Register a new student
+ * @async
+ * @function studentRegister
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.name - Student's full name
+ * @param {string} req.body.email - Student's email address
+ * @param {string} req.body.password - Student's password (min 8 characters)
+ * @param {string} req.body.contact - Student's contact number (10-13 digits)
+ * @param {string[]} req.body.parentsContact - Array of parent contact numbers
+ * @param {number} req.body.admissionYear - Year of admission
+ * @param {string} req.body.address - Student's address
+ * @param {string} [req.body.currentStd] - Current standard/grade
+ * @param {string} [req.body.profileImage] - URL to profile image
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with success status and message
+ * @throws {Error} When registration fails or validation error occurs
+ */
 const studentRegister = async (req, res) => {
   try {
     const { error } = studentSchema.validate(req.body);
@@ -79,6 +107,18 @@ const studentRegister = async (req, res) => {
     });
   }
 };
+
+/**
+ * Verify student's email address using token
+ * @async
+ * @function studentVerifyEmail
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.token - JWT verification token
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with verification status
+ * @throws {Error} When verification fails or token is invalid
+ */
 const studentVerifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
@@ -110,6 +150,18 @@ const studentVerifyEmail = async (req, res) => {
     });
   }
 };
+
+/**
+ * Resend verification email to unverified student
+ * @async
+ * @function resendVerificationEmail
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - Student's email address
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with email status
+ * @throws {Error} When email sending fails or student not found
+ */
 const resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -141,6 +193,20 @@ const resendVerificationEmail = async (req, res) => {
     });
   }
 };
+
+/**
+ * Authenticate student and generate access tokens
+ * @async
+ * @function studentLogin
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - Student's email address
+ * @param {string} req.body.password - Student's password
+ * @param {boolean} [req.body.rememberMe] - Whether to extend token validity
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with tokens and user info
+ * @throws {Error} When authentication fails or email not verified
+ */
 const studentLogin = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -187,7 +253,7 @@ const studentLogin = async (req, res) => {
         res.cookie(
           "refreshToken",
           refreshToken,
-          getCookieOptions(cookieExpiration),
+          getCookieOptions(cookieExpiration)
         );
         return res.status(200).json({
           success: true,
@@ -209,6 +275,18 @@ const studentLogin = async (req, res) => {
     });
   }
 };
+
+/**
+ * Check if student's session is valid
+ * @async
+ * @function studentAuthCheck
+ * @param {Object} req - Express request object
+ * @param {Object} req.cookies - Request cookies
+ * @param {string} req.cookies.refreshToken - Refresh token from cookie
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with authentication status
+ * @throws {Error} When token validation fails
+ */
 const studentAuthCheck = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;
@@ -236,6 +314,18 @@ const studentAuthCheck = async (req, res) => {
     });
   }
 };
+
+/**
+ * Generate new access and refresh tokens
+ * @async
+ * @function generateNewRefreshAccessToken
+ * @param {Object} req - Express request object
+ * @param {Object} req.cookies - Request cookies
+ * @param {string} req.cookies.refreshToken - Current refresh token
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with new tokens
+ * @throws {Error} When token generation fails or refresh token invalid
+ */
 const generateNewRefreshAccessToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
@@ -268,13 +358,13 @@ const generateNewRefreshAccessToken = async (req, res) => {
         const newAccessToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" },
+          { expiresIn: "1h" }
         );
 
         const newRefreshToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_REFRESH_SECRET,
-          { expiresIn: "30d" },
+          { expiresIn: "30d" }
         );
 
         student.refreshToken = newRefreshToken;
@@ -293,12 +383,12 @@ const generateNewRefreshAccessToken = async (req, res) => {
         res.cookie(
           "accessToken",
           newAccessToken,
-          getCookieOptions(60 * 60 * 1000),
+          getCookieOptions(60 * 60 * 1000)
         ); // 1 hour
         res.cookie(
           "refreshToken",
           newRefreshToken,
-          getCookieOptions(30 * 24 * 60 * 60 * 1000),
+          getCookieOptions(30 * 24 * 60 * 60 * 1000)
         ); // 30 days
 
         return res.status(200).json({
@@ -307,7 +397,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
           newAccessToken,
           data: student,
         });
-      },
+      }
     );
   } catch (e) {
     console.error(e);
@@ -318,6 +408,17 @@ const generateNewRefreshAccessToken = async (req, res) => {
   }
 };
 
+/**
+ * Logout student by invalidating tokens
+ * @async
+ * @function studentLogout
+ * @param {Object} req - Express request object
+ * @param {Object} req.cookies - Request cookies
+ * @param {string} req.cookies.refreshToken - Refresh token to invalidate
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with logout status
+ * @throws {Error} When logout process fails
+ */
 const studentLogout = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -326,7 +427,7 @@ const studentLogout = async (req, res) => {
     }
     await Student.updateOne(
       { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } },
+      { $unset: { refreshToken: "" } }
     );
     const cookiesToClear = ["accessToken", "refreshToken"];
     cookiesToClear.forEach((cookie) => {
@@ -349,16 +450,28 @@ const studentLogout = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get detailed information about logged-in student
+ * @async
+ * @function getStudentDetails
+ * @param {Object} req - Express request object
+ * @param {Object} req.userInfo - User information from auth middleware
+ * @param {string} req.userInfo.id - Student's ID
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with student details
+ * @throws {Error} When student not found or data retrieval fails
+ */
 const getStudentDetails = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select(
-        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects",
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects"
       )
       .populate(
         "subjects",
-        "name code description teachers category duration gradeLevel",
+        "name code description teachers category duration gradeLevel"
       )
       .populate("batches", "name classStd timings subjectId teacherId batchId")
       .lean();
@@ -383,6 +496,24 @@ const getStudentDetails = async (req, res) => {
   }
 };
 
+/**
+ * Update student's profile information
+ * @async
+ * @function updateStudentProfile
+ * @param {Object} req - Express request object
+ * @param {Object} req.userInfo - User information from auth middleware
+ * @param {string} req.userInfo.id - Student's ID
+ * @param {Object} req.body - Request body
+ * @param {string} [req.body.name] - Updated name
+ * @param {string} [req.body.password] - New password
+ * @param {string} [req.body.contact] - Updated contact number
+ * @param {string[]} [req.body.parentsContact] - Updated parent contacts
+ * @param {string} [req.body.address] - Updated address
+ * @param {string} [req.body.profileImage] - Updated profile image URL
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with update status
+ * @throws {Error} When update fails or validation error occurs
+ */
 const updateStudentProfile = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
@@ -427,7 +558,7 @@ const updateStudentProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
 
     return res.status(200).json({
@@ -443,6 +574,18 @@ const updateStudentProfile = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get subjects enrolled by the student
+ * @async
+ * @function getStudentSubjects
+ * @param {Object} req - Express request object
+ * @param {Object} req.userInfo - User information from auth middleware
+ * @param {string} req.userInfo.id - Student's ID
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with student's subjects
+ * @throws {Error} When subject retrieval fails
+ */
 const getStudentSubjects = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
@@ -468,6 +611,7 @@ const getStudentSubjects = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   studentRegister,
   studentVerifyEmail,
