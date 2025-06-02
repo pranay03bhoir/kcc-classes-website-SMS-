@@ -13,7 +13,7 @@ export default function StudentTable({ students, teacher }) {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [batchList, setBatchList] = useState([]);
-  
+
   /**
    * The function fetches batches data from an API endpoint and sets the batch list in the component
    * state.
@@ -191,17 +191,21 @@ export default function StudentTable({ students, teacher }) {
                 </td>
                 <td className="px-4 py-3">
                   <div
-                    className={`${student.attendance.map((attendance) =>
-                      attendance.status === "Absent"
+                    className={`px-2 py-1 rounded-full text-xs text-center ${
+                      student.attendance?.[student.attendance.length - 1]
+                        ?.status === "Absent"
                         ? "bg-red-100/50 text-red-800"
-                        : attendance.status === "Late"
+                        : student.attendance?.[student.attendance.length - 1]
+                            ?.status === "Late"
                         ? "bg-yellow-100/50 text-yellow-800"
-                        : "bg-green-100/50 text-green-800"
-                    )} rounded-full px-2 py-1 text-xs font-semibold text-center`}
+                        : student.attendance?.[student.attendance.length - 1]
+                            ?.status === "Present"
+                        ? "bg-green-100/50 text-green-800"
+                        : "bg-gray-100/50 text-gray-800"
+                    }`}
                   >
-                    {student.attendance
-                      .map((status) => status.status)
-                      .join(", ")}
+                    {student.attendance?.[student.attendance.length - 1]
+                      ?.status || "N/A"}
                   </div>
                   <div className="text-sm text-gray-500">
                     {student.attendedDays}

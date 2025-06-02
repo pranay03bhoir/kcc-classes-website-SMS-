@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 export default function EditIndividualStudentModal({
   open,
@@ -26,23 +26,24 @@ export default function EditIndividualStudentModal({
   batch,
 }) {
   const [attendanceData, setAttendanceData] = useState({
+    student: "",
+    subject: "",
     status: "",
     note: "",
-    date: new Date().toISOString().split("T")[0],
   });
 
   // Initialize attendance data when modal opens
   useEffect(() => {
-    if (attendance) {
+    if (student && attendance) {
       setAttendanceData({
+        student: student._id,
+        subject: Array.isArray(batch) ? batch[0]?.subjectId : batch?.subjectId,
         status: attendance.status || "",
         note: attendance.note || "",
-        date: attendance.date
-          ? format(new Date(attendance.date), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd"),
       });
     }
-  }, [attendance]);
+  }, [student, attendance, batch]);
+  console.log("attendanceData", attendanceData);
 
   const handleStatusChange = (value) => {
     setAttendanceData((prev) => ({
@@ -59,28 +60,19 @@ export default function EditIndividualStudentModal({
     }));
   };
 
-  const handleDateChange = (e) => {
-    const { value } = e.target;
-    setAttendanceData((prev) => ({
-      ...prev,
-      date: value,
-    }));
-  };
-
   const handleSave = async () => {
     if (!attendanceData.status) {
-      // You might want to add proper error handling/notification here
-      console.error("Status is required");
+      toast.error("Status is required");
+      return;
+    }
+
+    if (!attendanceData.student || !attendanceData.subject) {
+      toast.error("Missing required data");
       return;
     }
 
     try {
-      await onSave({
-        ...attendanceData,
-        student: student._id,
-        subject: Array.isArray(batch) ? batch[0]?.subjectId : batch?.subjectId,
-      });
-      onClose();
+      await onSave(attendanceData);
     } catch (error) {
       console.error("Error updating attendance:", error);
     }
@@ -132,7 +124,7 @@ export default function EditIndividualStudentModal({
 
           {/* Attendance Form */}
           <div className="space-y-4">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date
               </label>
@@ -142,7 +134,7 @@ export default function EditIndividualStudentModal({
                 onChange={handleDateChange}
                 className="w-full"
               />
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -159,7 +151,6 @@ export default function EditIndividualStudentModal({
                   <SelectItem value="Present">Present</SelectItem>
                   <SelectItem value="Absent">Absent</SelectItem>
                   <SelectItem value="Late">Late</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

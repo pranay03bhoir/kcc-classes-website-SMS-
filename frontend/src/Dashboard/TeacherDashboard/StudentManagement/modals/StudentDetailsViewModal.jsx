@@ -82,19 +82,23 @@ export default function StudentDetailsViewModal({
           <div>
             <p className="font-medium">Attendance</p>
             <p
-              className={`${student.attendance.map((attendance) =>
-                attendance.status === "Absent"
+              className={`px-2 py-1 rounded-full text-xs text-center ${
+                student.attendance?.[student.attendance.length - 1]?.status ===
+                "Absent"
                   ? "bg-red-100/50 text-red-800"
-                  : attendance.status === "Late"
+                  : student.attendance?.[student.attendance.length - 1]
+                      ?.status === "Late"
                   ? "bg-yellow-100/50 text-yellow-800"
-                  : "bg-green-100/50 text-green-800"
-              )}  rounded-md px-2 py-1 text-xs`}
+                  : student.attendance?.[student.attendance.length - 1]
+                      ?.status === "Present"
+                  ? "bg-green-100/50 text-green-800"
+                  : "bg-gray-100/50 text-gray-800"
+              }`}
             >
               {student && student.attendance ? (
                 <>
-                  {student.attendance
-                    .map((attendance) => attendance.status)
-                    .join(", ")}
+                  {student.attendance?.[student.attendance.length - 1]?.status}{" "}
+                  Today
                   <span className="text-xs ms-1 text-gray-500">
                     (
                     {student.attendance.length > 1

@@ -104,11 +104,24 @@ export default function Sidebar({ teacher }) {
         }`}
       >
         <Card className={`bg-gray-800 p-4 flex items-center gap-3`}>
-          <img
-            src="https://api.dicebear.com/6.x/adventurer/svg?seed=admin"
-            alt="Teacher"
-            className={`w-10 h-10 rounded-full `}
-          />
+          {teacher.profileImage ? (
+            <img
+              src={teacher.profileImage}
+              alt="Teacher"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+              <span className="text-purple-700 font-medium text-sm">
+                {teacher.name
+                  ?.split(" ")
+                  .slice(0, 2)
+                  .map((word) => word[0])
+                  .join("")
+                  .toUpperCase()}
+              </span>
+            </div>
+          )}
           <div className={`space-y-2 text-center `}>
             <p className="text-sm font-medium text-white">{teacher?.name}</p>
             <p className="text-xs text-gray-400">{teacher?.email}</p>

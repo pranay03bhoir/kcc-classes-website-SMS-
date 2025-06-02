@@ -24,6 +24,8 @@ export default function AttendancePage() {
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
   /**
    * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
    * loading message, success message, or error message using a toast notification.
@@ -116,7 +118,41 @@ export default function AttendancePage() {
     )
   ).length;
   const absentCount = studentList.length - presentCount;
-  const monthlyAvg = 92;
+  const monthlyAvg = (presentCount / 20) * 50;
+
+  const handleEditClick = (student) => {
+    setSelectedStudent(student);
+    setSelectedAttendance(
+      student.attendance?.[student.attendance.length - 1] || null
+    );
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateAttendance = async (updateData) => {
+    const toastId = toast.loading("Updating attendance...");
+    try {
+      const response = await api.post("/students/attendance", updateData);
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: response?.data?.message || "Attendance updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setEditModalOpen(false);
+        fetchStudentData(); // Refresh the data
+      }
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      toast.update(toastId, {
+        render:
+          error?.response?.data?.message || "Failed to update attendance.",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
 
   return (
     <div>
@@ -158,9 +194,11 @@ export default function AttendancePage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All Batches">All Batches</SelectItem>
-              <SelectItem value="Batch A">Batch A</SelectItem>
-              <SelectItem value="Batch B">Batch B</SelectItem>
-              <SelectItem value="Batch C">Batch C</SelectItem>
+              {batch.map((batch) => (
+                <SelectItem value="Batch A" key={batch._id}>
+                  {batch.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -174,7 +212,7 @@ export default function AttendancePage() {
               <p className="text-gray-500">Present Today</p>
               <h2 className="text-2xl font-bold">{presentCount}</h2>
               <p className="text-sm text-green-600">
-                {((presentCount / students.length) * 100).toFixed(0)}% of total
+                {((presentCount / students.length) * 50).toFixed(0)}% of total
               </p>
             </CardContent>
           </Card>
@@ -183,7 +221,7 @@ export default function AttendancePage() {
               <p className="text-gray-500">Absent Today</p>
               <h2 className="text-2xl font-bold">{absentCount}</h2>
               <p className="text-sm text-red-600">
-                {((absentCount / students.length) * 100).toFixed(0)}% of total
+                {((absentCount / students.length) * 50).toFixed(0)}% of total
               </p>
             </CardContent>
           </Card>
@@ -227,14 +265,18 @@ export default function AttendancePage() {
                   </td>
                   <td className="p-3">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${student.attendance.map(
-                        (attendance) =>
-                          attendance.status === "Absent"
-                            ? "bg-red-100/50 text-red-800"
-                            : attendance.status === "Late"
-                            ? "bg-yellow-100/50 text-yellow-800"
-                            : "bg-green-100/50 text-green-800"
-                      )}`}
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        student.attendance?.[student.attendance.length - 1]
+                          ?.status === "Absent"
+                          ? "bg-red-100/50 text-red-800"
+                          : student.attendance?.[student.attendance.length - 1]
+                              ?.status === "Late"
+                          ? "bg-yellow-100/50 text-yellow-800"
+                          : student.attendance?.[student.attendance.length - 1]
+                              ?.status === "Present"
+                          ? "bg-green-100/50 text-green-800"
+                          : "bg-gray-100/50 text-gray-800"
+                      }`}
                     >
                       {student.attendance?.[student.attendance.length - 1]
                         ?.status || "N/A"}
@@ -242,7 +284,10 @@ export default function AttendancePage() {
                   </td>
                   <td className="p-3">{student.time}</td>
                   <td className="p-3 space-x-2">
-                    <button className="text-blue-600 hover:underline">
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => handleEditClick(student)}
+                    >
                       Edit
                     </button>
                     <button className="text-blue-600 hover:underline">
@@ -283,7 +328,18 @@ export default function AttendancePage() {
         onSaveAttendance={addAttendance}
         batch={batch}
       />
-      <EditIndividualStudentModal />
+      <EditIndividualStudentModal
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedStudent(null);
+          setSelectedAttendance(null);
+        }}
+        student={selectedStudent}
+        attendance={selectedAttendance}
+        batch={batch}
+        onSave={handleUpdateAttendance}
+      />
     </div>
   );
 }
