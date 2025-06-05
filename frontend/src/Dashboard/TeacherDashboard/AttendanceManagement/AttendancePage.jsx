@@ -345,21 +345,25 @@ export default function AttendancePage() {
         pauseOnHover
         theme="light"
       />
-      <div className="fixed">
+      <div className="fixed z-50">
         <Sidebar teacher={teacher} />
       </div>
-      <div className="p-6 space-y-6 ms-64">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 ms-0 sm:ms-64 transition-all duration-300">
         <header className="space-y-2">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold" role="heading" aria-level="1">
+              <h1
+                className="text-xl sm:text-2xl font-bold"
+                role="heading"
+                aria-level="1"
+              >
                 Attendance Management
               </h1>
-              <p className="text-gray-500">
+              <p className="text-sm sm:text-base text-gray-500">
                 Track and manage student attendance records.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -368,8 +372,10 @@ export default function AttendancePage() {
                       size="icon"
                       onClick={handleExport}
                       disabled={isLoading}
+                      className="w-full sm:w-auto"
                     >
                       <Download className="h-4 w-4" />
+                      <span className="sm:hidden ml-2">Export</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -381,15 +387,15 @@ export default function AttendancePage() {
           </div>
         </header>
 
-        <div className="flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-start sm:items-center w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Calendar className="w-5 h-5 text-gray-500" aria-hidden="true" />
               <Input
                 type="date"
                 value={date}
                 onChange={handleDateChange}
-                className="w-[160px]"
+                className="w-full sm:w-[160px]"
                 aria-label="Select date"
                 max={format(new Date(), "yyyy-MM-dd")}
               />
@@ -399,8 +405,9 @@ export default function AttendancePage() {
               onValueChange={handleBatchChange}
               value={selectedBatch}
               aria-label="Select batch"
+              className="w-full sm:w-[160px]"
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Batch" />
               </SelectTrigger>
               <SelectContent>
@@ -415,19 +422,23 @@ export default function AttendancePage() {
               </SelectContent>
             </Select>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search students..."
                 value={searchQuery}
                 onChange={handleSearch}
-                className="pl-8 w-[200px]"
+                className="pl-8 w-full sm:w-[200px]"
               />
             </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   <Filter className="h-4 w-4 mr-2" />
                   Filter by Status
                 </Button>
@@ -453,6 +464,7 @@ export default function AttendancePage() {
             onClick={() => setShowModal(true)}
             disabled={isLoading}
             aria-label="Mark attendance"
+            className="w-full sm:w-auto"
           >
             {isLoading ? (
               <>
@@ -465,14 +477,16 @@ export default function AttendancePage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="py-4">
-              <p className="text-gray-500">Present Today</p>
-              <h2 className="text-2xl font-bold text-green-600">
+              <p className="text-sm sm:text-base text-gray-500">
+                Present Today
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-green-600">
                 {attendanceStats.presentCount}
               </h2>
-              <p className="text-sm text-green-600">
+              <p className="text-xs sm:text-sm text-green-600">
                 {filteredStudents.length > 0
                   ? (
                       (attendanceStats.presentCount / filteredStudents.length) *
@@ -485,11 +499,11 @@ export default function AttendancePage() {
           </Card>
           <Card>
             <CardContent className="py-4">
-              <p className="text-gray-500">Absent Today</p>
-              <h2 className="text-2xl font-bold text-red-600">
+              <p className="text-sm sm:text-base text-gray-500">Absent Today</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-red-600">
                 {attendanceStats.absentCount}
               </h2>
-              <p className="text-sm text-red-600">
+              <p className="text-xs sm:text-sm text-red-600">
                 {filteredStudents.length > 0
                   ? (
                       (attendanceStats.absentCount / filteredStudents.length) *
@@ -502,11 +516,11 @@ export default function AttendancePage() {
           </Card>
           <Card>
             <CardContent className="py-4">
-              <p className="text-gray-500">Late Today</p>
-              <h2 className="text-2xl font-bold text-yellow-600">
+              <p className="text-sm sm:text-base text-gray-500">Late Today</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-yellow-600">
                 {attendanceStats.lateCount}
               </h2>
-              <p className="text-sm text-yellow-600">
+              <p className="text-xs sm:text-sm text-yellow-600">
                 {filteredStudents.length > 0
                   ? (
                       (attendanceStats.lateCount / filteredStudents.length) *
@@ -519,143 +533,172 @@ export default function AttendancePage() {
           </Card>
           <Card>
             <CardContent className="py-4">
-              <p className="text-gray-500">Monthly Average</p>
-              <h2 className="text-2xl font-bold text-blue-600">
+              <p className="text-sm sm:text-base text-gray-500">
+                Monthly Average
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-600">
                 {attendanceStats.monthlyAvg.toFixed(0)}%
               </h2>
-              <p className="text-sm text-blue-600">Last 30 days</p>
+              <p className="text-xs sm:text-sm text-blue-600">Last 30 days</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-          <table className="min-w-full table-auto text-sm" role="grid">
-            <thead className="bg-gray-100 text-gray-700 text-left">
-              <tr>
-                <th className="p-3" scope="col">
-                  Student
-                </th>
-                <th className="p-3" scope="col">
-                  ID
-                </th>
-                <th className="p-3" scope="col">
-                  Batch
-                </th>
-                <th className="p-3" scope="col">
-                  Status
-                </th>
-                <th className="p-3" scope="col">
-                  Time
-                </th>
-                <th className="p-3" scope="col">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginationData.currentStudents.map((student, idx) => (
-                <tr
-                  key={student._id || idx}
-                  className="border-t hover:bg-gray-50 transition-colors"
-                >
-                  <td className="p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium text-gray-700">
-                        {student.profileImage ? (
-                          <img
-                            src={student.profileImage}
-                            alt={`${student.name}'s profile`}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-gray-500">
-                            {student.name
-                              .split(" ")
-                              .map((word) => word[0].toUpperCase())
-                              .join("")
-                              .slice(0, 2)}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">{student.name}</div>
-                        <div className="text-gray-500 text-xs">
-                          {student.email}
+          <div className="min-w-full inline-block align-middle">
+            <div className="overflow-hidden">
+              <table
+                className="min-w-full divide-y divide-gray-200"
+                role="grid"
+              >
+                <thead className="bg-gray-100 text-gray-700 text-left">
+                  <tr>
+                    <th className="p-3 whitespace-nowrap" scope="col">
+                      Student
+                    </th>
+                    <th
+                      className="p-3 whitespace-nowrap hidden sm:table-cell"
+                      scope="col"
+                    >
+                      ID
+                    </th>
+                    <th
+                      className="p-3 whitespace-nowrap hidden md:table-cell"
+                      scope="col"
+                    >
+                      Batch
+                    </th>
+                    <th className="p-3 whitespace-nowrap" scope="col">
+                      Status
+                    </th>
+                    <th
+                      className="p-3 whitespace-nowrap hidden lg:table-cell"
+                      scope="col"
+                    >
+                      Time
+                    </th>
+                    <th className="p-3 whitespace-nowrap" scope="col">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginationData.currentStudents.map((student, idx) => (
+                    <tr
+                      key={student._id || idx}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium text-gray-700">
+                            {student.profileImage ? (
+                              <img
+                                src={student.profileImage}
+                                alt={`${student.name}'s profile`}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-gray-500">
+                                {student.name
+                                  .split(" ")
+                                  .map((word) => word[0].toUpperCase())
+                                  .join("")
+                                  .slice(0, 2)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium">{student.name}</div>
+                            <div className="text-gray-500 text-xs">
+                              {student.email}
+                            </div>
+                            <div className="sm:hidden text-xs text-gray-500 mt-1">
+                              ID: {student.studentId}
+                            </div>
+                            <div className="md:hidden text-xs text-gray-500">
+                              Batch: {student.batchName || "N/A"}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">{student.studentId}</td>
-                  <td className="p-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-purple-100 text-purple-700"
-                    >
-                      {student.batchName || "N/A"}
-                    </Badge>
-                  </td>
-                  <td className="p-3">
-                    <Badge
-                      variant="secondary"
-                      className={`${
-                        student.lastAttendance?.status === "Absent"
-                          ? "bg-red-100 text-red-800"
-                          : student.lastAttendance?.status === "Late"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : student.lastAttendance?.status === "Present"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {student.lastAttendance?.status || "N/A"}
-                    </Badge>
-                  </td>
-                  <td className="p-3">
-                    {student.lastAttendance?.time || "N/A"}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditClick(student)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
+                      </td>
+                      <td className="p-3 hidden sm:table-cell">
+                        {student.studentId}
+                      </td>
+                      <td className="p-3 hidden md:table-cell">
+                        <Badge
+                          variant="secondary"
+                          className="bg-purple-100 text-purple-700"
+                        >
+                          {student.batchName || "N/A"}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        <Badge
+                          variant="secondary"
+                          className={`${
+                            student.lastAttendance?.status === "Absent"
+                              ? "bg-red-100 text-red-800"
+                              : student.lastAttendance?.status === "Late"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : student.lastAttendance?.status === "Present"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {student.lastAttendance?.status || "N/A"}
+                        </Badge>
+                        <div className="lg:hidden text-xs text-gray-500 mt-1">
+                          {student.lastAttendance?.time || "N/A"}
+                        </div>
+                      </td>
+                      <td className="p-3 hidden lg:table-cell">
+                        {student.lastAttendance?.time || "N/A"}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditClick(student)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Edit
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              // Implement view history
-                              toast.info("View history feature coming soon!");
-                            }}
-                          >
-                            View History
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              // Implement export individual
-                              toast.info(
-                                "Export individual feature coming soon!"
-                              );
-                            }}
-                          >
-                            Export Record
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  toast.info(
+                                    "View history feature coming soon!"
+                                  );
+                                }}
+                              >
+                                View History
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  toast.info(
+                                    "Export individual feature coming soon!"
+                                  );
+                                }}
+                              >
+                                Export Record
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         {filteredStudents.length === 0 && (
@@ -674,13 +717,13 @@ export default function AttendancePage() {
         )}
 
         {filteredStudents.length > 0 && (
-          <div className="flex justify-between items-center pt-4 text-sm text-gray-600">
-            <span>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 text-sm text-gray-600">
+            <span className="text-center sm:text-left">
               Showing {paginationData.startIndex} to {paginationData.endIndex}{" "}
               of {paginationData.totalItems} results
             </span>
             <div
-              className="flex items-center space-x-1"
+              className="flex flex-wrap items-center justify-center gap-1"
               role="navigation"
               aria-label="Pagination"
             >
