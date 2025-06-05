@@ -1,6 +1,13 @@
 "use client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -9,35 +16,131 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import api from "@/utils/teacher-axios";
-import { Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import { format, isValid, parseISO } from "date-fns";
+import {
+  Calendar,
+  Download,
+  Filter,
+  Loader2,
+  MoreVertical,
+  Search as SearchIcon,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../SideBar";
 import MarkAttendanceModal from "./Modals/AddAttendanceModal";
 import EditIndividualStudentModal from "./Modals/EditIndivisualStudent";
 
 export default function AttendancePage() {
-  const [date, setDate] = useState("");
-  const [batch, setBatch] = useState([]);
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedBatch, setSelectedBatch] = useState("All Batches");
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
   const [teacher, setTeacher] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
-  /**
-   * The function `fetchStudentData` asynchronously fetches student data from an API and displays a
-   * loading message, success message, or error message using a toast notification.
-   */
-  const fetchStudentData = async () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const itemsPerPage = 10;
+
+  // Memoized filtered students based on batch selection, search, and status filter
+  const filteredStudents = useMemo(() => {
+    let studentList = students.flatMap((batch) =>
+      batch.studentIds.map((student) => ({
+        ...student,
+        batchName: batch.name,
+        batchId: batch._id,
+        lastAttendance:
+          student.attendance?.[student.attendance.length - 1] || null,
+      }))
+    );
+
+    // Apply batch filter
+    if (selectedBatch !== "All Batches") {
+      studentList = studentList.filter(
+        (student) => student.batchId === selectedBatch
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      studentList = studentList.filter(
+        (student) =>
+          student.name.toLowerCase().includes(query) ||
+          student.studentId.toLowerCase().includes(query) ||
+          student.email.toLowerCase().includes(query) ||
+          student.batchName.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      studentList = studentList.filter(
+        (student) => student.lastAttendance?.status === statusFilter
+      );
+    }
+
+    return studentList;
+  }, [students, selectedBatch, searchQuery, statusFilter]);
+
+  // Memoized pagination calculations
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentStudents = filteredStudents.slice(startIndex, endIndex);
+
+    return {
+      currentStudents,
+      totalPages,
+      startIndex: startIndex + 1,
+      endIndex: Math.min(endIndex, filteredStudents.length),
+      totalItems: filteredStudents.length,
+    };
+  }, [filteredStudents, currentPage, itemsPerPage]);
+
+  // Memoized attendance statistics
+  const attendanceStats = useMemo(() => {
+    const studentList = filteredStudents;
+    const presentCount = studentList.filter(
+      (student) =>
+        student.lastAttendance?.status === "Present" ||
+        student.lastAttendance?.status === "Late"
+    ).length;
+    const absentCount = studentList.filter(
+      (student) => student.lastAttendance?.status === "Absent"
+    ).length;
+    const lateCount = studentList.filter(
+      (student) => student.lastAttendance?.status === "Late"
+    ).length;
+    const monthlyAvg =
+      studentList.length > 0 ? (presentCount / studentList.length) * 100 : 0;
+
+    return { presentCount, absentCount, lateCount, monthlyAvg };
+  }, [filteredStudents]);
+
+  const fetchStudentData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     const toastId = toast.loading("Loading students...");
+
     try {
       const response = await api.get("get/teacher/details");
-      setStudents(response.data.teacher.batches);
-      setBatch(response.data.teacher.batches);
-      setTeacher(response.data.teacher);
       if (response.status === 200) {
+        setStudents(response.data.teacher.batches);
+        setTeacher(response.data.teacher);
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",
           type: "success",
@@ -47,22 +150,28 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error(error);
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
-        const refreshSession = await api.post("/refresh");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1);
-      }
       const message =
         error?.response?.data?.message || "Failed to load students.";
+      setError(message);
       toast.update(toastId, {
         render: message,
         type: "error",
         isLoading: false,
         autoClose: 2000,
       });
+
+      if (error?.response?.status === 401) {
+        try {
+          await api.post("/refresh");
+          setTimeout(() => window.location.reload(), 1000);
+        } catch (refreshError) {
+          console.error("Session refresh failed:", refreshError);
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
 
   /**
    * The function `addAttendance` is an asynchronous function that adds attendance data for students and
@@ -100,26 +209,6 @@ export default function AttendancePage() {
     }
   };
 
-  useEffect(() => {
-    fetchStudentData();
-  }, []);
-  // console.log(
-  //   "Students Data:",
-  //   students.map(
-  //     (student) =>
-  //       student.attendance?.[student.attendance.length - 1]?.status ===
-  //       "Present"
-  //   )
-  // );
-  const studentList = students.flatMap((student) => student.studentIds);
-  const presentCount = studentList.filter((student) =>
-    student.attendance?.some(
-      (record) => record.status === "Present" || record.status === "Late"
-    )
-  ).length;
-  const absentCount = studentList.length - presentCount;
-  const monthlyAvg = (presentCount / 20) * 50;
-
   const handleEditClick = (student) => {
     setSelectedStudent(student);
     setSelectedAttendance(
@@ -154,8 +243,96 @@ export default function AttendancePage() {
     }
   };
 
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
+    if (isValid(parseISO(newDate))) {
+      setDate(newDate);
+    } else {
+      toast.error("Please select a valid date");
+    }
+  };
+
+  const handleBatchChange = (value) => {
+    setSelectedBatch(value);
+    setCurrentPage(1); // Reset to first page when changing batch
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleExport = async () => {
+    const toastId = toast.loading("Preparing export...");
+    try {
+      const response = await api.get("/students/attendance/export", {
+        params: {
+          date,
+          batchId: selectedBatch !== "All Batches" ? selectedBatch : undefined,
+        },
+        responseType: "blob",
+      });
+
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `attendance-report-${format(new Date(date), "yyyy-MM-dd")}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.update(toastId, {
+        render: "Export completed successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (error) {
+      console.error("Error exporting attendance:", error);
+      toast.update(toastId, {
+        render:
+          error?.response?.data?.message || "Failed to export attendance.",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  useEffect(() => {
+    fetchStudentData();
+  }, [fetchStudentData]);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Error Loading Data
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={fetchStudentData}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <ToastContainer
         position="top-center"
         autoClose={2000}
@@ -172,127 +349,308 @@ export default function AttendancePage() {
         <Sidebar teacher={teacher} />
       </div>
       <div className="p-6 space-y-6 ms-64">
-        <h1 className="text-2xl font-bold">Attendance</h1>
-        <p className="text-gray-500">
-          Track and manage student attendance records.
-        </p>
+        <header className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold" role="heading" aria-level="1">
+                Attendance Management
+              </h1>
+              <p className="text-gray-500">
+                Track and manage student attendance records.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleExport}
+                      disabled={isLoading}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Export Attendance Report</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </header>
 
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-[160px]"
-            />
+        <div className="flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-gray-500" aria-hidden="true" />
+              <Input
+                type="date"
+                value={date}
+                onChange={handleDateChange}
+                className="w-[160px]"
+                aria-label="Select date"
+                max={format(new Date(), "yyyy-MM-dd")}
+              />
+            </div>
+
+            <Select
+              onValueChange={handleBatchChange}
+              value={selectedBatch}
+              aria-label="Select batch"
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All Batches">All Batches</SelectItem>
+                {[...students]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((batch) => (
+                    <SelectItem key={batch._id} value={batch._id}>
+                      {batch.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            <div className="relative">
+              <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search students..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="pl-8 w-[200px]"
+              />
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter by Status
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleStatusFilter("all")}>
+                  All Status
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusFilter("Present")}>
+                  Present
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusFilter("Absent")}>
+                  Absent
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusFilter("Late")}>
+                  Late
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          <Select onValueChange={setBatch} defaultValue="All Batches">
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select Batch" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All Batches">All Batches</SelectItem>
-              {batch.map((batch) => (
-                <SelectItem value="Batch A" key={batch._id}>
-                  {batch.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button onClick={() => setShowModal(true)}>Mark Attendance</Button>
-          <Button variant="outline">Export</Button>
+          <Button
+            onClick={() => setShowModal(true)}
+            disabled={isLoading}
+            aria-label="Mark attendance"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Mark Attendance"
+            )}
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <Card>
             <CardContent className="py-4">
               <p className="text-gray-500">Present Today</p>
-              <h2 className="text-2xl font-bold">{presentCount}</h2>
+              <h2 className="text-2xl font-bold text-green-600">
+                {attendanceStats.presentCount}
+              </h2>
               <p className="text-sm text-green-600">
-                {((presentCount / students.length) * 50).toFixed(0)}% of total
+                {filteredStudents.length > 0
+                  ? (
+                      (attendanceStats.presentCount / filteredStudents.length) *
+                      100
+                    ).toFixed(0)
+                  : 0}
+                % of total
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
               <p className="text-gray-500">Absent Today</p>
-              <h2 className="text-2xl font-bold">{absentCount}</h2>
+              <h2 className="text-2xl font-bold text-red-600">
+                {attendanceStats.absentCount}
+              </h2>
               <p className="text-sm text-red-600">
-                {((absentCount / students.length) * 50).toFixed(0)}% of total
+                {filteredStudents.length > 0
+                  ? (
+                      (attendanceStats.absentCount / filteredStudents.length) *
+                      100
+                    ).toFixed(0)
+                  : 0}
+                % of total
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-4">
+              <p className="text-gray-500">Late Today</p>
+              <h2 className="text-2xl font-bold text-yellow-600">
+                {attendanceStats.lateCount}
+              </h2>
+              <p className="text-sm text-yellow-600">
+                {filteredStudents.length > 0
+                  ? (
+                      (attendanceStats.lateCount / filteredStudents.length) *
+                      100
+                    ).toFixed(0)
+                  : 0}
+                % of total
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-4">
               <p className="text-gray-500">Monthly Average</p>
-              <h2 className="text-2xl font-bold">{monthlyAvg}%</h2>
-              <p className="text-sm text-yellow-600">Last 30 days</p>
+              <h2 className="text-2xl font-bold text-blue-600">
+                {attendanceStats.monthlyAvg.toFixed(0)}%
+              </h2>
+              <p className="text-sm text-blue-600">Last 30 days</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="overflow-x-auto border rounded-lg">
-          <table className="min-w-full table-auto text-sm">
+        <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+          <table className="min-w-full table-auto text-sm" role="grid">
             <thead className="bg-gray-100 text-gray-700 text-left">
               <tr>
-                <th className="p-3">Student</th>
-                <th className="p-3">ID</th>
-                <th className="p-3">Batch</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Time</th>
-                <th className="p-3">Actions</th>
+                <th className="p-3" scope="col">
+                  Student
+                </th>
+                <th className="p-3" scope="col">
+                  ID
+                </th>
+                <th className="p-3" scope="col">
+                  Batch
+                </th>
+                <th className="p-3" scope="col">
+                  Status
+                </th>
+                <th className="p-3" scope="col">
+                  Time
+                </th>
+                <th className="p-3" scope="col">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {studentList.map((student, idx) => (
-                <tr key={idx} className="border-t">
+              {paginationData.currentStudents.map((student, idx) => (
+                <tr
+                  key={student._id || idx}
+                  className="border-t hover:bg-gray-50 transition-colors"
+                >
                   <td className="p-3">
-                    <div>
-                      <div className="font-medium">{student.name}</div>
-                      <div className="text-gray-500 text-xs">
-                        {student.email}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 bg-gray-200 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium text-gray-700">
+                        {student.profileImage ? (
+                          <img
+                            src={student.profileImage}
+                            alt={`${student.name}'s profile`}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-500">
+                            {student.name
+                              .split(" ")
+                              .map((word) => word[0].toUpperCase())
+                              .join("")
+                              .slice(0, 2)}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-gray-500 text-xs">
+                          {student.email}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="p-3">{student.studentId}</td>
                   <td className="p-3">
-                    <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
-                      {batch.map((batch) => batch.name).join(", ")}
-                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="bg-purple-100 text-purple-700"
+                    >
+                      {student.batchName || "N/A"}
+                    </Badge>
                   </td>
                   <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        student.attendance?.[student.attendance.length - 1]
-                          ?.status === "Absent"
-                          ? "bg-red-100/50 text-red-800"
-                          : student.attendance?.[student.attendance.length - 1]
-                              ?.status === "Late"
-                          ? "bg-yellow-100/50 text-yellow-800"
-                          : student.attendance?.[student.attendance.length - 1]
-                              ?.status === "Present"
-                          ? "bg-green-100/50 text-green-800"
-                          : "bg-gray-100/50 text-gray-800"
+                    <Badge
+                      variant="secondary"
+                      className={`${
+                        student.lastAttendance?.status === "Absent"
+                          ? "bg-red-100 text-red-800"
+                          : student.lastAttendance?.status === "Late"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : student.lastAttendance?.status === "Present"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {student.attendance?.[student.attendance.length - 1]
-                        ?.status || "N/A"}
-                    </span>
+                      {student.lastAttendance?.status || "N/A"}
+                    </Badge>
                   </td>
-                  <td className="p-3">{student.time}</td>
-                  <td className="p-3 space-x-2">
-                    <button
-                      className="text-blue-600 hover:underline"
-                      onClick={() => handleEditClick(student)}
-                    >
-                      Edit
-                    </button>
-                    <button className="text-blue-600 hover:underline">
-                      History
-                    </button>
+                  <td className="p-3">
+                    {student.lastAttendance?.time || "N/A"}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(student)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        Edit
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // Implement view history
+                              toast.info("View history feature coming soon!");
+                            }}
+                          >
+                            View History
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // Implement export individual
+                              toast.info(
+                                "Export individual feature coming soon!"
+                              );
+                            }}
+                          >
+                            Export Record
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -300,34 +658,97 @@ export default function AttendancePage() {
           </table>
         </div>
 
-        <div className="flex justify-between items-center pt-4 text-sm text-gray-600">
-          <span>Showing 1 to 5 of {studentList.length} results</span>
-          <div className="flex items-center space-x-1">
-            <Button variant="outline" size="sm">
-              &lt;
-            </Button>
-            <Button size="sm">1</Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <span>...</span>
-            <Button variant="outline" size="sm">
-              9
-            </Button>
-            <Button variant="outline" size="sm">
-              &gt;
-            </Button>
+        {filteredStudents.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading students...</span>
+              </div>
+            ) : searchQuery ? (
+              "No students found matching your search criteria."
+            ) : (
+              "No students found in the selected batch."
+            )}
           </div>
-        </div>
+        )}
+
+        {filteredStudents.length > 0 && (
+          <div className="flex justify-between items-center pt-4 text-sm text-gray-600">
+            <span>
+              Showing {paginationData.startIndex} to {paginationData.endIndex}{" "}
+              of {paginationData.totalItems} results
+            </span>
+            <div
+              className="flex items-center space-x-1"
+              role="navigation"
+              aria-label="Pagination"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                &lt;
+              </Button>
+              {Array.from(
+                { length: paginationData.totalPages },
+                (_, i) => i + 1
+              )
+                .filter((page) => {
+                  return (
+                    page === 1 ||
+                    page === paginationData.totalPages ||
+                    Math.abs(page - currentPage) <= 1
+                  );
+                })
+                .map((page, index, array) => {
+                  if (index > 0 && page - array[index - 1] > 1) {
+                    return (
+                      <span key={`ellipsis-${page}`} className="px-2">
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={page === currentPage ? "default" : "outline"}
+                      onClick={() => handlePageChange(page)}
+                      aria-label={`Page ${page}`}
+                      aria-current={page === currentPage ? "page" : undefined}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === paginationData.totalPages}
+                aria-label="Next page"
+              >
+                &gt;
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
       <MarkAttendanceModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        students={studentList}
+        students={filteredStudents}
         setStudents={setStudents}
         onSaveAttendance={addAttendance}
-        batch={batch}
+        batch={students}
+        selectedDate={date}
       />
+
       <EditIndividualStudentModal
         open={editModalOpen}
         onClose={() => {
@@ -337,8 +758,9 @@ export default function AttendancePage() {
         }}
         student={selectedStudent}
         attendance={selectedAttendance}
-        batch={batch}
+        batch={students}
         onSave={handleUpdateAttendance}
+        selectedDate={date}
       />
     </div>
   );
