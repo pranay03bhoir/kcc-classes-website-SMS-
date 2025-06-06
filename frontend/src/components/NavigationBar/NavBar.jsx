@@ -43,44 +43,54 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
-      <div className="container mx-auto px-6 py-3">
+      <div className="container mx-auto px-4 sm:px-6 py-3">
         <div className="flex justify-between items-center">
           {/* Logo and Brand */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <img
-              src={`KCC-icon.jpeg`}
-              alt="KCC Classes Logo"
-              className="w-12 h-12 rounded-full transition-transform duration-300 group-hover:scale-105"
-            />
-            <span className="md:text-2xl text-xl text-red-500 font-bold group-hover:text-red-600 transition-colors">
-              KCC-CLASSES
-            </span>
+            <div className="relative w-12 h-12">
+              <img
+                src={`KCC-icon.jpeg`}
+                alt="KCC Classes Logo"
+                className="w-full h-full rounded-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
+              />
+              <div className="absolute inset-0 rounded-full bg-red-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+            </div>
+            <div className="flex flex-col">
+              <span className="md:text-2xl text-xl text-red-500 font-bold group-hover:text-red-600 transition-colors">
+                KCC-CLASSES
+              </span>
+              <span className="text-xs text-gray-500 hidden md:block">
+                Empowering Education
+              </span>
+            </div>
           </Link>
 
           {/* Mobile Call Button */}
-          <a href={`tel:+919765022022`} className="md:hidden">
-            <Button className="h-10 text-start text-lg bg-red-600 hover:bg-red-700 transition-colors">
-              Call us <IoCall className="ml-2" />
-            </Button>
+          <a
+            href={`tel:+919765022022`}
+            className="md:hidden flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-sm"
+          >
+            <IoCall className="text-lg" />
+            <span className="text-sm font-medium">Call Us</span>
           </a>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const path = `/${item.toLowerCase().replace(" ", "")}`;
               return (
                 <Link
                   key={item}
                   href={path}
-                  className={`relative text-gray-700 hover:text-red-500 transition-colors duration-200 ${
-                    isActive(path) ? "text-red-500" : ""
+                  className={`relative px-4 py-2 text-gray-700 hover:text-red-500 transition-colors duration-200 rounded-lg hover:bg-red-50 ${
+                    isActive(path) ? "text-red-500 font-medium" : ""
                   }`}
                 >
                   {item}
                   {isActive(path) && (
                     <motion.div
                       layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-red-500"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-red-500 rounded-full"
                       transition={{ type: "spring", duration: 0.5 }}
                     />
                   )}
@@ -92,8 +102,9 @@ const Navbar = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <a href={`tel:+918830986365`}>
-              <Button className="h-10 text-lg bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-2">
-                Call us <IoCall />
+              <Button className="h-10 text-lg bg-red-500 hover:bg-red-600 transition-colors flex items-center gap-2 shadow-sm hover:shadow-md">
+                <IoCall className="text-lg" />
+                <span>Call Us</span>
               </Button>
             </a>
 
@@ -108,7 +119,7 @@ const Navbar = () => {
                 }
                 target="_blank"
               >
-                <Button className="h-10 text-md bg-red-600 hover:bg-red-700 transition-colors">
+                <Button className="h-10 text-md bg-red-500 hover:bg-red-600 transition-colors shadow-sm hover:shadow-md">
                   {userRole === "admin"
                     ? "Admin Panel"
                     : userRole === "teacher"
@@ -124,7 +135,7 @@ const Navbar = () => {
                       setLoginOpen(!loginOpen);
                       setRegisterOpen(false);
                     }}
-                    className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center gap-2"
+                    className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                   >
                     Login{" "}
                     <ChevronDown
@@ -138,22 +149,23 @@ const Navbar = () => {
                   <AnimatePresence>
                     {loginOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border border-gray-100"
+                        className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg border border-gray-100 overflow-hidden"
                       >
-                        <div className="py-1">
+                        <div className="py-2">
                           {["Student", "Teacher", "Admin"].map((role) => (
                             <Link
                               key={role}
                               href={`/login/${role.toLowerCase()}`}
                               target="_blank"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
                               onClick={() => setLoginOpen(false)}
                             >
-                              {role} Login
+                              <span className="flex-1">{role} Login</span>
+                              <ChevronDown size={14} className="rotate-270" />
                             </Link>
                           ))}
                         </div>
@@ -168,7 +180,7 @@ const Navbar = () => {
                       setRegisterOpen(!registerOpen);
                       setLoginOpen(false);
                     }}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 flex items-center gap-2"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                   >
                     Register{" "}
                     <ChevronDown
@@ -182,22 +194,23 @@ const Navbar = () => {
                   <AnimatePresence>
                     {registerOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg border border-gray-100"
+                        className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg border border-gray-100 overflow-hidden"
                       >
-                        <div className="py-1">
+                        <div className="py-2">
                           {["Student", "Teacher"].map((role) => (
                             <Link
                               key={role}
                               href={`/register/${role.toLowerCase()}-register`}
                               target="_blank"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
                               onClick={() => setRegisterOpen(false)}
                             >
-                              {role} Register
+                              <span className="flex-1">{role} Register</span>
+                              <ChevronDown size={14} className="rotate-270" />
                             </Link>
                           ))}
                         </div>
@@ -211,11 +224,11 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-700 hover:text-red-500 transition-colors"
+            className="md:hidden p-2 text-gray-700 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
@@ -228,82 +241,101 @@ const Navbar = () => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white border-t"
+            className="md:hidden bg-white border-t shadow-lg"
           >
-            <div className="container mx-auto px-6 py-4 space-y-4">
-              {navItems.map((item) => {
-                const path = `/${item.toLowerCase().replace(" ", "")}`;
-                return (
-                  <Link
-                    key={item}
-                    href={path}
-                    className={`block py-2 text-gray-700 hover:text-red-500 transition-colors ${
-                      isActive(path) ? "text-red-500 font-medium" : ""
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                );
-              })}
+            <div className="container mx-auto px-4 py-4">
+              <div className="grid gap-4">
+                {navItems.map((item) => {
+                  const path = `/${item.toLowerCase().replace(" ", "")}`;
+                  return (
+                    <Link
+                      key={item}
+                      href={path}
+                      className={`flex items-center px-4 py-3 text-gray-700 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg ${
+                        isActive(path)
+                          ? "text-red-500 font-medium bg-red-50"
+                          : ""
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span className="flex-1">{item}</span>
+                      {isActive(path) && (
+                        <motion.div
+                          layoutId="mobile-navbar-indicator"
+                          className="w-1.5 h-1.5 bg-red-500 rounded-full"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
 
-              {isLoggedIn ? (
-                <Link
-                  href={
-                    userRole === "admin"
-                      ? "/admindashboard"
-                      : userRole === "teacher"
-                      ? "/teacherdashboard"
-                      : "/studentdashboard"
-                  }
-                  target="_blank"
-                  className="block"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Button className="w-full h-10 bg-red-600 hover:bg-red-700 transition-colors">
-                    {userRole === "admin"
-                      ? "Admin Panel"
-                      : userRole === "teacher"
-                      ? "Teacher Dashboard"
-                      : "Student Dashboard"}
-                  </Button>
-                </Link>
-              ) : (
-                <div className="space-y-3 pt-2">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-500">
-                      Login as:
-                    </p>
-                    {["Student", "Teacher", "Admin"].map((role) => (
-                      <Link
-                        key={role}
-                        href={`/login/${role.toLowerCase()}`}
-                        target="_blank"
-                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {role} Login
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-500">
-                      Register as:
-                    </p>
-                    {["Student", "Teacher"].map((role) => (
-                      <Link
-                        key={role}
-                        href={`/register/${role.toLowerCase()}-register`}
-                        target="_blank"
-                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {role} Register
-                      </Link>
-                    ))}
-                  </div>
+                <div className="border-t border-gray-100 pt-4 mt-2">
+                  {isLoggedIn ? (
+                    <Link
+                      href={
+                        userRole === "admin"
+                          ? "/admindashboard"
+                          : userRole === "teacher"
+                          ? "/teacherdashboard"
+                          : "/studentdashboard"
+                      }
+                      target="_blank"
+                      className="block"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Button className="w-full h-12 bg-red-500 hover:bg-red-600 transition-colors shadow-sm">
+                        {userRole === "admin"
+                          ? "Admin Panel"
+                          : userRole === "teacher"
+                          ? "Teacher Dashboard"
+                          : "Student Dashboard"}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                          Login as:
+                        </h3>
+                        <div className="grid gap-2">
+                          {["Student", "Teacher", "Admin"].map((role) => (
+                            <Link
+                              key={role}
+                              href={`/login/${role.toLowerCase()}`}
+                              target="_blank"
+                              className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              <span>{role} Login</span>
+                              <ChevronDown size={14} className="rotate-270" />
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                          Register as:
+                        </h3>
+                        <div className="grid gap-2">
+                          {["Student", "Teacher"].map((role) => (
+                            <Link
+                              key={role}
+                              href={`/register/${role.toLowerCase()}-register`}
+                              target="_blank"
+                              className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              <span>{role} Register</span>
+                              <ChevronDown size={14} className="rotate-270" />
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </motion.div>
         )}
