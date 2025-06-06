@@ -53,7 +53,7 @@ export default function FaqAccordion() {
 
   return (
     <div>
-      <div className="flex items-center justify-center pt-16">
+      <div className="flex items-center justify-center pt-16 mb-20">
         <CustomHeading
           title="Frequently Asked Questions"
           padding="py-14"

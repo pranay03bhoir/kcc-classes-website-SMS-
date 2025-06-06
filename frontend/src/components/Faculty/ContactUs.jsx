@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import CustomHeading from "@/components/Heading/CustomHeading";
 import EnquiryAndAddressSection from "@/components/Home/EnquiryAndAddressSection";

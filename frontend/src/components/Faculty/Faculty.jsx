@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import FacultyPageSectionOne from "@/components/Faculty/FacultyPageSectionOne";
 import Navbar from "@/components/NavigationBar/NavBar";

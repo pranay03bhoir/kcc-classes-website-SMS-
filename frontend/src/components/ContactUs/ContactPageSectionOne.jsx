@@ -1,9 +1,9 @@
 "use client";
-import React, { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import Link from "next/link";
+import { useRef } from "react";
 import { FaBookOpen, FaCalculator } from "react-icons/fa";
 import { SlChemistry } from "react-icons/sl";
-import Link from "next/link";
-import { motion, useInView } from "framer-motion";
 
 const ContactPageSectionOne = () => {
   const heroRef = useRef(null);
