@@ -13,7 +13,7 @@ const AboutUs = () => {
   return (
     <div>
       <Navbar />
-      <div className={`pt-36`}>
+      <div className={`pt-16`}>
         <HomeIntroScreen />
       </div>
       <div className={`pt-16`}>

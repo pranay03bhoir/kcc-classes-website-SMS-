@@ -43,6 +43,7 @@ const {
   updateBatch,
   getAdminDetails,
   getAllStudentsWithPagination,
+  updateStudentAttendance,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -90,19 +91,13 @@ router.put(
   adminAuth,
   removeTeacherFromSubject
 );
-router.post(
-  "/students/attendance",
-  loginAuth,
-  adminAuth,
-  markStudentAttendance
+router.post("/students/attendance", markStudentAttendance);
+router.put(
+  "/students/:studentId/attendance/:attendanceId",
+  updateStudentAttendance
 );
 router.get("/all/attendance", getAttendanceRecords);
-router.get(
-  "/attendance/students/:id",
-  loginAuth,
-  adminAuth,
-  getStudentByAttendance
-);
+router.get("/attendance/students/:id", getStudentByAttendance);
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
 router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
 router.put(

@@ -17,7 +17,7 @@ const HomePage = () => {
       <div className="">
         <Navbar />
       </div>
-      <main className={`pt-40`}>
+      <main className={`pt-16`}>
         <HomeIntroScreen />
       </main>
       <section className={`pt-16`}>

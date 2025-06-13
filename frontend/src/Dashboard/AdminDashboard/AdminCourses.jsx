@@ -7,16 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
 import { useEffect, useState } from "react";
 import {
-  FaBookOpen,
   FaChalkboardTeacher,
   FaClock,
   FaEdit,
   FaFire,
-  FaGraduationCap,
   FaLayerGroup,
   FaPlus,
   FaSearch,
-  FaStar,
   FaTrash,
   FaUserGraduate,
 } from "react-icons/fa";
@@ -194,338 +191,325 @@ const AdminCourses = () => {
   }
 
   return (
-    <div>
-      <ToastContainer position={`top-center`} />
-      <div className="md:w-64 h-screen fixed border-r bg-gray-100">
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <ToastContainer position="top-center" />
+      <div className="w-full md:w-64 fixed h-full z-30">
         <Sidebar />
       </div>
 
-      <div className="flex-1 md:ml-64 ml-2 p-6 space-y-6 bg-gray-50 min-h-screen">
-        <h2 className="text-3xl font-bold flex items-center gap-2">
-          <FaBookOpen className="text-blue-600" /> Manage Courses
-        </h2>
-
-        <div className="bg-white p-6 rounded-xl shadow space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-xl shadow">
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Course Code
-              </label>
-              <Input
-                name="code"
-                value={form.code}
-                onChange={handleChange}
-                placeholder="Course Code (Unique)"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Course Name
-              </label>
-              <Input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Course Name"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Duration
-              </label>
-              <Input
-                name="duration"
-                value={form.duration}
-                onChange={handleChange}
-                placeholder="Duration (e.g. 3 months)"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Classes per Week
-              </label>
-              <Input
-                type="number"
-                name="classesPerWeek"
-                value={form.classesPerWeek}
-                onChange={handleChange}
-                placeholder="Classes per Week"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Grade Level
-              </label>
-              <Input
-                name="gradeLevel"
-                value={form.gradeLevel}
-                onChange={handleChange}
-                placeholder="Grade Level"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Category
-              </label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              >
-                <option value="">Select Category</option>
-                <option value="Middle School">Middle School</option>
-                <option value="High School">High School</option>
-                <option value="Science Stream">Science Stream</option>
-                <option value="Commerce Stream">Commerce Stream</option>
-              </select>
-            </div>
-
-            <div className="col-span-full">
-              <label className="text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <Textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Course Description"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Image URL
-              </label>
-              <Input
-                name="imageUrl"
-                value={form.imageUrl}
-                onChange={handleChange}
-                placeholder="Image URL (optional)"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Rating
-              </label>
-              <Input
-                type="number"
-                name="rating"
-                value={form.rating}
-                onChange={handleChange}
-                min="0"
-                max="5"
-                placeholder="Course Rating"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="checkbox"
-                name="isPopular"
-                checked={form.isPopular}
-                onChange={handleChange}
-              />
-              <label className="text-sm">Mark as Popular</label>
-            </div>
-
-            {/* Teacher Search */}
-            <div className="col-span-full">
-              <label className="text-sm font-medium text-gray-700">
-                Search Teachers
-              </label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={teacherSearch}
-                  onChange={(e) => setTeacherSearch(e.target.value)}
-                  placeholder="Search teachers"
-                  className="w-full"
-                />
-                <FaSearch />
-              </div>
-              <select
-                name="teachers"
-                multiple
-                value={form.teachers}
-                onChange={handleMultiSelectChange}
-                className="w-full border rounded p-2 mt-2"
-              >
-                {filteredTeachers.length > 0 ? (
-                  filteredTeachers.map((teacher) => (
-                    <option key={teacher._id} value={teacher._id}>
-                      {teacher.name}
-                    </option>
-                  ))
-                ) : (
-                  <option>No teachers found</option>
-                )}
-              </select>
-            </div>
-
-            {/* Student Search */}
-            <div className="col-span-full">
-              <label className="text-sm font-medium text-gray-700">
-                Search Students
-              </label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={studentSearch}
-                  onChange={(e) => setStudentSearch(e.target.value)}
-                  placeholder="Search students"
-                  className="w-full"
-                />
-                <FaSearch />
-              </div>
-              <div className="mt-2">
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
-                    <div key={student._id} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="students"
-                        value={student._id}
-                        checked={form.students.includes(student._id)}
-                        onChange={handleMultiSelectChange}
-                      />
-                      <span>{student.name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p>No students found</p>
-                )}
-              </div>
-            </div>
+      <div className="flex-1 md:ml-64 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              Course Management
+            </h1>
+            <Button
+              onClick={() => {
+                setForm({
+                  code: "",
+                  name: "",
+                  description: "",
+                  category: "",
+                  duration: "",
+                  classesPerWeek: "",
+                  gradeLevel: "",
+                  rating: 0,
+                  isPopular: false,
+                  imageUrl: "",
+                  teachers: [],
+                  students: [],
+                });
+                setEditingIndex(null);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="w-full md:w-auto"
+            >
+              <FaPlus className="mr-2" /> Add New Course
+            </Button>
           </div>
 
-          <Button onClick={handleAddOrUpdate} className="w-full mt-4">
-            {editingIndex !== null ? (
-              <>
-                <FaEdit className="mr-2" /> Update Course
-              </>
-            ) : (
-              <>
-                <FaPlus className="mr-2" /> Add Course
-              </>
-            )}
-          </Button>
-        </div>
+          {/* Course Form */}
+          <Card className="p-4 md:p-6">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddOrUpdate();
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Course Code</label>
+                  <Input
+                    name="code"
+                    value={form.code}
+                    onChange={handleChange}
+                    placeholder="e.g., MATH101"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Course Name</label>
+                  <Input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="e.g., Advanced Mathematics"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Category</label>
+                  <Input
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    placeholder="e.g., Science"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Duration (months)
+                  </label>
+                  <Input
+                    name="duration"
+                    type="number"
+                    value={form.duration}
+                    onChange={handleChange}
+                    placeholder="e.g., 6"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Classes per Week
+                  </label>
+                  <Input
+                    name="classesPerWeek"
+                    type="number"
+                    value={form.classesPerWeek}
+                    onChange={handleChange}
+                    placeholder="e.g., 3"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Grade Level</label>
+                  <Input
+                    name="gradeLevel"
+                    value={form.gradeLevel}
+                    onChange={handleChange}
+                    placeholder="e.g., Grade 10"
+                    required
+                  />
+                </div>
+              </div>
 
-        <div>
-          <h1 className={`text-4xl font-bold`}>Courses</h1>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
-          {courses.length > 0 ? (
-            courses.map((course, index) => (
-              <Card
-                key={index}
-                className="p-4 shadow-md hover:shadow-lg transition duration-200 rounded-lg bg-white"
-              >
-                <CardContent className="space-y-3">
-                  <div className="flex flex-col items-start gap-2">
-                    <h3 className="text-2xl font-semibold text-blue-700">
-                      {course.name}
-                    </h3>
-                    {course.imageUrl && (
-                      <img
-                        src={course.imageUrl}
-                        alt={course.name}
-                        className="w-full h-48 object-cover rounded-lg mt-3"
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Enter course description..."
+                  className="min-h-[100px]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Teachers Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Assign Teachers</h3>
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <Input
+                        type="text"
+                        placeholder="Search teachers..."
+                        value={teacherSearch}
+                        onChange={(e) => setTeacherSearch(e.target.value)}
+                        className="pl-10 w-full md:w-48"
                       />
-                    )}
-                    <p className="text-sm text-gray-600">
-                      {course.description}
-                    </p>
-                    <p className="text-sm flex items-center gap-1 text-gray-500">
-                      <FaLayerGroup /> {course.category}
-                    </p>
-                    <p className="text-sm flex items-center gap-1 text-gray-500">
-                      <FaGraduationCap /> Grade {course.gradeLevel}
-                    </p>
-                    <p className="text-sm flex items-center gap-1 text-gray-500">
-                      <FaClock /> Duration: {course.duration}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-500 flex">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar
-                            key={i}
-                            className={
-                              i < Math.round(course.rating)
-                                ? "text-yellow-400"
-                                : "text-gray-400"
-                            }
-                          />
-                        ))}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {course.rating}
-                      </span>
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg">
+                    {filteredTeachers.map((teacher) => (
+                      <label
+                        key={teacher._id}
+                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          name="teachers"
+                          value={teacher._id}
+                          checked={form.teachers.includes(teacher._id)}
+                          onChange={handleMultiSelectChange}
+                          className="rounded"
+                        />
+                        <span>{teacher.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Students Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Enroll Students</h3>
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <Input
+                        type="text"
+                        placeholder="Search students..."
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        className="pl-10 w-full md:w-48"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto space-y-2 p-2 border rounded-lg">
+                    {filteredStudents.map((student) => (
+                      <label
+                        key={student._id}
+                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          name="students"
+                          value={student._id}
+                          checked={form.students.includes(student._id)}
+                          onChange={handleMultiSelectChange}
+                          className="rounded"
+                        />
+                        <span>{student.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="isPopular"
+                    checked={form.isPopular}
+                    onChange={handleChange}
+                    className="rounded"
+                  />
+                  <span>Mark as Popular Course</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                {editingIndex !== null && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingIndex(null);
+                      setForm({
+                        code: "",
+                        name: "",
+                        description: "",
+                        category: "",
+                        duration: "",
+                        classesPerWeek: "",
+                        gradeLevel: "",
+                        rating: 0,
+                        isPopular: false,
+                        imageUrl: "",
+                        teachers: [],
+                        students: [],
+                      });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                <Button type="submit" className="min-w-[120px]">
+                  {editingIndex !== null ? "Update Course" : "Add Course"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+
+          {/* Courses List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courses.map((course, index) => (
+              <Card key={course._id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{course.name}</h3>
+                      <p className="text-sm text-gray-500">{course.code}</p>
                     </div>
                     {course.isPopular && (
-                      <p className="text-sm text-green-600">
-                        <FaFire className="inline mr-1" /> Popular Course
-                      </p>
+                      <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
+                        <FaFire className="mr-1" /> Popular
+                      </span>
                     )}
-                    {Array.isArray(course.teachers) &&
-                      course.teachers.length > 0 && (
-                        <p className="text-sm flex items-center gap-1 text-gray-500">
-                          <FaChalkboardTeacher /> Teachers:{" "}
-                          {course.teachers
-                            .slice(0, 5)
-                            .map((teacher) => teacher.name)
-                            .join(", ")}
-                          {course.teachers.length > 5 ? "...." : ""}
-                        </p>
-                      )}
-
-                    {Array.isArray(course.students) &&
-                      course.students.length > 0 && (
-                        <p className="text-sm flex items-center gap-1 text-gray-500">
-                          <FaUserGraduate /> Students:{" "}
-                          {course.students
-                            .slice(0, 5)
-                            .map((student) => student.name)
-                            .join(", ")}
-                          {course.students.length > 5 ? "...." : ""}
-                        </p>
-                      )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {course.description}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                    <div className="flex items-center text-gray-600">
+                      <FaClock className="mr-2" />
+                      {course.duration} months
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <FaLayerGroup className="mr-2" />
+                      {course.classesPerWeek}/week
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <FaChalkboardTeacher className="mr-2" />
+                      {course.teachers?.length || 0} teachers
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <FaUserGraduate className="mr-2" />
+                      {course.students?.length || 0} students
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(index)}
                     >
-                      <FaEdit className="mr-1" /> Edit
+                      <FaEdit className="mr-2" /> Edit
                     </Button>
                     <Button
-                      variant="danger"
+                      variant="destructive"
                       size="sm"
                       onClick={() => {
-                        setDeleteModalOpen(true);
                         setCourseIndex(index);
+                        setDeleteModalOpen(true);
                       }}
-                      className={`bg-red-700 text-white`}
                     >
-                      <FaTrash className="mr-1" /> Delete
+                      <FaTrash className="mr-2" /> Delete
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          ) : (
-            <p>No courses available</p>
-          )}
+            ))}
+          </div>
         </div>
-        <DeleteConfirmationModal
-          isOpen={deleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={() => handleDelete(courseIndex)}
-          itemType="Course"
-        />
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => handleDelete(courseIndex)}
+        title="Delete Course"
+        message="Are you sure you want to delete this course? This action cannot be undone."
+      />
     </div>
   );
 };

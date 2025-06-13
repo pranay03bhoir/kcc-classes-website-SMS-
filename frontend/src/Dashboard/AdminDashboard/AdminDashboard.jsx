@@ -1,21 +1,35 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
 import api from "@/utils/axios";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaBook,
   FaCalendarAlt,
   FaChalkboardTeacher,
-  FaPlus,
+  FaSearch,
+  FaSync,
   FaUserGraduate,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,200 +37,260 @@ import {
 } from "recharts";
 import AdminSummaryCard from "./components/AdminSummaryCard";
 
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
 export default function AdminDashboard() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
   const [subjectCount, setSubjectCount] = useState(0);
   const [students, setStudents] = useState([]);
   const [attendanceRate, setAttendanceRate] = useState(94.2);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterPeriod, setFilterPeriod] = useState("month");
   const [enrollmentTrend, setEnrollmentTrend] = useState([
-    { month: "Jan", count: 1150 },
-    { month: "Feb", count: 1180 },
-    { month: "Mar", count: 1200 },
-    { month: "Apr", count: 1220 },
-    { month: "May", count: 1240 },
-    { month: "Jun", count: 1247 },
+    { month: "Jan", count: 1150, attendance: 92 },
+    { month: "Feb", count: 1180, attendance: 93 },
+    { month: "Mar", count: 1200, attendance: 91 },
+    { month: "Apr", count: 1220, attendance: 94 },
+    { month: "May", count: 1240, attendance: 95 },
+    { month: "Jun", count: 1247, attendance: 93 },
   ]);
 
   const weeklyAttendance = [
-    { day: "Mon", rate: 90 },
-    { day: "Tue", rate: 92 },
-    { day: "Wed", rate: 88 },
-    { day: "Thu", rate: 94 },
-    { day: "Fri", rate: 93 },
-    { day: "Sat", rate: 91 },
+    { day: "Mon", rate: 90, present: 45, absent: 5 },
+    { day: "Tue", rate: 92, present: 46, absent: 4 },
+    { day: "Wed", rate: 88, present: 44, absent: 6 },
+    { day: "Thu", rate: 94, present: 47, absent: 3 },
+    { day: "Fri", rate: 93, present: 46, absent: 4 },
+    { day: "Sat", rate: 91, present: 45, absent: 5 },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const toastId = toast.loading("Loading data...");
-      try {
-        const [studentCountRes, teacherCountRes, subjectCountRes, studentsRes] =
-          await Promise.all([
-            api.get("/students-count"),
-            api.get("/teachers-count"),
-            api.get("/subjects-count"),
-            api.get("/students"),
-          ]);
-        setStudentCount(studentCountRes?.data?.studentCount || 0);
-        setTeacherCount(teacherCountRes?.data?.teacherCount || 0);
-        setSubjectCount(subjectCountRes?.data?.subjectCount || 0);
-        setStudents(studentsRes?.data?.students || []);
-        toast.update(toastId, {
-          render: "Data loaded successfully",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
-      } catch (e) {
-        console.error("Dashboard fetch error:", e);
-        toast.update(toastId, {
-          render: "Error loading data",
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-        });
-      }
-    };
-    fetchData();
+  const fetchData = useCallback(async () => {
+    const toastId = toast.loading("Loading dashboard data...");
+    setIsLoading(true);
+    try {
+      const [studentCountRes, teacherCountRes, subjectCountRes, studentsRes] =
+        await Promise.all([
+          api.get("/students-count"),
+          api.get("/teachers-count"),
+          api.get("/subjects-count"),
+          api.get("/students"),
+        ]);
+
+      setStudentCount(studentCountRes?.data?.studentCount || 0);
+      setTeacherCount(teacherCountRes?.data?.teacherCount || 0);
+      setSubjectCount(subjectCountRes?.data?.subjectCount || 0);
+      setStudents(studentsRes?.data?.students || []);
+
+      toast.update(toastId, {
+        render: "Dashboard data updated successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (e) {
+      console.error("Dashboard fetch error:", e);
+      toast.update(toastId, {
+        render: "Error loading dashboard data. Please try again.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchData();
+    // Set up polling for real-time updates every 5 minutes
+    const intervalId = setInterval(fetchData, 300000);
+    return () => clearInterval(intervalId);
+  }, [fetchData, refreshKey]);
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+    toast.info("Refreshing dashboard data...");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Implement search functionality
+    toast.info("Search functionality coming soon!");
+  };
+
+  const handleFilterChange = (value) => {
+    setFilterPeriod(value);
+    // Implement filter functionality based on period
+    toast.info(`Filtering data for ${value}...`);
+  };
+
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <ToastContainer position="top-center" />
-      <div className="w-64 fixed h-full">
+      <div className="w-full md:w-64 fixed h-full z-30">
         <Sidebar />
       </div>
 
-      <div className="flex-1 md:ml-64 bg-[#f9fafb] p-6 overflow-y-auto space-y-6">
-        <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+      <div className="flex-1 md:ml-64 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-xl md:text-2xl font-bold"
+          >
+            Dashboard
+          </motion.h2>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <AdminSummaryCard
-            icon={
-              <div className="bg-blue-100 text-blue-600 p-2 rounded-full">
-                <FaUserGraduate />
-              </div>
-            }
-            label="Total Students"
-            value={studentCount}
-            growth="12% from last month"
-          />
-          <AdminSummaryCard
-            icon={
-              <div className="bg-green-100 text-green-600 p-2 rounded-full">
-                <FaChalkboardTeacher />
-              </div>
-            }
-            label="Total Teachers"
-            value={teacherCount}
-            growth="3% from last month"
-          />
-          <AdminSummaryCard
-            icon={
-              <div className="bg-purple-100 text-purple-600 p-2 rounded-full">
-                <FaBook />
-              </div>
-            }
-            label="Total Subjects"
-            value={subjectCount}
-            growth="Active courses"
-          />
-          <AdminSummaryCard
-            icon={
-              <div className="bg-orange-100 text-orange-600 p-2 rounded-full">
-                <FaCalendarAlt />
-              </div>
-            }
-            label="Attendance Rate"
-            value={`${attendanceRate}%`}
-            growth="+2.1% from yesterday"
-          />
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full md:w-auto">
+            <form
+              onSubmit={handleSearch}
+              className="flex gap-2 w-full sm:w-auto"
+            >
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-48"
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                <FaSearch className="mr-2" /> Search
+              </Button>
+            </form>
+
+            <div className="flex gap-2">
+              <Select value={filterPeriod} onValueChange={handleFilterChange}>
+                <SelectTrigger className="w-full sm:w-32">
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                <FaSync className={`mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="rounded-2xl shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Student Enrollment Trend
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={enrollmentTrend}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center items-center h-64"
+            >
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              variants={fadeIn}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              <AdminSummaryCard
+                title="Total Students"
+                value={studentCount}
+                icon={<FaUserGraduate className="h-6 w-6" />}
+                trend="+12%"
+                trendUp={true}
+              />
+              <AdminSummaryCard
+                title="Total Teachers"
+                value={teacherCount}
+                icon={<FaChalkboardTeacher className="h-6 w-6" />}
+                trend="+5%"
+                trendUp={true}
+              />
+              <AdminSummaryCard
+                title="Total Courses"
+                value={subjectCount}
+                icon={<FaBook className="h-6 w-6" />}
+                trend="+8%"
+                trendUp={true}
+              />
+              <AdminSummaryCard
+                title="Attendance Rate"
+                value={`${attendanceRate}%`}
+                icon={<FaCalendarAlt className="h-6 w-6" />}
+                trend="+2.5%"
+                trendUp={true}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">Enrollment Trend</h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={enrollmentTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#8884d8"
+                    name="Students"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="attendance"
+                    stroke="#82ca9d"
+                    name="Attendance %"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </Card>
 
-          <Card className="rounded-2xl shadow-md p-6">
+          <Card className="p-4">
             <h3 className="text-lg font-semibold mb-4">Weekly Attendance</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklyAttendance}>
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="rate" fill="#34d399" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="grid grid-cols-2 gap-10">
-          <Card className="rounded-2xl shadow-md">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Activities</h3>
-              <ul className="space-y-2">
-                <li className="text-sm text-blue-600">
-                  📌 New student enrolled - Sarah Johnson joined Mathematics
-                  batch (2 mins ago)
-                </li>
-                <li className="text-sm text-green-600">
-                  ✅ Attendance marked - Physics class completed (15 mins ago)
-                </li>
-                <li className="text-sm text-purple-600">
-                  📝 Grades updated - Chemistry exam results published (1 hour
-                  ago)
-                </li>
-                <li className="text-sm text-orange-600">
-                  👨‍🏫 New teacher added - Dr. Michael Brown joined Biology
-                  department (3 hours ago)
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="rounded-2xl shadow-md">
-            <CardContent className="grid grid-cols-2 md:grid-cols-1 gap-4 p-6">
-              <Link href={`admindashboard/students`}>
-                <button className="bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg px-4 py-2 font-semibold">
-                  <FaPlus className="inline mr-2" /> Add New Student
-                </button>
-              </Link>
-              <Link href={`admindashboard/teachers`}>
-                <button className="bg-green-600 hover:bg-green-700 transition text-white rounded-lg px-4 py-2 font-semibold">
-                  <FaPlus className="inline mr-2" /> Add New Teacher
-                </button>
-              </Link>
-              <Link href={`admindashboard/attendance`}>
-                <button className="bg-purple-600 hover:bg-purple-700 transition text-white rounded-lg px-4 py-2 font-semibold">
-                  <FaPlus className="inline mr-2" /> Mark Attendance
-                </button>
-              </Link>
-              <Link href={`admindashboard/courses`}>
-                <button className="bg-orange-600 hover:bg-orange-700 transition text-white rounded-lg px-4 py-2 font-semibold">
-                  <FaPlus className="inline mr-2" /> Create Subject
-                </button>
-              </Link>
-              <Link href={`admindashboard/reports`}>
-                <button className="border border-gray-400 hover:border-gray-600 transition text-gray-700 rounded-lg px-4 py-2 font-semibold col-span-2 md:col-span-1">
-                  📊 View Reports
-                </button>
-              </Link>
-            </CardContent>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyAttendance}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="present" fill="#4CAF50" name="Present" />
+                  <Bar dataKey="absent" fill="#F44336" name="Absent" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </Card>
         </div>
       </div>

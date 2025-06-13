@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import api from "@/utils/common-axios";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +14,12 @@ const Navbar = () => {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [loadingStates, setLoadingStates] = useState({
+    login: {},
+    register: {},
+    dashboard: false,
+    nav: {},
+  });
   const pathname = usePathname();
 
   useEffect(() => {
@@ -39,6 +45,30 @@ const Navbar = () => {
   const isActive = (path) => {
     if (path === "/home") return pathname === "/";
     return pathname === path.toLowerCase().replace(" ", "");
+  };
+
+  const handleLinkClick = (type, role = null, item = null) => {
+    if (type === "login") {
+      setLoadingStates((prev) => ({
+        ...prev,
+        login: { ...prev.login, [role]: true },
+      }));
+    } else if (type === "register") {
+      setLoadingStates((prev) => ({
+        ...prev,
+        register: { ...prev.register, [role]: true },
+      }));
+    } else if (type === "dashboard") {
+      setLoadingStates((prev) => ({
+        ...prev,
+        dashboard: true,
+      }));
+    } else if (type === "nav") {
+      setLoadingStates((prev) => ({
+        ...prev,
+        nav: { ...prev.nav, [item]: true },
+      }));
+    }
   };
 
   return (
@@ -82,17 +112,24 @@ const Navbar = () => {
                 <Link
                   key={item}
                   href={path}
-                  className={`relative px-4 py-2 text-gray-700 hover:text-red-500 transition-colors duration-200 rounded-lg hover:bg-red-50 ${
+                  onClick={() => handleLinkClick("nav", null, item)}
+                  className={`relative px-4 py-2 text-gray-700 hover:text-red-500 transition-colors duration-200 rounded-lg hover:bg-red-50 flex items-center gap-2 min-w-[100px] justify-center ${
                     isActive(path) ? "text-red-500 font-medium" : ""
                   }`}
                 >
-                  {item}
-                  {isActive(path) && (
-                    <motion.div
-                      layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-red-500 rounded-full"
-                      transition={{ type: "spring", duration: 0.5 }}
-                    />
+                  {loadingStates.nav[item] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      {item}
+                      {isActive(path) && (
+                        <motion.div
+                          layoutId="navbar-indicator"
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-red-500 rounded-full"
+                          transition={{ type: "spring", duration: 0.5 }}
+                        />
+                      )}
+                    </>
                   )}
                 </Link>
               );
@@ -114,17 +151,25 @@ const Navbar = () => {
                   userRole === "admin"
                     ? "/admindashboard"
                     : userRole === "teacher"
-                    ? "/teacherdashboard"
+                    ? "/teacherDashboard"
                     : "/studentdashboard"
                 }
                 target="_blank"
+                onClick={() => handleLinkClick("dashboard")}
               >
-                <Button className="h-10 text-md bg-red-500 hover:bg-red-600 transition-colors shadow-sm hover:shadow-md">
-                  {userRole === "admin"
-                    ? "Admin Panel"
-                    : userRole === "teacher"
-                    ? "Teacher Dashboard"
-                    : "Student Dashboard"}
+                <Button
+                  className="h-10 text-md bg-red-500 hover:bg-red-600 transition-colors shadow-sm hover:shadow-md min-w-[160px]"
+                  disabled={loadingStates.dashboard}
+                >
+                  {loadingStates.dashboard ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : userRole === "admin" ? (
+                    "Admin Panel"
+                  ) : userRole === "teacher" ? (
+                    "Teacher Dashboard"
+                  ) : (
+                    "Student Dashboard"
+                  )}
                 </Button>
               </Link>
             ) : (
@@ -162,10 +207,17 @@ const Navbar = () => {
                               href={`/login/${role.toLowerCase()}`}
                               target="_blank"
                               className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
-                              onClick={() => setLoginOpen(false)}
+                              onClick={() => {
+                                handleLinkClick("login", role);
+                                setLoginOpen(false);
+                              }}
                             >
                               <span className="flex-1">{role} Login</span>
-                              <ChevronDown size={14} className="rotate-270" />
+                              {loadingStates.login[role] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ChevronDown size={14} className="rotate-270" />
+                              )}
                             </Link>
                           ))}
                         </div>
@@ -207,10 +259,17 @@ const Navbar = () => {
                               href={`/register/${role.toLowerCase()}-register`}
                               target="_blank"
                               className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
-                              onClick={() => setRegisterOpen(false)}
+                              onClick={() => {
+                                handleLinkClick("register", role);
+                                setRegisterOpen(false);
+                              }}
                             >
                               <span className="flex-1">{role} Register</span>
-                              <ChevronDown size={14} className="rotate-270" />
+                              {loadingStates.register[role] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ChevronDown size={14} className="rotate-270" />
+                              )}
                             </Link>
                           ))}
                         </div>
@@ -251,19 +310,26 @@ const Navbar = () => {
                     <Link
                       key={item}
                       href={path}
+                      onClick={() => {
+                        handleLinkClick("nav", null, item);
+                        setIsOpen(false);
+                      }}
                       className={`flex items-center px-4 py-3 text-gray-700 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg ${
                         isActive(path)
                           ? "text-red-500 font-medium bg-red-50"
                           : ""
                       }`}
-                      onClick={() => setIsOpen(false)}
                     >
                       <span className="flex-1">{item}</span>
-                      {isActive(path) && (
-                        <motion.div
-                          layoutId="mobile-navbar-indicator"
-                          className="w-1.5 h-1.5 bg-red-500 rounded-full"
-                        />
+                      {loadingStates.nav[item] ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        isActive(path) && (
+                          <motion.div
+                            layoutId="mobile-navbar-indicator"
+                            className="w-1.5 h-1.5 bg-red-500 rounded-full"
+                          />
+                        )
                       )}
                     </Link>
                   );
@@ -281,14 +347,24 @@ const Navbar = () => {
                       }
                       target="_blank"
                       className="block"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        handleLinkClick("dashboard");
+                        setIsOpen(false);
+                      }}
                     >
-                      <Button className="w-full h-12 bg-red-500 hover:bg-red-600 transition-colors shadow-sm">
-                        {userRole === "admin"
-                          ? "Admin Panel"
-                          : userRole === "teacher"
-                          ? "Teacher Dashboard"
-                          : "Student Dashboard"}
+                      <Button
+                        className="w-full h-12 bg-red-500 hover:bg-red-600 transition-colors shadow-sm"
+                        disabled={loadingStates.dashboard}
+                      >
+                        {loadingStates.dashboard ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : userRole === "admin" ? (
+                          "Admin Panel"
+                        ) : userRole === "teacher" ? (
+                          "Teacher Dashboard"
+                        ) : (
+                          "Student Dashboard"
+                        )}
                       </Button>
                     </Link>
                   ) : (
@@ -304,10 +380,17 @@ const Navbar = () => {
                               href={`/login/${role.toLowerCase()}`}
                               target="_blank"
                               className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
-                              onClick={() => setIsOpen(false)}
+                              onClick={() => {
+                                handleLinkClick("login", role);
+                                setIsOpen(false);
+                              }}
                             >
                               <span>{role} Login</span>
-                              <ChevronDown size={14} className="rotate-270" />
+                              {loadingStates.login[role] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ChevronDown size={14} className="rotate-270" />
+                              )}
                             </Link>
                           ))}
                         </div>
@@ -324,10 +407,17 @@ const Navbar = () => {
                               href={`/register/${role.toLowerCase()}-register`}
                               target="_blank"
                               className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
-                              onClick={() => setIsOpen(false)}
+                              onClick={() => {
+                                handleLinkClick("register", role);
+                                setIsOpen(false);
+                              }}
                             >
                               <span>{role} Register</span>
-                              <ChevronDown size={14} className="rotate-270" />
+                              {loadingStates.register[role] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ChevronDown size={14} className="rotate-270" />
+                              )}
                             </Link>
                           ))}
                         </div>

@@ -528,7 +528,8 @@ const getAllStudentsWithPagination = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("subjects")
-      .populate("batches");
+      .populate("batches")
+      .populate("attendance");
     if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
@@ -2430,6 +2431,92 @@ const removeTeacherFromBatch = async (req, res) => {
   }
 };
 
+/**
+ * Updates a student's attendance record
+ * @async
+ * @function updateStudentAttendance
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.studentId - Student ID
+ * @param {string} req.params.attendanceId - Attendance record ID
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.status - New attendance status
+ * @param {string} [req.body.note] - Optional note about attendance
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated attendance record
+ */
+const updateStudentAttendance = async (req, res) => {
+  try {
+    const { studentId, attendanceId } = req.params;
+    const { status, note } = req.body;
+
+    // Validate required fields
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Status is required for updating attendance",
+      });
+    }
+
+    // Find and validate student
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // Find and validate attendance record
+    const attendance = await Attendance.findById(attendanceId);
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance record not found",
+      });
+    }
+
+    // Verify the attendance record belongs to the student
+    if (attendance.student.toString() !== studentId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This attendance record does not belong to the specified student",
+      });
+    }
+
+    // Update the attendance record
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      attendanceId,
+      {
+        status,
+        note: note || attendance.note,
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update attendance record",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Attendance updated successfully",
+      attendance: updatedAttendance,
+    });
+  } catch (error) {
+    console.error("Error updating student attendance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   adminRegister,
   adminLogin,
@@ -2475,4 +2562,5 @@ module.exports = {
   addTeacherToBatch,
   removeStudentFromBatch,
   removeTeacherFromBatch,
+  updateStudentAttendance,
 };

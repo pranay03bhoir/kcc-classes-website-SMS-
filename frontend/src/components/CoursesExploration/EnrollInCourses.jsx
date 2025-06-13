@@ -161,7 +161,7 @@ const EnrollInCourses = () => {
                 <React.Fragment key={i}>
                   {page.courses.map((course) => (
                     <motion.div
-                      key={course.id}
+                      key={course._id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}

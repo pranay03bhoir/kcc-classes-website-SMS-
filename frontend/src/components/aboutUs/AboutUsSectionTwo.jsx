@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { FaCheckCircle } from "react-icons/fa";
-import { motion, useAnimation } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import CustomHeading from "@/components/Heading/CustomHeading";
+import { Card } from "@/components/ui/card";
+import { motion, useAnimation } from "framer-motion";
+import { useEffect } from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { useInView } from "react-intersection-observer";
 
 const AboutUsSectionTwo = () => {
   const controls = useAnimation();
@@ -25,7 +25,7 @@ const AboutUsSectionTwo = () => {
     >
       <CustomHeading
         title={"About Our Tutoring Center"}
-        top={`md:top-[140%]`}
+        top={`md:top-[180%]`}
         padding={`py-24`}
         borderColour={"border-white"}
       />
