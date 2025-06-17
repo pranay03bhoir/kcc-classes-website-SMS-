@@ -1,5 +1,6 @@
 "use client";
 
+import api from "@/utils/axios";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -19,9 +20,9 @@ import {
   FaSpinner,
   FaUpload,
 } from "react-icons/fa";
-import { mockGrades } from "../../data/mockData"; // We'll move mock data to a separate file
 import Sidebar from "./SideBar";
 import AddScoreModal from "./components/modals/AddScoresModal";
+import AddStudentsScoreBulk from "./components/modals/AddStudentsScoreBulk";
 
 ChartJS.register(
   CategoryScale,
@@ -40,13 +41,15 @@ const AdminStudentScoreManagement = () => {
   const [addScoreModalOpen, setAddScoreModalOpen] = useState(false);
   const [bulkAddModalOpen, setBulkAddModalOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [students, setStudents] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [filters, setFilters] = useState({
     subject: "All Subjects",
     examType: "All Types",
     gradeRange: "All Grades",
   });
-  const [grades, setGrades] = useState([]);
   const [stats, setStats] = useState({
     averageScore: 0,
     highestScore: 0,
@@ -71,18 +74,36 @@ const AdminStudentScoreManagement = () => {
     "NEET PG",
   ];
 
-  // Simulated API call
+  // API call to fetch students with scores
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setGrades(mockGrades);
-        calculateStats(mockGrades);
-        setError(null);
+        // Fetch all students without pagination to get all scores
+        const response = await api.get(`/students`);
+
+        if (response.data.success) {
+          setStudents(response.data.students);
+          setTotalStudents(response.data.students.length);
+          // Flatten scores from all students for processing
+          const allScores = response.data.students.flatMap((student) =>
+            student.scores
+              ? student.scores.map((score) => ({
+                  ...score,
+                  studentId: student.studentId,
+                  studentName: student.name,
+                  id: student._id,
+                }))
+              : []
+          );
+          calculateStats(allScores);
+          setError(null);
+        } else {
+          setError("Failed to fetch students. Please try again later.");
+        }
       } catch (err) {
-        setError("Failed to fetch grades. Please try again later.");
+        console.error("Error fetching students:", err);
+        setError("Failed to fetch students. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -91,57 +112,152 @@ const AdminStudentScoreManagement = () => {
     fetchData();
   }, []);
 
-  const calculateStats = (data) => {
-    const scores = data.map((g) => parseInt(g.score.split("/")[0]));
-    const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const highest = Math.max(...scores);
-    const belowAvg = scores.filter((s) => s < average).length;
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const addScoreToStudents = async (scoreData) => {
+    try {
+      const response = await api.post("/scores/students", scoreData);
+      if (response.data.success) {
+        setAddScoreModalOpen(false);
+        setError(null);
+        setSuccessMessage("Score added successfully!");
+        // Re-fetch students to update scores
+        const updatedResponse = await api.get(`/students`);
+        if (updatedResponse.data.success) {
+          setStudents(updatedResponse.data.students);
+          setTotalStudents(updatedResponse.data.students.length);
+          calculateStats(
+            updatedResponse.data.students.flatMap((student) =>
+              student.scores
+                ? student.scores.map((score) => ({
+                    ...score,
+                    studentId: student.studentId,
+                    studentName: student.name,
+                    id: student._id,
+                  }))
+                : []
+            )
+          );
+        }
+      } else {
+        setError(
+          response.data.message || "Failed to add score. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Error adding score:", error);
+      if (error.response) {
+        // Handle specific error responses from the server
+        const errorMessage =
+          error.response.data?.message ||
+          "Failed to add score. Please try again later.";
+        setError(errorMessage);
+      } else if (error.request) {
+        // Network error
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        // Other errors
+        setError("Failed to add score. Please try again later.");
+      }
+    }
+  };
+
+  const calculateStats = (scores) => {
+    if (!scores || scores.length === 0) {
+      setStats({
+        averageScore: 0,
+        highestScore: 0,
+        totalStudents: totalStudents,
+        belowAverage: 0,
+      });
+      return;
+    }
+
+    const scoreValues = scores.map((score) => score.score);
+    const average = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
+    const highest = Math.max(...scoreValues);
+    const belowAvg = scoreValues.filter((s) => s < average).length;
 
     setStats({
       averageScore: average.toFixed(1),
       highestScore: highest,
-      totalStudents: data.length,
+      totalStudents: students.length,
       belowAverage: belowAvg,
     });
   };
 
-  const filteredGrades = useMemo(() => {
-    return grades.filter((grade) => {
+  // Flatten all scores from students for filtering and display
+  const allScores = useMemo(() => {
+    return students.flatMap((student) =>
+      student.scores
+        ? student.scores.map((score, scoreIndex) => ({
+            ...score,
+            studentId: student.studentId,
+            studentName: student.name,
+            id: student._id,
+            uniqueId: `${student._id}-${score._id || scoreIndex}-${
+              score.examType
+            }-${score.date}`,
+          }))
+        : []
+    );
+  }, [students]);
+
+  const filteredScores = useMemo(() => {
+    return allScores.filter((score) => {
       if (
         filters.subject !== "All Subjects" &&
-        grade.subject !== filters.subject
+        score.subject?.name !== filters.subject
+      )
+        return false;
+      if (
+        filters.examType !== "All Types" &&
+        score.examType !== filters.examType
       )
         return false;
       if (filters.gradeRange !== "All Grades") {
         const [min, max] = filters.gradeRange.split("-");
-        const score = parseInt(grade.score.split("/")[0]);
-        if (score < parseInt(min) || score > parseInt(max)) return false;
+        if (score.score < parseInt(min) || score.score > parseInt(max))
+          return false;
       }
       return true;
     });
-  }, [grades, filters]);
+  }, [allScores, filters]);
 
-  const paginatedGrades = useMemo(() => {
+  // Implement client-side pagination for filtered scores
+  const paginatedScores = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredGrades.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredGrades, currentPage]);
+    return filteredScores.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredScores, currentPage]);
 
-  const totalPages = Math.ceil(filteredGrades.length / ITEMS_PER_PAGE);
+  // Calculate total pages based on filtered scores
+  const totalPages = Math.ceil(filteredScores.length / ITEMS_PER_PAGE);
 
   const handleFilterChange = (filterType, value) => {
     setFilters((prev) => ({ ...prev, [filterType]: value }));
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when filters change
+    setError(null);
+    setSuccessMessage(null);
   };
 
   const handleExport = () => {
     const csvContent = [
-      ["Student ID", "Subject", "Exam Type", "Score", "Date"],
-      ...filteredGrades.map((g) => [
-        g.studentId,
-        g.subject,
-        g.examType,
-        g.score,
-        new Date(g.date).toLocaleDateString(),
+      ["Student ID", "Student Name", "Subject", "Exam Type", "Score", "Date"],
+      ...filteredScores.map((score) => [
+        score.studentId,
+        score.studentName,
+        score.subject?.name || "N/A",
+        score.examType,
+        score.score,
+        new Date(score.date).toLocaleDateString(),
       ]),
     ]
       .map((row) => row.join(","))
@@ -156,16 +272,22 @@ const AdminStudentScoreManagement = () => {
   };
 
   const gradeDistributionData = {
-    labels: ["A", "B", "C", "D", "F"],
+    labels: ["A (90-100)", "B (80-89)", "C (70-79)", "D (60-69)", "F (0-59)"],
     datasets: [
       {
         label: "Number of Students",
         data: [
-          filteredGrades.filter((g) => g.grade === "A").length,
-          filteredGrades.filter((g) => g.grade === "B").length,
-          filteredGrades.filter((g) => g.grade === "C").length,
-          filteredGrades.filter((g) => g.grade === "D").length,
-          filteredGrades.filter((g) => g.grade === "F").length,
+          filteredScores.filter((score) => score.score >= 90).length,
+          filteredScores.filter(
+            (score) => score.score >= 80 && score.score < 90
+          ).length,
+          filteredScores.filter(
+            (score) => score.score >= 70 && score.score < 80
+          ).length,
+          filteredScores.filter(
+            (score) => score.score >= 60 && score.score < 70
+          ).length,
+          filteredScores.filter((score) => score.score < 60).length,
         ],
         borderColor: "rgb(75, 192, 192)",
         tension: 0.1,
@@ -173,23 +295,27 @@ const AdminStudentScoreManagement = () => {
     ],
   };
 
-  // Add this new function to calculate top performers
+  // Calculate top performers based on average scores
   const getTopPerformers = useMemo(() => {
-    const studentScores = grades.reduce((acc, grade) => {
-      const score = parseInt(grade.score.split("/")[0]);
-      if (!acc[grade.id]) {
-        acc[grade.id] = {
-          id: grade.id,
-          name: grade.name,
+    const studentScores = {};
+
+    // Group scores by student
+    allScores.forEach((score) => {
+      if (!studentScores[score.studentId]) {
+        studentScores[score.studentId] = {
+          id: score.studentId,
+          name: score.studentName,
           scores: [],
           averageScore: 0,
           bestSubject: "",
           bestScore: 0,
         };
       }
-      acc[grade.id].scores.push({ subject: grade.subject, score });
-      return acc;
-    }, {});
+      studentScores[score.studentId].scores.push({
+        subject: score.subject?.name || "N/A",
+        score: score.score,
+      });
+    });
 
     return Object.values(studentScores)
       .map((student) => {
@@ -208,7 +334,7 @@ const AdminStudentScoreManagement = () => {
       })
       .sort((a, b) => b.averageScore - a.averageScore)
       .slice(0, 5);
-  }, [grades]);
+  }, [allScores]);
 
   if (error) {
     return (
@@ -236,12 +362,28 @@ const AdminStudentScoreManagement = () => {
           <button
             className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             onClick={() => {
+              setError(null);
+              setSuccessMessage(null);
               setAddScoreModalOpen(true);
             }}
           >
             <FaPlus className="text-lg" /> Add Grade
           </button>
         </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-100">
@@ -259,13 +401,17 @@ const AdminStudentScoreManagement = () => {
                 onChange={(e) => handleFilterChange("subject", e.target.value)}
               >
                 <option value="All Subjects">All Subjects</option>
-                {Array.from(new Set(grades.map((g) => g.subject))).map(
-                  (subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
+                {Array.from(
+                  new Set(
+                    allScores
+                      .map((score) => score.subject?.name)
+                      .filter(Boolean)
                   )
-                )}
+                ).map((subject) => (
+                  <option key={subject} value={subject}>
+                    {subject}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="relative">
@@ -578,7 +724,7 @@ const AdminStudentScoreManagement = () => {
                     <button
                       className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                       onClick={() => {
-                        /* TODO: Implement bulk add modal */
+                        setBulkAddModalOpen(true);
                       }}
                     >
                       <FaUpload /> Bulk Add
@@ -593,6 +739,9 @@ const AdminStudentScoreManagement = () => {
                     <tr className="bg-gray-50 text-left">
                       <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Student ID
+                      </th>
+                      <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Student Name
                       </th>
                       <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Subject
@@ -612,123 +761,139 @@ const AdminStudentScoreManagement = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {paginatedGrades.map((g, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-900">
-                              {g.studentId}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {g.subject}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {g.examType}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {g.score}%
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {new Date(g.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          <div className="flex gap-3">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                              onClick={() => {
-                                /* TODO: Implement edit modal */
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                              onClick={() => {
-                                /* TODO: Implement delete confirmation */
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </div>
+                    {paginatedScores.length > 0 ? (
+                      paginatedScores.map((score, idx) => (
+                        <tr
+                          key={score.uniqueId}
+                          className="hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-gray-900">
+                                {score.studentId}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {score.studentName}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {score.subject?.name || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {score.examType}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {score.score}%
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {new Date(score.date).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <div className="flex gap-3">
+                              <button
+                                className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                onClick={() => {
+                                  /* TODO: Implement edit modal */
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                onClick={() => {
+                                  /* TODO: Implement delete confirmation */
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="px-6 py-8 text-center text-gray-500"
+                        >
+                          No scores found. Add some scores to see them here.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
 
               {/* Pagination */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                <div className="flex justify-end gap-2">
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                  >
-                    First
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                          currentPage === pageNum
-                            ? "bg-green-500 text-white"
-                            : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                        }`}
-                        onClick={() => setCurrentPage(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Last
-                  </button>
+              {totalPages > 1 && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                      }`}
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      First
+                    </button>
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                      }`}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                            currentPage === pageNum
+                              ? "bg-green-500 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                          }`}
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                      }`}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                      }`}
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Last
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </>
         )}
@@ -736,6 +901,45 @@ const AdminStudentScoreManagement = () => {
       <AddScoreModal
         isOpen={addScoreModalOpen}
         onClose={() => setAddScoreModalOpen(false)}
+        onSubmit={addScoreToStudents}
+        students={students}
+        subjects={Array.from(
+          students
+            .flatMap((student) =>
+              student.subjects
+                ? student.subjects.map((subject) => ({
+                    _id: subject._id,
+                    name: subject.name,
+                  }))
+                : []
+            )
+            .reduce((map, subject) => {
+              map.set(subject._id, subject);
+              return map;
+            }, new Map())
+            .values()
+        )}
+      />
+      <AddStudentsScoreBulk
+        isOpen={bulkAddModalOpen}
+        onClose={() => setBulkAddModalOpen(false)}
+        students={students}
+        subjects={Array.from(
+          students
+            .flatMap((student) =>
+              student.subjects
+                ? student.subjects.map((subject) => ({
+                    _id: subject._id,
+                    name: subject.name,
+                  }))
+                : []
+            )
+            .reduce((map, subject) => {
+              map.set(subject._id, subject);
+              return map;
+            }, new Map())
+            .values()
+        )}
       />
     </div>
   );

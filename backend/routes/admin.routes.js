@@ -99,7 +99,7 @@ router.put(
 router.get("/all/attendance", getAttendanceRecords);
 router.get("/attendance/students/:id", getStudentByAttendance);
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
-router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
+router.post("/scores/students", addGradesToStudent);
 router.put(
   "/scores/students/:studentId/:subjectId/:examType",
   loginAuth,

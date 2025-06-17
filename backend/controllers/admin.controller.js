@@ -483,7 +483,14 @@ const getAllStudents = async (req, res) => {
     // const totalStudents = await Student.countDocuments();
     const students = await Student.find({})
       .populate("subjects")
-      .populate("batches");
+      .populate("batches")
+      .populate("attendance")
+      .populate({
+        path: "scores",
+        populate: {
+          path: "subject",
+        },
+      });
     if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
@@ -529,7 +536,13 @@ const getAllStudentsWithPagination = async (req, res) => {
       .limit(limit)
       .populate("subjects")
       .populate("batches")
-      .populate("attendance");
+      .populate("attendance")
+      .populate({
+        path: "scores",
+        populate: {
+          path: "subject",
+        },
+      });
     if (!students || students.length === 0) {
       res.status(404).json({
         success: false,
