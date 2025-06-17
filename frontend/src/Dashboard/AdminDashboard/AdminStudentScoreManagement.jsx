@@ -36,6 +36,15 @@ ChartJS.register(
 
 const ITEMS_PER_PAGE = 10;
 
+// Helper function to calculate grade based on score
+const calculateGrade = (score) => {
+  if (score >= 90) return "A";
+  if (score >= 80) return "B";
+  if (score >= 70) return "C";
+  if (score >= 60) return "D";
+  return "F";
+};
+
 const AdminStudentScoreManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [addScoreModalOpen, setAddScoreModalOpen] = useState(false);
@@ -250,13 +259,22 @@ const AdminStudentScoreManagement = () => {
 
   const handleExport = () => {
     const csvContent = [
-      ["Student ID", "Student Name", "Subject", "Exam Type", "Score", "Date"],
+      [
+        "Student ID",
+        "Student Name",
+        "Subject",
+        "Exam Type",
+        "Score",
+        "Grade",
+        "Date",
+      ],
       ...filteredScores.map((score) => [
         score.studentId,
         score.studentName,
         score.subject?.name || "N/A",
         score.examType,
         score.score,
+        calculateGrade(score.score),
         new Date(score.date).toLocaleDateString(),
       ]),
     ]
@@ -753,6 +771,9 @@ const AdminStudentScoreManagement = () => {
                         Score
                       </th>
                       <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Grade
+                      </th>
+                      <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
                       <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -786,6 +807,23 @@ const AdminStudentScoreManagement = () => {
                           <td className="px-6 py-4 text-sm text-gray-900">
                             {score.score}%
                           </td>
+                          <td className="px-6 py-4 text-sm">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                calculateGrade(score.score) === "A"
+                                  ? "bg-green-100 text-green-800"
+                                  : calculateGrade(score.score) === "B"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : calculateGrade(score.score) === "C"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : calculateGrade(score.score) === "D"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {calculateGrade(score.score)}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
                             {new Date(score.date).toLocaleDateString()}
                           </td>
@@ -814,7 +852,7 @@ const AdminStudentScoreManagement = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="7"
+                          colSpan="8"
                           className="px-6 py-8 text-center text-gray-500"
                         >
                           No scores found. Add some scores to see them here.
