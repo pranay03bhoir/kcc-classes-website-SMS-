@@ -179,14 +179,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-screen bg-gray-50 pt-16">
       <ToastContainer position="top-center" />
       <TokenRefreshIndicator />
-      <div className="w-full md:w-64 fixed h-full z-30">
+
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar />
       </div>
 
-      <div className="flex-1 md:ml-64 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <div className="flex-1 w-full md:ml-16 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <motion.h2
             initial={{ opacity: 0, x: -20 }}

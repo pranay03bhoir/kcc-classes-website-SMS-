@@ -22,6 +22,17 @@ const Navbar = () => {
   });
   const pathname = usePathname();
 
+  // Don't render navbar on dashboard pages
+  const isDashboardPage =
+    pathname.includes("/admindashboard") ||
+    pathname.includes("/studentdashboard") ||
+    pathname.includes("/teacherDashboard") ||
+    pathname.includes("/teacherdashboard");
+
+  if (isDashboardPage) {
+    return null;
+  }
+
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {

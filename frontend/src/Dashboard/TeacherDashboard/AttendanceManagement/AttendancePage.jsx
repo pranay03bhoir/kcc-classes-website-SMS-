@@ -367,7 +367,7 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       <ToastContainer
         position="top-center"
         autoClose={2000}
@@ -380,10 +380,14 @@ export default function AttendancePage() {
         pauseOnHover
         theme="light"
       />
-      <div className="fixed z-50">
+
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar teacher={teacher} />
       </div>
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 ms-0 sm:ms-64 transition-all duration-300">
+
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <div className="flex-1 w-full md:ml-16 p-4 sm:p-6 space-y-4 sm:space-y-6 transition-all duration-300">
         <header className="space-y-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>

@@ -191,13 +191,16 @@ const AdminCourses = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-screen bg-gray-50 pt-16">
       <ToastContainer position="top-center" />
-      <div className="w-full md:w-64 fixed h-full z-30">
+
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar />
       </div>
 
-      <div className="flex-1 md:ml-64 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto">
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <div className="flex-1 w-full md:ml-16 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl p-6 md:p-8 text-white shadow-xl">
@@ -598,110 +601,154 @@ const AdminCourses = () => {
             {courses.map((course, index) => (
               <Card
                 key={course._id}
-                className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-gray-200 bg-white rounded-lg"
+                className="group overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-2xl shadow-lg hover:shadow-purple-200/50 h-full flex flex-col"
               >
-                <CardContent className="p-0">
+                <CardContent className="p-0 flex flex-col h-full">
                   {/* Course Image Header */}
-                  <div className="relative h-40 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                  <div className="relative h-48 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 overflow-hidden flex-shrink-0">
                     {course.imageUrl ? (
                       <img
                         src={course.imageUrl}
                         alt={course.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         onError={(e) => {
                           e.target.style.display = "none";
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-gray-400 text-4xl">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200">
+                        <div className="text-white text-5xl opacity-80 group-hover:scale-110 transition-transform duration-300">
                           <FaChalkboardTeacher />
                         </div>
                       </div>
                     )}
 
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
                     {/* Popular Badge */}
                     {course.isPopular && (
-                      <div className="absolute top-2 right-2">
-                        <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          <FaFire className="mr-1" /> Popular
+                      <div className="absolute top-3 right-3 animate-pulse">
+                        <span className="bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center">
+                          <FaFire className="mr-1 text-yellow-200" /> Popular
                         </span>
                       </div>
                     )}
 
                     {/* Category Badge */}
-                    <div className="absolute top-2 left-2">
-                      <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-semibold border border-white/20 max-w-[120px] truncate">
                         {course.category}
                       </span>
+                    </div>
+
+                    {/* Rating Badge */}
+                    <div className="absolute bottom-3 right-3">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center shadow-lg">
+                        <span className="text-yellow-500 mr-1 text-sm">⭐</span>
+                        <span className="font-bold text-gray-800 text-sm">
+                          {course.rating || 0}/5
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Course Content */}
-                  <div className="p-4">
+                  <div className="p-6 flex-1 flex flex-col">
                     {/* Course Title and Code */}
-                    <div className="mb-3">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2">
+                    <div className="mb-4 flex-shrink-0">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300 line-clamp-2 leading-tight min-h-[3rem]">
                         {course.name}
                       </h3>
-                      <p className="text-sm text-blue-600 font-medium">
-                        {course.code}
-                      </p>
+                      <div className="flex items-center">
+                        <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full font-bold truncate max-w-full">
+                          {course.code}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Course Description */}
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">
-                      {course.description}
+                    <p className="text-sm text-gray-600 mb-6 line-clamp-3 leading-relaxed flex-1 min-h-[4rem]">
+                      {course.description || "No description available"}
                     </p>
 
-                    {/* Course Stats */}
-                    <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
-                      <div className="flex items-center text-gray-600">
-                        <FaClock className="mr-2 text-gray-400" />
-                        <span className="font-medium">{course.duration}</span>
+                    {/* Course Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-6 flex-shrink-0">
+                      <div className="flex items-center p-2.5 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <div className="bg-blue-500 p-1.5 rounded-lg mr-2 flex-shrink-0">
+                          <FaClock className="text-white text-xs" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-blue-600 font-semibold truncate">
+                            Duration
+                          </p>
+                          <p className="text-xs font-bold text-gray-800 truncate">
+                            {course.duration || "N/A"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaLayerGroup className="mr-2 text-gray-400" />
-                        <span className="font-medium">
-                          {course.classesPerWeek}/week
-                        </span>
+
+                      <div className="flex items-center p-2.5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                        <div className="bg-purple-500 p-1.5 rounded-lg mr-2 flex-shrink-0">
+                          <FaLayerGroup className="text-white text-xs" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-purple-600 font-semibold truncate">
+                            Classes/Week
+                          </p>
+                          <p className="text-xs font-bold text-gray-800 truncate">
+                            {course.classesPerWeek || "N/A"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaChalkboardTeacher className="mr-2 text-gray-400" />
-                        <span className="font-medium">
-                          {course.teachers?.length || 0} teachers
-                        </span>
+
+                      <div className="flex items-center p-2.5 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <div className="bg-green-500 p-1.5 rounded-lg mr-2 flex-shrink-0">
+                          <FaChalkboardTeacher className="text-white text-xs" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-green-600 font-semibold truncate">
+                            Teachers
+                          </p>
+                          <p className="text-xs font-bold text-gray-800 truncate">
+                            {course.teachers?.length || 0}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaUserGraduate className="mr-2 text-gray-400" />
-                        <span className="font-medium">
-                          {course.students?.length || 0} students
-                        </span>
+
+                      <div className="flex items-center p-2.5 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                        <div className="bg-orange-500 p-1.5 rounded-lg mr-2 flex-shrink-0">
+                          <FaUserGraduate className="text-white text-xs" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-orange-600 font-semibold truncate">
+                            Students
+                          </p>
+                          <p className="text-xs font-bold text-gray-800 truncate">
+                            {course.students?.length || 0}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Rating and Grade */}
-                    <div className="flex items-center justify-between mb-4 text-sm">
-                      <div className="flex items-center text-gray-600">
-                        <span className="text-yellow-500 mr-1">⭐</span>
-                        <span className="font-medium">
-                          {course.rating || 0}/5
+                    {/* Grade Level */}
+                    <div className="mb-6 flex-shrink-0">
+                      <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full border border-gray-300">
+                        <span className="text-gray-700 font-semibold text-xs truncate max-w-[120px]">
+                          {course.gradeLevel || "N/A"}
                         </span>
                       </div>
-                      <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs">
-                        {course.gradeLevel}
-                      </span>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-100">
+                    <div className="flex justify-end space-x-2 pt-4 border-t border-gray-100 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(index)}
-                        className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200 text-xs"
+                        className="hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition-all duration-300 text-xs font-semibold px-3 py-1.5 rounded-lg border-2 hover:shadow-md flex-1"
                       >
-                        <FaEdit className="mr-1" /> Edit
+                        <FaEdit className="mr-1.5" /> Edit
                       </Button>
                       <Button
                         variant="destructive"
@@ -710,9 +757,9 @@ const AdminCourses = () => {
                           setCourseIndex(index);
                           setDeleteModalOpen(true);
                         }}
-                        className="hover:bg-red-50 hover:border-red-300 transition-all duration-200 text-xs"
+                        className="hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-all duration-300 text-xs font-semibold px-3 py-1.5 rounded-lg border-2 hover:shadow-md flex-1"
                       >
-                        <FaTrash className="mr-1" /> Delete
+                        <FaTrash className="mr-1.5" /> Delete
                       </Button>
                     </div>
                   </div>

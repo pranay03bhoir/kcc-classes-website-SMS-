@@ -172,7 +172,7 @@ export default function StudentTable({ students, teacher }) {
 
   if (error) {
     return (
-      <div className="p-6 ms-64">
+      <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-700">
           {error}
           <button
@@ -187,11 +187,14 @@ export default function StudentTable({ students, teacher }) {
   }
 
   return (
-    <div>
-      <div className="fixed h-screen bg-gray-100 z-1">
+    <div className="min-h-screen bg-gray-50 pt-16">
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar teacher={teacher} />
       </div>
-      <div className="p-4 md:p-6 md:ms-64">
+
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <div className="flex-1 w-full md:ml-16 p-4 md:p-6">
         <h1 className="text-xl md:text-2xl font-bold mb-1">Students</h1>
         <p className="text-sm text-gray-600 mb-4">
           Manage your students and view their details.

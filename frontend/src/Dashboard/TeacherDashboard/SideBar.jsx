@@ -77,17 +77,17 @@ const navItems = [
 
 export default function Sidebar({ teacher }) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { logout } = useTeacherAuth();
 
   // Handle window resize for mobile detection
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setIsOpen(false);
-      }
+      const isMobileView = window.innerWidth < 768;
+      setIsMobile(isMobileView);
+      // Keep sidebar collapsed by default on all screen sizes
+      setIsOpen(false);
     };
 
     checkMobile();
@@ -160,19 +160,54 @@ export default function Sidebar({ teacher }) {
 
   return (
     <>
+      {/* Mobile Menu Button - Only show on mobile when sidebar is collapsed */}
+      {isMobile && !isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed top-3 left-3 p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:hidden"
+          aria-label="Open menu"
+        >
+          <FaBars className="h-4 w-4 text-gray-600" />
+        </button>
+      )}
+
+      {/* Desktop Toggle Button - Show when collapsed */}
+      {!isMobile && !isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed top-4 left-4 p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:block"
+          aria-label="Open sidebar"
+        >
+          <FaBars className="h-4 w-4 text-gray-600" />
+        </button>
+      )}
+
+      {/* Desktop Toggle Button - Show when expanded */}
+      {!isMobile && isOpen && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="fixed top-4 left-[248px] p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:block"
+          aria-label="Close sidebar"
+        >
+          <FaTimes className="h-4 w-4 text-gray-600" />
+        </button>
+      )}
+
       {/* Overlay for mobile */}
       {isOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsOpen(false)}
+          style={{ pointerEvents: "auto" }}
         />
       )}
 
       <aside
         className={`fixed h-screen ${
           isOpen ? "w-64" : "w-16"
-        } bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out z-50
-        ${isMobile ? (isOpen ? "left-0" : "-left-16") : "left-0"}`}
+        } bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out z-40
+        ${isMobile ? (isOpen ? "left-0" : "-left-16") : "left-0"} top-0`}
+        style={{ pointerEvents: "auto" }}
       >
         <div className="px-4 py-6">
           <div className="flex items-center justify-between mb-6">
@@ -183,6 +218,14 @@ export default function Sidebar({ teacher }) {
             >
               Teacher Panel
             </h1>
+            {isMobile && (
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 hover:bg-gray-800 rounded-md md:hidden"
+              >
+                <FaTimes className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <nav className="space-y-1">
             {navItems.map((item) => (
@@ -254,6 +297,49 @@ export default function Sidebar({ teacher }) {
             </AlertDialog>
           </Card>
         </div>
+
+        {/* Collapsed Sidebar Logout Button */}
+        {!isOpen && (
+          <div className="px-2 py-4 border-t border-gray-800">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        className="w-full p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200 flex items-center justify-center"
+                        aria-label="Logout"
+                      >
+                        <FaSignOutAlt className="text-lg" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to logout? You will need to
+                          login again to access your account.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleLogout}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Logout
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-gray-800 text-white">
+                  <p>Logout</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
 
         {/* Toggle Button */}
         <button

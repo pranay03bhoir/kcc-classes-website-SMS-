@@ -422,7 +422,7 @@ const AdminStudentScoreManagement = () => {
 
   if (error) {
     return (
-      <div className="p-6 md:ml-64">
+      <div className="p-6">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
@@ -431,11 +431,16 @@ const AdminStudentScoreManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full md:w-64 fixed h-full z-30">
+    <div className="flex min-h-screen bg-gray-50">
+      <ToastContainer position="top-center" />
+
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar />
       </div>
-      <div className="p-8 md:ml-64">
+
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <div className="flex-1 w-full md:ml-16 p-8">
         <div className="flex flex-wrap justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Student Grades</h1>
@@ -1076,7 +1081,6 @@ const AdminStudentScoreManagement = () => {
         onDelete={handleDeleteScore}
         scoreData={selectedScore}
       />
-      <ToastContainer position="top-center" />
     </div>
   );
 };

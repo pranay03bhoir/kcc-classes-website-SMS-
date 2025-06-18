@@ -3,16 +3,15 @@
 import { useEffect, useState } from "react";
 
 export const useSidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
       const isMobileView = window.innerWidth < 768;
       setIsMobile(isMobileView);
-      if (isMobileView) {
-        setIsOpen(false);
-      }
+      // Keep sidebar collapsed by default on all screen sizes
+      setIsOpen(false);
     };
 
     checkMobile();

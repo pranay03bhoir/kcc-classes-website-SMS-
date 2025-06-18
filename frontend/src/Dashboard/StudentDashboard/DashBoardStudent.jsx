@@ -117,11 +117,16 @@ const DashBoardStudent = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100 ">
-      <Sidebar student={studentData} />
-      <main className="flex-1 p-6 ms-64">
+    <div className="flex min-h-screen bg-gray-100 pt-16">
+      {/* Sidebar - Fixed on desktop, overlay on mobile */}
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
+        <Sidebar student={studentData} />
+      </div>
+
+      {/* Main content area - Properly positioned for mobile and desktop */}
+      <main className="flex-1 w-full md:ml-16 p-6">
         <h1 className="text-2xl font-bold mb-4">Student Dashboard</h1>
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ProfileCard student={studentData} />
           <ScoreCard student={studentData} />
         </div>

@@ -4,7 +4,12 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { AnimatePresence, motion } from "framer-motion";
 
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemType }) => {
+const DeleteConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  itemType = "item",
+}) => {
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
@@ -44,8 +49,8 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemType }) => {
                   <Dialog.Description asChild>
                     <p className="text-sm text-zinc-400">
                       This action cannot be undone. This will permanently delete
-                      this {itemType.toLowerCase()} and remove all its data from
-                      our servers.
+                      this {itemType?.toLowerCase() || "item"} and remove all
+                      its data from our servers.
                     </p>
                   </Dialog.Description>
 
@@ -64,7 +69,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemType }) => {
                       className="text-sm bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition"
                       onClick={onConfirm}
                     >
-                      Yes, delete {itemType.toLowerCase()}
+                      Yes, delete {itemType?.toLowerCase() || "item"}
                     </button>
                   </div>
                 </motion.div>
