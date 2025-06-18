@@ -164,48 +164,60 @@ const generateNewRefreshAccessToken = async (req, res) => {
         message: "Invalid token",
       });
     }
-    jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, user) => {
-      if (err) {
-        return res.status(403).json({
-          success: false,
-          message: "Invalid token or Expired token",
+    jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET,
+      async (err, user) => {
+        if (err) {
+          return res.status(403).json({
+            success: false,
+            message: "Invalid token or Expired token",
+          });
+        }
+        const payload = {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        };
+        const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+        const newRefreshToken = jwt.sign(
+          payload,
+          process.env.JWT_REFRESH_SECRET,
+          {
+            expiresIn: "30d",
+          }
+        );
+        admin.refreshToken = newRefreshToken;
+        await admin.save();
+        const isProd = process.env.NODE_ENV === "PRODUCTION";
+        const isCrossSite = process.env.CROSS_SITE === "true"; // ensure this is set in your .env
+
+        const getCookieOptions = (maxAge) => ({
+          httpOnly: true,
+          secure: isProd, // only true in production
+          sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+          maxAge,
+        });
+
+        res.cookie(
+          "accessToken",
+          newAccessToken,
+          getCookieOptions(60 * 60 * 1000)
+        ); // 1 hour
+        res.cookie(
+          "refreshToken",
+          newRefreshToken,
+          getCookieOptions(30 * 24 * 60 * 60 * 1000)
+        ); // 30 days
+        return res.status(200).json({
+          success: true,
+          message: "New access token generated",
+          accessToken: newAccessToken,
         });
       }
-      const payload = {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      };
-      const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-      const newRefreshToken = jwt.sign(
-        payload,
-        process.env.JWT_REFRESH_SECRET,
-        {
-          expiresIn: "30d",
-        }
-      );
-      admin.refreshToken = newRefreshToken;
-      await admin.save();
-      res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-        maxAge: 60 * 60 * 1000, // 1 hour
-      });
-      res.cookie("refreshToken", newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
-      return res.status(200).json({
-        success: true,
-        message: "New access token generated",
-        accessToken: newAccessToken,
-      });
-    });
+    );
   } catch (e) {
     console.error(e);
     res.status(500).json({
@@ -288,6 +300,94 @@ const getAdminDetails = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Something went wrong",
+    });
+  }
+};
+
+/**
+ * Updates details of the currently logged-in admin
+ * @async
+ * @function updateAdminDetails
+ * @param {Object} req - Express request object
+ * @param {Object} req.userInfo - User info from auth middleware
+ * @param {string} req.userInfo.id - Admin's ID
+ * @param {Object} req.body - Request body containing updated details
+ * @param {string} [req.body.name] - Updated admin name
+ * @param {string} [req.body.email] - Updated email address
+ * @param {string} [req.body.password] - Updated password
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated admin details
+ * @throws {Error} If update fails, admin not found, or email already exists
+ */
+const updateAdminDetails = async (req, res) => {
+  try {
+    const adminId = req.userInfo.id;
+    const { name, email, password } = req.body;
+
+    // Fetch the current admin record
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    // Prepare the fields to update
+    const updateFields = {};
+
+    // Only update fields if they are provided in the request
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+
+    // If a new password is provided, handle hashing it
+    if (password) {
+      // Check if the provided password is plain text (not already hashed)
+      if (password.length < 60) {
+        // A typical bcrypt hash is 60 characters long
+        const isSamePassword = await bcrypt.compare(password, admin.password);
+        if (isSamePassword) {
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a new password",
+          });
+        }
+        // Hash the password if it's plain text
+        const genSalt = await bcrypt.genSalt(10);
+        updateFields.password = await bcrypt.hash(password, genSalt);
+      } else {
+        // If the password is already a hash (length > 60), do not hash again
+        updateFields.password = password;
+      }
+    }
+
+    // If email is being updated, check if it already exists
+    if (email && email !== admin.email) {
+      const existingAdmin = await Admin.findOne({ email: email });
+      if (existingAdmin) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+    }
+
+    // Update the admin record with new data
+    const updatedAdmin = await Admin.findByIdAndUpdate(adminId, updateFields, {
+      new: true,
+      runValidators: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin details updated successfully.",
+      data: updatedAdmin,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
     });
   }
 };
@@ -2656,6 +2756,7 @@ module.exports = {
   generateNewRefreshAccessToken,
   adminLogout,
   getAdminDetails,
+  updateAdminDetails,
   createStudents,
   updateStudentDetails,
   getAllStudents,

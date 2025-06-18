@@ -1,11 +1,11 @@
-import React from "react";
 import AdminDashboard from "@/Dashboard/AdminDashboard/AdminDashboard";
+import AdminRoute from "@/components/AdminRoute";
 
 const Page = () => {
   return (
-    <div>
+    <AdminRoute>
       <AdminDashboard />
-    </div>
+    </AdminRoute>
   );
 };
 

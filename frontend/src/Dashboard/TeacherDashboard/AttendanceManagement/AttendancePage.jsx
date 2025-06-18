@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import api from "@/utils/teacher-axios";
 import { format, isValid, parseISO } from "date-fns";
 import {
@@ -39,11 +40,11 @@ import MarkAttendanceModal from "./Modals/AddAttendanceModal";
 import EditIndividualStudentModal from "./Modals/EditIndivisualStudent";
 
 export default function AttendancePage() {
+  const { user: teacher, refreshToken } = useTeacherAuth();
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedBatch, setSelectedBatch] = useState("All Batches");
   const [showModal, setShowModal] = useState(false);
   const [students, setStudents] = useState([]);
-  const [teacher, setTeacher] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
@@ -140,7 +141,6 @@ export default function AttendancePage() {
       const response = await api.get("get/teacher/details");
       if (response.status === 200) {
         setStudents(response.data.teacher.batches);
-        setTeacher(response.data.teacher);
         toast.update(toastId, {
           render: response?.data?.message || "Students loaded successfully!",
           type: "success",
@@ -150,6 +150,17 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error(error);
+
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          fetchStudentData();
+          return;
+        }
+      }
+
       const message =
         error?.response?.data?.message || "Failed to load students.";
       setError(message);
@@ -159,19 +170,10 @@ export default function AttendancePage() {
         isLoading: false,
         autoClose: 2000,
       });
-
-      if (error?.response?.status === 401) {
-        try {
-          await api.post("/refresh");
-          setTimeout(() => window.location.reload(), 1000);
-        } catch (refreshError) {
-          console.error("Session refresh failed:", refreshError);
-        }
-      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshToken]);
 
   /**
    * The function `addAttendance` is an asynchronous function that adds attendance data for students and
@@ -198,6 +200,17 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error("Error adding attendance:", error);
+
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          addAttendance(attendanceData);
+          return;
+        }
+      }
+
       const message =
         error?.response?.data?.message || "Failed to add attendance.";
       toast.update(toastId, {
@@ -233,6 +246,17 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error("Error updating attendance:", error);
+
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          handleUpdateAttendance(updateData);
+          return;
+        }
+      }
+
       toast.update(toastId, {
         render:
           error?.response?.data?.message || "Failed to update attendance.",
@@ -293,6 +317,17 @@ export default function AttendancePage() {
       });
     } catch (error) {
       console.error("Error exporting attendance:", error);
+
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          handleExport();
+          return;
+        }
+      }
+
       toast.update(toastId, {
         render:
           error?.response?.data?.message || "Failed to export attendance.",

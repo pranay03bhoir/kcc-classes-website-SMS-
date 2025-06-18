@@ -1,11 +1,13 @@
 "use client";
 import Sidebar from "@/Dashboard/StudentDashboard/SideBar";
+import { useStudentAuth } from "@/hooks/useStudentAuth";
 import api from "@/utils/student-axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 const StudentEnrolledCourses = () => {
   const [subjects, setSubjects] = useState([]);
   const [student, setStudent] = useState([]);
+  const { refreshToken } = useStudentAuth();
   useEffect(() => {
     const fetchData = async () => {
       const toastId = toast.loading("Loading student data...");
@@ -30,54 +32,14 @@ const StudentEnrolledCourses = () => {
           });
         }
       } catch (error) {
-        if (error?.response?.status === 401) {
-          // If the access token expired, attempt to refresh using cookies
-          const refreshSession = await api.post(
-            "/refresh",
-            {},
-            { withCredentials: true }
-          );
-          setTimeout(() => {
-            window.location.reload();
-          }, 1);
-          // if (refreshSession.status === 200) {
-          //   // If refresh is successful, retry the original request
-          //   const retryResponse = await api.get("/get/student/details", {
-          //     headers: {
-          //       Authorization: `Bearer ${refreshSession?.data?.newAccessToken}`, // Pass new access token if needed
-          //     },
-          //     withCredentials: true, // Ensures cookies are sent with the request
-          //   });
-
-          //   if (retryResponse.status === 200) {
-          //     setSubjects(retryResponse.data.data.subjects);
-          //     setStudent(retryResponse.data.data);
-          //     toast.update(toastId, {
-          //       render: retryResponse?.data?.message,
-          //       type: "success",
-          //       isLoading: false,
-          //       autoClose: 2000,
-          //     });
-          //   } else {
-          //     toast.update(toastId, {
-          //       render:
-          //         retryResponse?.data?.message ||
-          //         "Failed to load data after refresh.",
-          //       type: "error",
-          //       isLoading: false,
-          //       autoClose: 2000,
-          //     });
-          //   }
-          // } else {
-          //   toast.update(toastId, {
-          //     render:
-          //       refreshSession?.data?.message ||
-          //       "Session expired. Please login again.",
-          //     type: "warning",
-          //     isLoading: false,
-          //     autoClose: 2000,
-          //   });
-          // }
+        if (error.response?.status === 401) {
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            const response = await api.get("/get/student/details");
+            setSubjects(response.data.data.subjects);
+            setStudent(response.data.data);
+            return;
+          }
         }
         console.error("Error fetching data:", error);
         toast.update(toastId, {

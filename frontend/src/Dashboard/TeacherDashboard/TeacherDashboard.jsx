@@ -1,11 +1,21 @@
 "use client";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import api from "@/utils/teacher-axios";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import StudentTable from "./StudentManagement/StudentTable";
+
 const TeacherDashboard = () => {
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    user: teacher,
+    refreshToken,
+  } = useTeacherAuth();
   const [student, setStudent] = useState([]);
-  const [teacher, setTeacher] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   /**
    * The function `fetchData` asynchronously fetches teacher details and updates a toast notification
    * based on the response status.
@@ -13,6 +23,7 @@ const TeacherDashboard = () => {
   const fetchData = async () => {
     const toastId = toast.loading("Loading students.....");
     try {
+      setIsLoading(true);
       console.log("Fetching teacher details...");
       const response = await api.get("get/teacher/details");
       // console.log("Full API Response:", response);
@@ -31,7 +42,6 @@ const TeacherDashboard = () => {
       }
 
       setStudent(response.data.teacher.batches);
-      setTeacher(response.data.teacher);
 
       if (response.status === 200) {
         toast.update(toastId, {
@@ -56,18 +66,14 @@ const TeacherDashboard = () => {
         data: error.response?.data,
       });
 
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
-        console.log("401 detected — attempting refresh");
-        const refreshSession = await api.post(
-          "/refresh",
-          {},
-          { withCredentials: true }
-        );
-        fetchData(); // Retry fetching data after refreshing session
-        // console.log("Refresh response:", refreshSession);
-        // setTimeout(() => {
-        //   window.location.reload();
-        // }, 1);
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          fetchData();
+          return;
+        }
       }
 
       console.error("Error fetching data:", error);
@@ -79,17 +85,51 @@ const TeacherDashboard = () => {
         isLoading: false,
         autoClose: 2000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated && teacher) {
+      fetchData();
+    }
+  }, [isAuthenticated, teacher]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <ToastContainer position="top-center" />
-      <StudentTable students={student} teacher={teacher} />
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        <StudentTable students={student} teacher={teacher} />
+      )}
     </div>
   );
 };

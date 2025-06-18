@@ -239,16 +239,16 @@ const ViewModal = ({ isOpen, onClose, student }) => {
                       </h3>
                       {student.scores.length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {student.scores.map((score, index) => (
+                          {student.scores.map((scoreObj, index) => (
                             <div
                               key={index}
                               className="bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-orange-100 text-center"
                             >
                               <span className="text-sm text-gray-500">
-                                Test {index + 1}
+                                {scoreObj.examType || `Test ${index + 1}`}
                               </span>
                               <p className="text-lg font-semibold text-gray-800">
-                                {score}
+                                {scoreObj.score}
                               </p>
                             </div>
                           ))}

@@ -19,7 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import api from "@/utils/teacher-axios";
+import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -79,6 +79,7 @@ export default function Sidebar({ teacher }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const { logout } = useTeacherAuth();
 
   // Handle window resize for mobile detection
   useEffect(() => {
@@ -97,20 +98,17 @@ export default function Sidebar({ teacher }) {
   const handleLogout = async () => {
     const toastId = toast.loading("Logging out...");
     try {
-      const logout = await api.post("/logout");
-      if (logout.status === 200) {
-        toast.update(toastId, {
-          render: logout?.data?.message || "Logged out successfully!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
-        window.location.href = "/login/teacher";
-      }
+      await logout();
+      toast.update(toastId, {
+        render: "Logged out successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
     } catch (error) {
       console.error("Logout error:", error);
       toast.update(toastId, {
-        render: error?.response?.data?.message || "Logout failed",
+        render: "Logout failed",
         type: "error",
         isLoading: false,
         autoClose: 2000,
@@ -200,7 +198,7 @@ export default function Sidebar({ teacher }) {
         >
           <Card className="bg-gray-800 p-4 space-y-4">
             <div className="flex items-center gap-3">
-              {teacher.profileImage ? (
+              {teacher?.profileImage ? (
                 <img
                   src={teacher.profileImage}
                   alt="Teacher"
@@ -209,21 +207,21 @@ export default function Sidebar({ teacher }) {
               ) : (
                 <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center border-2 border-blue-500">
                   <span className="text-white font-medium text-lg">
-                    {teacher.name
+                    {teacher?.name
                       ?.split(" ")
                       .slice(0, 2)
                       .map((word) => word[0])
                       .join("")
-                      .toUpperCase()}
+                      .toUpperCase() || "T"}
                   </span>
                 </div>
               )}
               <div className="space-y-1">
                 <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                  {teacher?.name}
+                  {teacher?.name || "Teacher"}
                 </p>
                 <p className="text-xs text-gray-400 truncate max-w-[120px]">
-                  {teacher?.email}
+                  {teacher?.email || "teacher@example.com"}
                 </p>
               </div>
             </div>

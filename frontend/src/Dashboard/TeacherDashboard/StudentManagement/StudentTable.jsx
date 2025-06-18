@@ -1,4 +1,5 @@
 "use client";
+import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import api from "@/utils/teacher-axios";
 import PropTypes from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -17,6 +18,7 @@ import EditStudentModal from "./modals/StudentUpdateModal";
 const ITEMS_PER_PAGE = 10;
 
 export default function StudentTable({ students, teacher }) {
+  const { refreshToken } = useTeacherAuth();
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("All");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -36,12 +38,23 @@ export default function StudentTable({ students, teacher }) {
       setBatchList(response.data.batches);
     } catch (error) {
       console.error("Error fetching batches:", error);
+
+      // If it's an authentication error, try to refresh token
+      if (error.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          fetchBatches();
+          return;
+        }
+      }
+
       setError("Failed to load batches. Please try again later.");
       toast.error("Failed to load batches");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshToken]);
 
   const handleSaveEdit = useCallback(
     async (updatedData) => {
@@ -61,6 +74,16 @@ export default function StudentTable({ students, teacher }) {
         });
         setIsEditModalOpen(false);
       } catch (error) {
+        // If it's an authentication error, try to refresh token
+        if (error.response?.status === 401) {
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            // Retry the request after successful refresh
+            handleSaveEdit(updatedData);
+            return;
+          }
+        }
+
         const message =
           error?.response?.data?.message || "Failed to update student";
         toast.update(toastId, {
@@ -71,7 +94,7 @@ export default function StudentTable({ students, teacher }) {
         });
       }
     },
-    [selectedStudent]
+    [selectedStudent, refreshToken]
   );
 
   useEffect(() => {

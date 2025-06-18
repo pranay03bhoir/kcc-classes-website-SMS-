@@ -1,5 +1,6 @@
 "use client";
 
+import TokenRefreshIndicator from "@/components/TokenRefreshIndicator";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
+import { useAuth } from "@/hooks/useAuth";
 import api from "@/utils/axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
@@ -44,6 +46,12 @@ const fadeIn = {
 };
 
 export default function AdminDashboard() {
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    user,
+    refreshToken,
+  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
@@ -72,6 +80,8 @@ export default function AdminDashboard() {
   ];
 
   const fetchData = useCallback(async () => {
+    if (!isAuthenticated) return;
+
     const toastId = toast.loading("Loading dashboard data...");
     setIsLoading(true);
     try {
@@ -96,6 +106,17 @@ export default function AdminDashboard() {
       });
     } catch (e) {
       console.error("Dashboard fetch error:", e);
+
+      // If it's an authentication error, try to refresh token
+      if (e.response?.status === 401) {
+        const refreshSuccess = await refreshToken();
+        if (refreshSuccess) {
+          // Retry the request after successful refresh
+          fetchData();
+          return;
+        }
+      }
+
       toast.update(toastId, {
         render: "Error loading dashboard data. Please try again.",
         type: "error",
@@ -105,14 +126,16 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated, refreshToken]);
 
   useEffect(() => {
-    fetchData();
-    // Set up polling for real-time updates every 5 minutes
-    const intervalId = setInterval(fetchData, 300000);
-    return () => clearInterval(intervalId);
-  }, [fetchData, refreshKey]);
+    if (isAuthenticated) {
+      fetchData();
+      // Set up polling for real-time updates every 5 minutes
+      const intervalId = setInterval(fetchData, 300000);
+      return () => clearInterval(intervalId);
+    }
+  }, [fetchData, refreshKey, isAuthenticated]);
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -131,9 +154,34 @@ export default function AdminDashboard() {
     toast.info(`Filtering data for ${value}...`);
   };
 
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 w-12 h-12 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 w-12 h-12 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <ToastContainer position="top-center" />
+      <TokenRefreshIndicator />
       <div className="w-full md:w-64 fixed h-full z-30">
         <Sidebar />
       </div>

@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useStudentAuth } from "@/hooks/useStudentAuth";
 import api from "@/utils/student-axios";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
@@ -8,98 +10,100 @@ import ProfileCard from "./ProfileCard";
 import ScoreCard from "./ScoreCard";
 import Sidebar from "./SideBar";
 import SubjectList from "./SubjectList";
+
 const DashBoardStudent = () => {
-  const [studentData, setStudentData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    user: studentData,
+    refreshToken,
+  } = useStudentAuth();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isAuthenticated || !studentData) return;
+
       const toastId = toast.loading("Loading student data...");
       try {
+        setLoading(true);
         const response = await api.get("/get/student/details");
         if (response.status === 200) {
-          setStudentData(response.data.data);
+          // Data is already available from the auth hook
+          toast.update(toastId, {
+            render: "Student data loaded successfully!",
+            type: "success",
+            isLoading: false,
+            autoClose: 2000,
+          });
         } else {
           toast.update(toastId, {
-            render: response?.data?.message,
+            render: response?.data?.message || "Failed to load data",
             type: "error",
             isLoading: false,
             autoClose: 2000,
           });
         }
       } catch (err) {
-        if (err?.response?.status >= 400) {
-          // If the access token expired, attempt to refresh using cookies
-          const toastId = toast.loading("Session expired. Refreshing...");
-          const refreshSession = await api.post(
-            "/refresh",
-            {},
-            { withCredentials: true }
-          );
-          setTimeout(() => {
-            window.location.reload();
-          }, 1);
-          toast.update(toastId, {
-            render: refreshSession?.data?.message,
-            type: "warning",
-            isLoading: false,
-            autoClose: 2000,
-          });
-
-          // Uncomment the following code if you want to handle the refresh token logic
-
-          // if (refreshSession.status === 200) {
-          //   // If refresh is successful, retry the original request
-          //   const retryResponse = await api.get("/get/student/details", {
-          //     headers: {
-          //       Authorization: `Bearer ${refreshSession?.data?.newAccessToken}`, // Pass new access token if needed
-          //     },
-          //     withCredentials: true, // Ensures cookies are sent with the request
-          //   });
-
-          //   if (retryResponse.status === 200) {
-          //     setStudentData(retryResponse.data.data);
-          //     toast.update(toastId, {
-          //       render: retryResponse?.data?.message,
-          //       type: "success",
-          //       isLoading: false,
-          //       autoClose: 2000,
-          //     });
-          //   } else {
-          //     toast.update(toastId, {
-          //       render:
-          //         retryResponse?.data?.message ||
-          //         "Failed to load data after refresh.",
-          //       type: "error",
-          //       isLoading: false,
-          //       autoClose: 2000,
-          //     });
-          //   }
-          // } else {
-          //   toast.update(toastId, {
-          //     render:
-          //       refreshSession?.data?.message ||
-          //       "Session expired. Please login again.",
-          //     type: "warning",
-          //     isLoading: false,
-          //     autoClose: 2000,
-          //   });
-          // }
-        }
         console.error("Error fetching data:", err);
+
+        // If it's an authentication error, try to refresh token
+        if (err.response?.status === 401) {
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            // Retry the request after successful refresh
+            fetchData();
+            return;
+          }
+        }
+
         setError("An error occurred while fetching student data.");
+        toast.update(toastId, {
+          render: "Failed to load student data",
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, []);
+  }, [isAuthenticated, studentData, refreshToken]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="animate-bounce">Loading student dashboard...</p>
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Loading student dashboard...</p>
+        </div>
       </div>
     );
   }

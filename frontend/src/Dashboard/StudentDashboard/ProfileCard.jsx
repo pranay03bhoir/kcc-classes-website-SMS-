@@ -1,8 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ViewModal from "@/Dashboard/AdminDashboard/components/ViewModal";
 import { useState } from "react";
+import ViewModal from "./ViewModal";
 export default function ProfileCard({ student }) {
   const [isOpen, setIsOpen] = useState(false);
   return (

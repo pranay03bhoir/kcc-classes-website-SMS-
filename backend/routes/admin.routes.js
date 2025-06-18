@@ -42,71 +42,102 @@ const {
   searchATeacher,
   updateBatch,
   getAdminDetails,
+  updateAdminDetails,
   getAllStudentsWithPagination,
   updateStudentAttendance,
   deleteStudentScore,
+  generateNewRefreshAccessToken,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
-const {
-  generateNewAccessRefreshToken,
-} = require("../controllers/teacher.controller");
 const router = express.Router();
 
 router.post("/register", adminRegister);
-router.post("/login", adminLogin);
-router.post("/refresh", generateNewAccessRefreshToken);
+router.post("/login/admin", adminLogin);
+router.post("/refresh", generateNewRefreshAccessToken);
 router.post("/logout", adminLogout);
-router.get("/get/admin/details", getAdminDetails);
-router.post("/create/students", createStudents);
-router.put("/update/students/:id", updateStudentDetails);
-router.get("/students", getAllStudents);
-router.get("/all/students", getAllStudentsWithPagination);
-router.get("/search/students", searchAStudent);
-router.get("/search/teachers", searchATeacher);
+router.get("/get/admin/details", loginAuth, adminAuth, getAdminDetails);
+router.put("/update/admin/details", loginAuth, adminAuth, updateAdminDetails);
+router.post("/create/students", loginAuth, adminAuth, createStudents);
+router.put("/update/students/:id", loginAuth, adminAuth, updateStudentDetails);
+router.get("/students", loginAuth, adminAuth, getAllStudents);
+router.get("/all/students", loginAuth, adminAuth, getAllStudentsWithPagination);
+router.get("/search/students", loginAuth, adminAuth, searchAStudent);
+router.get("/search/teachers", loginAuth, adminAuth, searchATeacher);
 router.get(
   "/students/subjects/:id",
   loginAuth,
   adminAuth,
   getStudentsBySubject
 );
-router.get("/teachers", getAllTeachers);
+router.get("/teachers", loginAuth, adminAuth, getAllTeachers);
 router.get("/students/:studentId", loginAuth, adminAuth, getStudentsById);
 router.get("/teachers/:id", loginAuth, adminAuth, getTeachersById);
 router.put("/teachers/update/:id", loginAuth, adminAuth, updateTeachersDetails);
 router.delete("delete/teachers/:id", loginAuth, adminAuth, deleteTeacher);
-router.delete("/delete/students/:id", deleteStudent);
-router.get("/students-count", countAllStudents);
-router.get("/teachers-count", countAllTeachers);
-router.post("/subjects", createSubject);
-router.put("/subjects/:id", updateSubject);
-router.get("/subjects", getAllSubjects);
-router.get("/subjects-count", countAllSubjects);
-router.delete("/subjects/:id", deleteSubject);
-router.put("/subjects/add/students/:studentId", enrollStudentInSubject);
-router.put("/subjects/add/teachers/:teacherId", addTeacherToSubject);
-router.put("/subjects/remove/students/:id", removeStudentFromSubject);
+router.delete("/delete/students/:id", loginAuth, adminAuth, deleteStudent);
+router.get("/students-count", loginAuth, adminAuth, countAllStudents);
+router.get("/teachers-count", loginAuth, adminAuth, countAllTeachers);
+router.post("/subjects", loginAuth, adminAuth, createSubject);
+router.put("/subjects/:id", loginAuth, adminAuth, updateSubject);
+router.get("/subjects", loginAuth, adminAuth, getAllSubjects);
+router.get("/subjects-count", loginAuth, adminAuth, countAllSubjects);
+router.delete("/subjects/:id", loginAuth, adminAuth, deleteSubject);
+router.put(
+  "/subjects/add/students/:studentId",
+  loginAuth,
+  adminAuth,
+  enrollStudentInSubject
+);
+router.put(
+  "/subjects/add/teachers/:teacherId",
+  loginAuth,
+  adminAuth,
+  addTeacherToSubject
+);
+router.put(
+  "/subjects/remove/students/:id",
+  loginAuth,
+  adminAuth,
+  removeStudentFromSubject
+);
 router.put(
   "/subjects/teachers/:id",
   loginAuth,
   adminAuth,
   removeTeacherFromSubject
 );
-router.post("/students/attendance", markStudentAttendance);
+router.post(
+  "/students/attendance",
+  loginAuth,
+  adminAuth,
+  markStudentAttendance
+);
 router.put(
   "/students/:studentId/attendance/:attendanceId",
+  loginAuth,
+  adminAuth,
   updateStudentAttendance
 );
-router.get("/all/attendance", getAttendanceRecords);
-router.get("/attendance/students/:id", getStudentByAttendance);
+router.get("/all/attendance", loginAuth, adminAuth, getAttendanceRecords);
+router.get(
+  "/attendance/students/:id",
+  loginAuth,
+  adminAuth,
+  getStudentByAttendance
+);
 router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
-router.post("/scores/students", addGradesToStudent);
+router.post("/scores/students", loginAuth, adminAuth, addGradesToStudent);
 router.put(
   "/scores/students/:studentId/:subjectId/:examType",
+  loginAuth,
+  adminAuth,
   updateStudentScore
 );
 router.delete(
   "/scores/students/:studentId/:subjectId/:examType",
+  loginAuth,
+  adminAuth,
   deleteStudentScore
 );
 router.get(
@@ -121,11 +152,21 @@ router.get(
   adminAuth,
   getScoresForSubject
 );
-router.post("/batch/create", createBatch);
-router.put("/batch/update/:id", updateBatch);
-router.get("/batches", getAllBatches);
-router.put("/add/student/batch/:id", addStudentToBatch);
-router.put("/add/teacher/batch/:id", addTeacherToBatch);
-router.delete("/remove/student/batch/:id", removeStudentFromBatch);
-router.delete("/remove/teacher/batch/:id", removeTeacherFromBatch);
+router.post("/batch/create", loginAuth, adminAuth, createBatch);
+router.put("/batch/update/:id", loginAuth, adminAuth, updateBatch);
+router.get("/batches", loginAuth, adminAuth, getAllBatches);
+router.put("/add/student/batch/:id", loginAuth, adminAuth, addStudentToBatch);
+router.put("/add/teacher/batch/:id", loginAuth, adminAuth, addTeacherToBatch);
+router.delete(
+  "/remove/student/batch/:id",
+  loginAuth,
+  adminAuth,
+  removeStudentFromBatch
+);
+router.delete(
+  "/remove/teacher/batch/:id",
+  loginAuth,
+  adminAuth,
+  removeTeacherFromBatch
+);
 module.exports = router;
