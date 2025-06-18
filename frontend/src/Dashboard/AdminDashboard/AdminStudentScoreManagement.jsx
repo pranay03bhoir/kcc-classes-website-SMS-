@@ -20,9 +20,13 @@ import {
   FaSpinner,
   FaUpload,
 } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Sidebar from "./SideBar";
 import AddScoreModal from "./components/modals/AddScoresModal";
 import AddStudentsScoreBulk from "./components/modals/AddStudentsScoreBulk";
+import DeleteScoreModal from "./components/modals/DeleteScoreModal";
+import EditScoreModal from "./components/modals/EditScoreModal";
 
 ChartJS.register(
   CategoryScale,
@@ -49,6 +53,9 @@ const AdminStudentScoreManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [addScoreModalOpen, setAddScoreModalOpen] = useState(false);
   const [bulkAddModalOpen, setBulkAddModalOpen] = useState(false);
+  const [editScoreModalOpen, setEditScoreModalOpen] = useState(false);
+  const [deleteScoreModalOpen, setDeleteScoreModalOpen] = useState(false);
+  const [selectedScore, setSelectedScore] = useState(null);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,7 +106,7 @@ const AdminStudentScoreManagement = () => {
             student.scores
               ? student.scores.map((score) => ({
                   ...score,
-                  studentId: student.studentId,
+                  studentId: student._id,
                   studentName: student.name,
                   id: student._id,
                 }))
@@ -148,7 +155,7 @@ const AdminStudentScoreManagement = () => {
               student.scores
                 ? student.scores.map((score) => ({
                     ...score,
-                    studentId: student.studentId,
+                    studentId: student._id,
                     studentName: student.name,
                     id: student._id,
                   }))
@@ -176,6 +183,64 @@ const AdminStudentScoreManagement = () => {
         // Other errors
         setError("Failed to add score. Please try again later.");
       }
+    }
+  };
+
+  const updateScore = async (updatedScoreData) => {
+    try {
+      setError(null);
+      toast.success("Score updated successfully!");
+
+      // Re-fetch students to update scores
+      const updatedResponse = await api.get(`/students`);
+      if (updatedResponse.data.success) {
+        setStudents(updatedResponse.data.students);
+        setTotalStudents(updatedResponse.data.students.length);
+        calculateStats(
+          updatedResponse.data.students.flatMap((student) =>
+            student.scores
+              ? student.scores.map((score) => ({
+                  ...score,
+                  studentId: student._id,
+                  studentName: student.name,
+                  id: student._id,
+                }))
+              : []
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error updating score:", error);
+      setError("Failed to refresh data after update. Please refresh the page.");
+    }
+  };
+
+  const handleDeleteScore = async () => {
+    try {
+      setError(null);
+      setSuccessMessage("Score deleted successfully!");
+
+      // Re-fetch students to update scores
+      const updatedResponse = await api.get(`/students`);
+      if (updatedResponse.data.success) {
+        setStudents(updatedResponse.data.students);
+        setTotalStudents(updatedResponse.data.students.length);
+        calculateStats(
+          updatedResponse.data.students.flatMap((student) =>
+            student.scores
+              ? student.scores.map((score) => ({
+                  ...score,
+                  studentId: student._id,
+                  studentName: student.name,
+                  id: student._id,
+                }))
+              : []
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing data after delete:", error);
+      setError("Failed to refresh data after delete. Please refresh the page.");
     }
   };
 
@@ -209,7 +274,8 @@ const AdminStudentScoreManagement = () => {
       student.scores
         ? student.scores.map((score, scoreIndex) => ({
             ...score,
-            studentId: student.studentId,
+            studentId: student._id,
+            studentIdDisplay: student.studentId,
             studentName: student.name,
             id: student._id,
             uniqueId: `${student._id}-${score._id || scoreIndex}-${
@@ -269,7 +335,7 @@ const AdminStudentScoreManagement = () => {
         "Date",
       ],
       ...filteredScores.map((score) => [
-        score.studentId,
+        score.studentIdDisplay,
         score.studentName,
         score.subject?.name || "N/A",
         score.examType,
@@ -319,9 +385,9 @@ const AdminStudentScoreManagement = () => {
 
     // Group scores by student
     allScores.forEach((score) => {
-      if (!studentScores[score.studentId]) {
-        studentScores[score.studentId] = {
-          id: score.studentId,
+      if (!studentScores[score.studentIdDisplay]) {
+        studentScores[score.studentIdDisplay] = {
+          id: score.studentIdDisplay,
           name: score.studentName,
           scores: [],
           averageScore: 0,
@@ -329,7 +395,7 @@ const AdminStudentScoreManagement = () => {
           bestScore: 0,
         };
       }
-      studentScores[score.studentId].scores.push({
+      studentScores[score.studentIdDisplay].scores.push({
         subject: score.subject?.name || "N/A",
         score: score.score,
       });
@@ -791,7 +857,7 @@ const AdminStudentScoreManagement = () => {
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900">
-                                {score.studentId}
+                                {score.studentIdDisplay}
                               </span>
                             </div>
                           </td>
@@ -832,7 +898,8 @@ const AdminStudentScoreManagement = () => {
                               <button
                                 className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                 onClick={() => {
-                                  /* TODO: Implement edit modal */
+                                  setEditScoreModalOpen(true);
+                                  setSelectedScore(score);
                                 }}
                               >
                                 Edit
@@ -840,7 +907,8 @@ const AdminStudentScoreManagement = () => {
                               <button
                                 className="text-red-600 hover:text-red-800 transition-colors duration-200"
                                 onClick={() => {
-                                  /* TODO: Implement delete confirmation */
+                                  setDeleteScoreModalOpen(true);
+                                  setSelectedScore(score);
                                 }}
                               >
                                 Delete
@@ -979,6 +1047,36 @@ const AdminStudentScoreManagement = () => {
             .values()
         )}
       />
+      <EditScoreModal
+        isOpen={editScoreModalOpen}
+        onClose={() => setEditScoreModalOpen(false)}
+        onUpdate={updateScore}
+        scoreData={selectedScore}
+        students={students}
+        subjects={Array.from(
+          students
+            .flatMap((student) =>
+              student.subjects
+                ? student.subjects.map((subject) => ({
+                    _id: subject._id,
+                    name: subject.name,
+                  }))
+                : []
+            )
+            .reduce((map, subject) => {
+              map.set(subject._id, subject);
+              return map;
+            }, new Map())
+            .values()
+        )}
+      />
+      <DeleteScoreModal
+        isOpen={deleteScoreModalOpen}
+        onClose={() => setDeleteScoreModalOpen(false)}
+        onDelete={handleDeleteScore}
+        scoreData={selectedScore}
+      />
+      <ToastContainer position="top-center" />
     </div>
   );
 };

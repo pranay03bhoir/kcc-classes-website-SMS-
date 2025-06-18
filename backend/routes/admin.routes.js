@@ -44,6 +44,7 @@ const {
   getAdminDetails,
   getAllStudentsWithPagination,
   updateStudentAttendance,
+  deleteStudentScore,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -102,9 +103,11 @@ router.get("/attendance/date", loginAuth, adminAuth, getAttendanceByDate);
 router.post("/scores/students", addGradesToStudent);
 router.put(
   "/scores/students/:studentId/:subjectId/:examType",
-  loginAuth,
-  adminAuth,
   updateStudentScore
+);
+router.delete(
+  "/scores/students/:studentId/:subjectId/:examType",
+  deleteStudentScore
 );
 router.get(
   "/scores/students/:studentId",

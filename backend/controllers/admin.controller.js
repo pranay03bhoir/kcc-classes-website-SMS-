@@ -1838,8 +1838,9 @@ const addGradesToStudent = async (req, res) => {
 const updateStudentScore = async (req, res) => {
   try {
     const { studentId, subjectId, examType } = req.params;
-    const { score } = req.body;
+    const { score, date, newExamType } = req.body;
 
+    // Validate IDs
     if (
       !mongoose.Types.ObjectId.isValid(studentId) ||
       !mongoose.Types.ObjectId.isValid(subjectId)
@@ -1849,6 +1850,51 @@ const updateStudentScore = async (req, res) => {
         .json({ success: false, message: "Invalid student or subject ID" });
     }
 
+    // Validate score
+    if (typeof score !== "number" || isNaN(score) || score < 0 || score > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Score must be a number between 0 and 100",
+      });
+    }
+
+    // Validate exam type (use newExamType if provided, otherwise use the one from params)
+    const examTypeToValidate = newExamType || examType;
+    const validExamTypes = [
+      "Midterm",
+      "Final",
+      "Quiz",
+      "Assignment",
+      "Board",
+      "JEE",
+      "NEET",
+      "JEE Mains",
+      "JEE Advanced",
+      "MH CET",
+      "NEET UG",
+      "NEET UA",
+      "NEET PG",
+    ];
+    if (!validExamTypes.includes(examTypeToValidate)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid exam type" });
+    }
+
+    // Validate date if provided
+    let updateDate = undefined;
+    if (date) {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format",
+        });
+      }
+      updateDate = parsedDate;
+    }
+
+    // Check student existence
     const student = await Student.findById(studentId);
     if (!student) {
       return res
@@ -1856,18 +1902,34 @@ const updateStudentScore = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    const validExamTypes = ["Midterm", "Final", "Quiz", "Assignment"];
-    if (!validExamTypes.includes(examType)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid exam type" });
+    // Check subject enrollment
+    if (!student.subjects.map(String).includes(subjectId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Student is not enrolled in this subject",
+      });
     }
 
+    // Prepare update fields
+    const updateFields = { score, updatedAt: Date.now() };
+    if (updateDate) updateFields.date = updateDate;
+    if (newExamType) updateFields.examType = newExamType;
+
+    // Find and update the score
     const updatedScore = await Score.findOneAndUpdate(
       { studentId, subject: subjectId, examType },
-      { $set: { score, updatedAt: Date.now() } },
+      { $set: updateFields },
       { new: true, upsert: true }
-    );
+    )
+      .populate("subject", "name")
+      .populate("studentId", "name studentId");
+
+    if (!updatedScore) {
+      return res.status(404).json({
+        success: false,
+        message: "Score not found or could not be updated",
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -1875,7 +1937,65 @@ const updateStudentScore = async (req, res) => {
       updatedScore,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error in updateStudentScore:", err);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const deleteStudentScore = async (req, res) => {
+  try {
+    const { studentId, subjectId, examType } = req.params;
+
+    // Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(studentId) ||
+      !mongoose.Types.ObjectId.isValid(subjectId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid student or subject ID",
+      });
+    }
+
+    // Check if the score exists
+    const score = await Score.findOne({
+      studentId,
+      subject: subjectId,
+      examType,
+    });
+
+    if (!score) {
+      return res.status(404).json({
+        success: false,
+        message: "Score not found",
+      });
+    }
+
+    // Delete the score
+    await Score.deleteOne({ _id: score._id });
+    // Remove the score reference from the student
+    // Update the student to remove the score reference
+    const student = await Student.findByIdAndUpdate(
+      studentId,
+      { $pull: { scores: score._id } },
+      { new: true }
+    );
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    // Remove the score from the subject
+    return res.status(200).json({
+      success: true,
+      message: "Student score deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error in deleteStudentScore:", err);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
@@ -2566,6 +2686,7 @@ module.exports = {
   getAttendanceByDate,
   addGradesToStudent,
   updateStudentScore,
+  deleteStudentScore,
   getStudentScore,
   getScoresForSubject,
   createBatch,
