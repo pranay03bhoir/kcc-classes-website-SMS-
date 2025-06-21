@@ -152,8 +152,7 @@ const BatchDetailsModal = ({
                         </div>
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        {student?.attendance[student?.attendance?.length - 1]
-                          ?.status || "Regular"}
+                        {student?.attendance?.[0]?.status || "Regular"}
                       </Badge>
                     </div>
                   ))

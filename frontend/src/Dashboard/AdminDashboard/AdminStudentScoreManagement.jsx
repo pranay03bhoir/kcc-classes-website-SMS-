@@ -60,6 +60,7 @@ const AdminStudentScoreManagement = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [totalStudents, setTotalStudents] = useState(0);
   const [filters, setFilters] = useState({
     subject: "All Subjects",
@@ -90,11 +91,23 @@ const AdminStudentScoreManagement = () => {
     "NEET PG",
   ];
 
-  // API call to fetch students with scores
+  // API call to fetch students with scores and subjects
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+
+        // Fetch subjects using getAllSubjects endpoint
+        const subjectsResponse = await api.get(`/subjects`);
+        if (subjectsResponse.data.success) {
+          setSubjects(subjectsResponse.data.subjects);
+        } else {
+          console.error(
+            "Failed to fetch subjects:",
+            subjectsResponse.data.message
+          );
+        }
+
         // Fetch all students without pagination to get all scores
         const response = await api.get(`/students`);
 
@@ -118,8 +131,8 @@ const AdminStudentScoreManagement = () => {
           setError("Failed to fetch students. Please try again later.");
         }
       } catch (err) {
-        console.error("Error fetching students:", err);
-        setError("Failed to fetch students. Please try again later.");
+        console.error("Error fetching data:", err);
+        setError("Failed to fetch data. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -490,15 +503,9 @@ const AdminStudentScoreManagement = () => {
                 onChange={(e) => handleFilterChange("subject", e.target.value)}
               >
                 <option value="All Subjects">All Subjects</option>
-                {Array.from(
-                  new Set(
-                    allScores
-                      .map((score) => score.subject?.name)
-                      .filter(Boolean)
-                  )
-                ).map((subject) => (
-                  <option key={subject} value={subject}>
-                    {subject}
+                {subjects.map((subject) => (
+                  <option key={subject._id} value={subject.name}>
+                    {subject.name}
                   </option>
                 ))}
               </select>
@@ -1014,43 +1021,13 @@ const AdminStudentScoreManagement = () => {
         onClose={() => setAddScoreModalOpen(false)}
         onSubmit={addScoreToStudents}
         students={students}
-        subjects={Array.from(
-          students
-            .flatMap((student) =>
-              student.subjects
-                ? student.subjects.map((subject) => ({
-                    _id: subject._id,
-                    name: subject.name,
-                  }))
-                : []
-            )
-            .reduce((map, subject) => {
-              map.set(subject._id, subject);
-              return map;
-            }, new Map())
-            .values()
-        )}
+        subjects={subjects}
       />
       <AddStudentsScoreBulk
         isOpen={bulkAddModalOpen}
         onClose={() => setBulkAddModalOpen(false)}
         students={students}
-        subjects={Array.from(
-          students
-            .flatMap((student) =>
-              student.subjects
-                ? student.subjects.map((subject) => ({
-                    _id: subject._id,
-                    name: subject.name,
-                  }))
-                : []
-            )
-            .reduce((map, subject) => {
-              map.set(subject._id, subject);
-              return map;
-            }, new Map())
-            .values()
-        )}
+        subjects={subjects}
       />
       <EditScoreModal
         isOpen={editScoreModalOpen}
@@ -1058,22 +1035,7 @@ const AdminStudentScoreManagement = () => {
         onUpdate={updateScore}
         scoreData={selectedScore}
         students={students}
-        subjects={Array.from(
-          students
-            .flatMap((student) =>
-              student.subjects
-                ? student.subjects.map((subject) => ({
-                    _id: subject._id,
-                    name: subject.name,
-                  }))
-                : []
-            )
-            .reduce((map, subject) => {
-              map.set(subject._id, subject);
-              return map;
-            }, new Map())
-            .values()
-        )}
+        subjects={subjects}
       />
       <DeleteScoreModal
         isOpen={deleteScoreModalOpen}

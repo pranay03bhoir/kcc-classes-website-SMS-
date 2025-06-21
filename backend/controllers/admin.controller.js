@@ -402,10 +402,13 @@ const updateAdminDetails = async (req, res) => {
  * @param {string} req.body.email - Student's email address
  * @param {string} req.body.password - Student's password
  * @param {string} req.body.contact - Student's contact number
- * @param {string} req.body.parentsContact - Parent's contact number
+ * @param {string|Array<string>} req.body.parentsContact - Parent's contact number(s)
  * @param {string} req.body.address - Student's address
- * @param {string} req.body.currentStd - Current standard/grade
- * @param {string} req.body.admissionYear - Year of admission
+ * @param {string} [req.body.currentStd] - Current standard/grade
+ * @param {number} req.body.admissionYear - Year of admission
+ * @param {boolean} [req.body.isVerified] - Whether student is verified
+ * @param {boolean} [req.body.isAdmitted] - Whether student is admitted
+ * @param {string} [req.body.profileImage] - Profile image URL
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with success message
  * @throws {Error} If student creation fails or email already exists
@@ -421,49 +424,145 @@ const createStudents = async (req, res) => {
       address,
       currentStd,
       admissionYear,
+      isVerified,
+      isAdmitted,
+      profileImage,
     } = req.body;
+
+    // Validate required fields
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !contact ||
+      !parentsContact ||
+      !address ||
+      !admissionYear
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "All required fields (name, email, password, contact, parentsContact, address, admissionYear) must be provided",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
+    }
+
+    // Validate admission year
+    const currentYear = new Date().getFullYear();
+    if (admissionYear < 2000 || admissionYear > currentYear + 1) {
+      return res.status(400).json({
+        success: false,
+        message: `Admission year must be between 2000 and ${currentYear + 1}`,
+      });
+    }
+
+    // Check if student already exists
     const existingStudent = await Student.findOne({ email: email });
     if (existingStudent) {
       return res.status(400).json({
         success: false,
-        message: `Student with email ${email} already exists.Kindly login`,
+        message: `Student with email ${email} already exists. Kindly login`,
       });
-    } else {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const student = new Student({
-        name,
-        email,
-        password: hashedPassword,
-        contact,
-        parentsContact,
-        address,
-        currentStd,
-        admissionYear,
-      });
-      await student.save();
-      const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-      await sendVerificationEmail(student.email, token);
-      if (student) {
-        res.status(200).json({
-          success: true,
-          message:
-            "Student registered successfully, A link has been sent to your email for verification",
-        });
-      } else {
-        res.status(400).json({
+    }
+
+    // Handle parentsContact - ensure it's an array
+    const parentsContactArray = Array.isArray(parentsContact)
+      ? parentsContact
+      : [parentsContact];
+
+    // Validate parents contact numbers
+    const contactRegex = /^[0-9]{10}$/;
+    for (const contactNum of parentsContactArray) {
+      if (!contactRegex.test(contactNum)) {
+        return res.status(400).json({
           success: false,
-          message: "Error registering",
+          message: "Parent contact numbers must be 10-digit numbers",
         });
       }
     }
+
+    // Validate student contact number
+    if (!contactRegex.test(contact)) {
+      return res.status(400).json({
+        success: false,
+        message: "Student contact number must be a 10-digit number",
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create student object
+    const studentData = {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      contact: contact.trim(),
+      parentsContact: parentsContactArray,
+      address: address.trim(),
+      admissionYear: parseInt(admissionYear),
+      role: "student",
+      isVerified: isVerified || false,
+      isAdmitted: isAdmitted || false,
+    };
+
+    // Add optional fields if provided
+    if (currentStd) studentData.currentStd = currentStd.trim();
+    if (profileImage) studentData.profileImage = profileImage.trim();
+
+    const student = new Student(studentData);
+    await student.save();
+
+    // Send verification email
+    const token = jwt.sign({ email: student.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    try {
+      await sendVerificationEmail(student.email, token);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      // Continue with student creation even if email fails
+    }
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Student registered successfully. A verification link has been sent to your email.",
+      student: {
+        studentId: student.studentId,
+        name: student.name,
+        email: student.email,
+        isVerified: student.isVerified,
+        isAdmitted: student.isAdmitted,
+      },
+    });
   } catch (e) {
-    console.error(e);
+    console.error("Error creating student:", e);
+
+    // Handle specific MongoDB errors
+    if (e.code === 11000) {
+      const field = Object.keys(e.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } already exists`,
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: "Something went wrong while creating student",
     });
   }
 };
@@ -477,28 +576,44 @@ const createStudents = async (req, res) => {
  * @param {string} req.params.id - Student's ID
  * @param {Object} req.body - Request body containing updated details
  * @param {string} [req.body.name] - Updated student name
+ * @param {string} [req.body.email] - Updated email address
  * @param {string} [req.body.password] - Updated password
  * @param {string} [req.body.contact] - Updated contact number
- * @param {string} [req.body.parentsContact] - Updated parent's contact
+ * @param {string|Array<string>} [req.body.parentsContact] - Updated parent's contact(s)
  * @param {string} [req.body.address] - Updated address
+ * @param {string} [req.body.currentStd] - Updated current standard
  * @param {string} [req.body.profileImage] - Updated profile image URL
- * @param {string} [req.body.admissionYear] - Updated admission year
+ * @param {number} [req.body.admissionYear] - Updated admission year
+ * @param {boolean} [req.body.isVerified] - Updated verification status
+ * @param {boolean} [req.body.isAdmitted] - Updated admission status
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with updated student details
- * @throws {Error} If update fails or student not found
+ * @throws {Error} If update fails, student not found, or email already exists
  */
 const updateStudentDetails = async (req, res) => {
   try {
     const studentId = req.params.id;
     const {
       name,
+      email,
       password,
       contact,
       parentsContact,
       address,
+      currentStd,
       profileImage,
       admissionYear,
+      isVerified,
+      isAdmitted,
     } = req.body;
+
+    // Validate student ID
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid student ID format",
+      });
+    }
 
     // Fetch the current student record
     const student = await Student.findById(studentId);
@@ -512,16 +627,129 @@ const updateStudentDetails = async (req, res) => {
     // Prepare the fields to update
     const updateFields = {};
 
-    // Only update fields if they are provided in the request
-    if (name) updateFields.name = name;
-    if (contact) updateFields.contact = contact;
-    if (parentsContact) updateFields.parentsContact = parentsContact;
-    if (address) updateFields.address = address;
-    if (profileImage) updateFields.profileImage = profileImage;
-    if (admissionYear) updateFields.admissionYear = admissionYear;
+    // Validate and update name
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Name cannot be empty",
+        });
+      }
+      updateFields.name = name.trim();
+    }
 
-    // If a new password is provided, handle hashing it
-    if (password) {
+    // Validate and update email
+    if (email !== undefined) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide a valid email address",
+        });
+      }
+
+      // Check if email already exists (excluding current student)
+      const existingStudent = await Student.findOne({
+        email: email.toLowerCase().trim(),
+        _id: { $ne: studentId },
+      });
+      if (existingStudent) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+      updateFields.email = email.toLowerCase().trim();
+    }
+
+    // Validate and update contact
+    if (contact !== undefined) {
+      const contactRegex = /^[0-9]{10}$/;
+      if (!contactRegex.test(contact)) {
+        return res.status(400).json({
+          success: false,
+          message: "Contact number must be a 10-digit number",
+        });
+      }
+      updateFields.contact = contact.trim();
+    }
+
+    // Validate and update parentsContact
+    if (parentsContact !== undefined) {
+      const parentsContactArray = Array.isArray(parentsContact)
+        ? parentsContact
+        : [parentsContact];
+
+      if (parentsContactArray.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "At least one parent contact number is required",
+        });
+      }
+
+      // Validate each parent contact number
+      const contactRegex = /^[0-9]{10}$/;
+      for (const contactNum of parentsContactArray) {
+        if (!contactRegex.test(contactNum)) {
+          return res.status(400).json({
+            success: false,
+            message: "Parent contact numbers must be 10-digit numbers",
+          });
+        }
+      }
+      updateFields.parentsContact = parentsContactArray;
+    }
+
+    // Update address
+    if (address !== undefined) {
+      if (!address.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Address cannot be empty",
+        });
+      }
+      updateFields.address = address.trim();
+    }
+
+    // Update currentStd
+    if (currentStd !== undefined) {
+      updateFields.currentStd = currentStd.trim();
+    }
+
+    // Update profileImage
+    if (profileImage !== undefined) {
+      updateFields.profileImage = profileImage.trim();
+    }
+
+    // Validate and update admissionYear
+    if (admissionYear !== undefined) {
+      const currentYear = new Date().getFullYear();
+      if (admissionYear < 2000 || admissionYear > currentYear + 1) {
+        return res.status(400).json({
+          success: false,
+          message: `Admission year must be between 2000 and ${currentYear + 1}`,
+        });
+      }
+      updateFields.admissionYear = parseInt(admissionYear);
+    }
+
+    // Update boolean fields
+    if (isVerified !== undefined) {
+      updateFields.isVerified = Boolean(isVerified);
+    }
+    if (isAdmitted !== undefined) {
+      updateFields.isAdmitted = Boolean(isAdmitted);
+    }
+
+    // Handle password update
+    if (password !== undefined) {
+      if (!password.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Password cannot be empty",
+        });
+      }
+
       // Check if the provided password is plain text (not already hashed)
       if (password.length < 60) {
         // A typical bcrypt hash is 60 characters long
@@ -541,6 +769,9 @@ const updateStudentDetails = async (req, res) => {
       }
     }
 
+    // Add updatedAt timestamp
+    updateFields.updatedAt = new Date();
+
     // Update the student record with new data
     const updatedStudent = await Student.findByIdAndUpdate(
       studentId,
@@ -549,18 +780,37 @@ const updateStudentDetails = async (req, res) => {
         new: true,
         runValidators: true,
       }
-    );
+    ).select("-password -refreshToken"); // Exclude sensitive fields from response
+
+    if (!updatedStudent) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update student details",
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: "Details updated successfully.",
+      message: "Student details updated successfully.",
       data: updatedStudent,
     });
   } catch (e) {
-    console.error(e);
+    console.error("Error updating student details:", e);
+
+    // Handle specific MongoDB errors
+    if (e.code === 11000) {
+      const field = Object.keys(e.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } already exists`,
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: "Something went wrong.",
+      message: "Something went wrong while updating student details.",
     });
   }
 };
@@ -1703,6 +1953,13 @@ const markStudentAttendance = async (req, res) => {
 
     await attendance.save();
 
+    // Add attendance reference to the student document
+    await Student.findByIdAndUpdate(
+      student,
+      { $addToSet: { attendance: attendance._id } },
+      { new: true }
+    );
+
     res
       .status(201)
       .json({ message: "Attendance marked successfully.", attendance });
@@ -2750,6 +3007,201 @@ const updateStudentAttendance = async (req, res) => {
   }
 };
 
+/**
+ * Retrieves students with server-side filtering and pagination
+ * @async
+ * @function getFilteredStudents
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {number} [req.query.page=1] - Page number
+ * @param {number} [req.query.limit=10] - Items per page
+ * @param {string} [req.query.batchId] - Batch ID to filter
+ * @param {string} [req.query.status] - Attendance status to filter (Present/Absent/Late)
+ * @param {string} [req.query.search] - Search term (name, email, studentId)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with paginated, filtered students
+ */
+const getFilteredStudents = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, batchId, status, search } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+    let filter = {};
+
+    // Batch filter
+    if (batchId && batchId !== "All Batches") {
+      filter.batches = batchId;
+    }
+
+    // Search filter
+    if (search) {
+      const regex = new RegExp(search, "i");
+      filter.$or = [{ name: regex }, { email: regex }, { studentId: regex }];
+    }
+
+    // Find students
+    let students = await Student.find(filter)
+      .populate("subjects")
+      .populate("batches")
+      .populate("attendance")
+      .populate({
+        path: "scores",
+        populate: { path: "subject" },
+      });
+
+    // Status filter (on latest attendance)
+    if (status && status !== "all") {
+      students = students.filter((student) => {
+        const lastAttendance =
+          Array.isArray(student.attendance) && student.attendance.length > 0
+            ? student.attendance[student.attendance.length - 1]
+            : null;
+        return lastAttendance?.status === status;
+      });
+    }
+
+    const total = students.length;
+    const paginatedStudents = students.slice(skip, skip + limitNumber);
+
+    res.status(200).json({
+      success: true,
+      students: paginatedStudents,
+      total,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+/**
+ * Retrieves attendance stats for a batch and date
+ * @async
+ * @function getAttendanceStats
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.batchId - Batch ID to filter
+ * @param {string} req.query.date - Date (YYYY-MM-DD)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with present, absent, late, and monthlyAvg
+ */
+const getAttendanceStats = async (req, res) => {
+  try {
+    const { batchId, date } = req.query;
+    if (!batchId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "batchId and date are required",
+      });
+    }
+    const startOfDay = new Date(`${date}T00:00:00.000Z`);
+    const endOfDay = new Date(`${date}T23:59:59.999Z`);
+    // Find students in batch
+    const students = await Student.find({ batches: batchId });
+    const studentIds = students.map((s) => s._id);
+    // Find attendance for those students on the date
+    const attendance = await Attendance.find({
+      student: { $in: studentIds },
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+    let present = 0,
+      absent = 0,
+      late = 0;
+    attendance.forEach((a) => {
+      if (a.status === "Present") present++;
+      else if (a.status === "Absent") absent++;
+      else if (a.status === "Late") late++;
+    });
+    // Monthly average (for simplicity, use attendance in last 30 days)
+    const monthAgo = new Date(startOfDay);
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    const monthlyAttendance = await Attendance.find({
+      student: { $in: studentIds },
+      date: { $gte: monthAgo, $lte: endOfDay },
+    });
+    const monthlyPresent = monthlyAttendance.filter(
+      (a) => a.status === "Present" || a.status === "Late"
+    ).length;
+    const monthlyAvg =
+      students.length > 0 ? (monthlyPresent / (students.length * 30)) * 100 : 0;
+    res.status(200).json({
+      success: true,
+      present,
+      absent,
+      late,
+      monthlyAvg: Number(monthlyAvg.toFixed(1)),
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+/**
+ * Retrieves attendance records with filtering and pagination
+ * @async
+ * @function getFilteredAttendanceRecords
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} [req.query.batchId] - Batch ID to filter
+ * @param {string} [req.query.date] - Date (YYYY-MM-DD)
+ * @param {string} [req.query.status] - Attendance status to filter
+ * @param {number} [req.query.page=1] - Page number
+ * @param {number} [req.query.limit=10] - Items per page
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with paginated, filtered attendance records
+ */
+const getFilteredAttendanceRecords = async (req, res) => {
+  try {
+    const { batchId, date, status, page = 1, limit = 10 } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+    let filter = {};
+    // Batch filter
+    if (batchId && batchId !== "All Batches") {
+      // Find students in batch
+      const students = await Student.find({ batches: batchId });
+      const studentIds = students.map((s) => s._id);
+      filter.student = { $in: studentIds };
+    }
+    // Date filter
+    if (date) {
+      const startOfDay = new Date(`${date}T00:00:00.000Z`);
+      const endOfDay = new Date(`${date}T23:59:59.999Z`);
+      filter.date = { $gte: startOfDay, $lte: endOfDay };
+    }
+    // Status filter
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+    const total = await Attendance.countDocuments(filter);
+    const attendance = await Attendance.find(filter)
+      .skip(skip)
+      .limit(limitNumber)
+      .populate("student")
+      .populate("subject");
+    res.status(200).json({
+      success: true,
+      attendance,
+      total,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 module.exports = {
   adminRegister,
   adminLogin,
@@ -2798,4 +3250,7 @@ module.exports = {
   removeStudentFromBatch,
   removeTeacherFromBatch,
   updateStudentAttendance,
+  getFilteredStudents,
+  getAttendanceStats,
+  getFilteredAttendanceRecords,
 };

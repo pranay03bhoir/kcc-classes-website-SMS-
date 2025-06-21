@@ -25,7 +25,7 @@ import {
   MoreVertical,
   Search as SearchIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import MarkAttendanceModal from "./components/modals/AddAttendanceModal";
 import EditIndividualStudentModal from "./components/modals/EditIndivisualStudent";
@@ -33,242 +33,93 @@ import Sidebar from "./SideBar";
 
 export default function AdminAttendanceManagement() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [selectedBatch, setSelectedBatch] = useState("All Batches");
-  const [showModal, setShowModal] = useState(false);
-  const [students, setStudents] = useState([]);
+  const [selectedBatch, setSelectedBatch] = useState("");
   const [batches, setBatches] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [attendanceStats, setAttendanceStats] = useState({
+    present: 0,
+    absent: 0,
+    late: 0,
+    monthlyAvg: 0,
+  });
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const itemsPerPage = 10;
-
-  // Memoized filtered students based on batch selection, search, and status filter
-  const filteredStudents = useMemo(() => {
-    let filtered = [...students];
-
-    // Apply batch filter
-    if (selectedBatch !== "all" && selectedBatch !== "All Batches") {
-      filtered = filtered.filter((student) =>
-        student.batches?.some((batch) => batch._id === selectedBatch)
-      );
-    }
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (student) =>
-          student.name.toLowerCase().includes(query) ||
-          student.studentId.toLowerCase().includes(query) ||
-          student.email.toLowerCase().includes(query) ||
-          student.batches?.some((batch) =>
-            batch.name.toLowerCase().includes(query)
-          )
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((student) => {
-        const lastAttendance =
-          Array.isArray(student.attendance) && student.attendance.length > 0
-            ? student.attendance[student.attendance.length - 1]
-            : null;
-        return lastAttendance?.status === statusFilter;
-      });
-    }
-
-    return filtered;
-  }, [students, selectedBatch, searchQuery, statusFilter]);
-
-  // Update totalStudents when filters change
-  useEffect(() => {
-    setTotalStudents(filteredStudents.length);
-  }, [filteredStudents]);
-
   const totalPages = Math.ceil(totalStudents / itemsPerPage);
-  const fetchStudentData = useCallback(async () => {
+
+  // Fetch batches on mount
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await api.get("/batches");
+        setBatches(res.data.batches || []);
+        if (res.data.batches && res.data.batches.length > 0 && !selectedBatch) {
+          setSelectedBatch(res.data.batches[0]._id);
+        }
+      } catch (e) {
+        setError("Failed to load batches");
+      }
+    };
+    fetchBatches();
+  }, []);
+
+  // Fetch students with filters
+  const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    const toastId = toast.loading("Loading students...");
-
     try {
-      const [studentData, batchData] = await Promise.all([
-        api.get(`/all/students?page=${currentPage}&limit=${itemsPerPage}`),
-        api.get("/batches"),
-      ]);
-
-      if (studentData.status === 200 && batchData.status === 200) {
-        setStudents(studentData.data.students);
-        setBatches(batchData.data.batches);
-        setTotalStudents(studentData.data.totalStudents);
-        console.log("Student data", studentData.data.students);
-        toast.update(toastId, {
-          render: "Students and batches loaded successfully!",
-          type: "success",
-          autoClose: 2000,
-          isLoading: false,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      const message =
-        error?.response?.data?.message || "Failed to load students.";
-      setError(message);
-      toast.update(toastId, {
-        render: message,
-        type: "error",
-        isLoading: false,
-        autoClose: 2000,
-      });
-
-      if (error?.response?.status === 401) {
-        try {
-          await api.post("/refresh");
-          setTimeout(() => window.location.reload(), 1000);
-        } catch (refreshError) {
-          console.error("Session refresh failed:", refreshError);
-        }
-      }
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        batchId: selectedBatch,
+        status: statusFilter,
+        search: searchQuery,
+      };
+      const res = await api.get("/filtered/students", { params });
+      setStudents(res.data.students || []);
+      setTotalStudents(res.data.total || 0);
+    } catch (e) {
+      setError("Failed to load students");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, itemsPerPage]);
-  const attendanceStats = useMemo(() => {
-    const presentCount = students.filter((student) => {
-      const lastAttendance =
-        Array.isArray(student.attendance) && student.attendance.length > 0
-          ? student.attendance[student.attendance.length - 1]
-          : null;
-      return (
-        lastAttendance?.status === "Present" ||
-        lastAttendance?.status === "Late"
-      );
-    }).length;
+  }, [currentPage, itemsPerPage, selectedBatch, statusFilter, searchQuery]);
 
-    const absentCount = students.filter((student) => {
-      const lastAttendance =
-        Array.isArray(student.attendance) && student.attendance.length > 0
-          ? student.attendance[student.attendance.length - 1]
-          : null;
-      return lastAttendance?.status === "Absent";
-    }).length;
-
-    const lateCount = students.filter((student) => {
-      const lastAttendance =
-        Array.isArray(student.attendance) && student.attendance.length > 0
-          ? student.attendance[student.attendance.length - 1]
-          : null;
-      return lastAttendance?.status === "Late";
-    }).length;
-
-    // Calculate daily attendance percentage
-    const dailyAttendancePercentage =
-      students.length > 0
-        ? ((presentCount + lateCount) / students.length) * 100
-        : 0;
-
-    // Note: For a true monthly average, we would need to fetch attendance data for the last 30 days
-    // This is currently just showing the daily percentage
-    return {
-      presentCount,
-      absentCount,
-      lateCount,
-      monthlyAvg: dailyAttendancePercentage,
-    };
-  }, [students]);
-  /**
-   * The function `addAttendance` is an async function that adds attendance data for students and
-   * displays corresponding toast messages based on the success or failure of the operation.
-   */
-  const addAttendance = async (attendanceData) => {
-    const toastId = toast.loading("Adding attendance...");
+  // Fetch attendance stats
+  const fetchStats = useCallback(async () => {
+    if (!selectedBatch || !date) return;
     try {
-      const response = await api.post("/students/attendance", attendanceData);
-
-      if (response.status === 200 || response.status === 201) {
-        toast.update(toastId, {
-          render: response?.data?.message || "Attendance added successfully!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
-        setShowModal(false);
-        fetchStudentData(); // Refresh student data after adding attendance
-      }
-    } catch (error) {
-      console.error("Error adding attendance:", error);
-      const message =
-        error?.response?.data?.message || "Failed to add attendance.";
-      toast.update(toastId, {
-        render: message,
-        type: "error",
-        isLoading: false,
-        autoClose: 2000,
+      const params = { batchId: selectedBatch, date };
+      const res = await api.get("/attendance/stats", { params });
+      setAttendanceStats({
+        present: res.data.present,
+        absent: res.data.absent,
+        late: res.data.late,
+        monthlyAvg: res.data.monthlyAvg,
       });
+    } catch (e) {
+      setAttendanceStats({ present: 0, absent: 0, late: 0, monthlyAvg: 0 });
     }
-  };
+  }, [selectedBatch, date]);
 
-  const handleEditClick = (student) => {
-    const lastAttendance =
-      Array.isArray(student.attendance) && student.attendance.length > 0
-        ? student.attendance[student.attendance.length - 1]
-        : null;
-    setSelectedStudent(student);
-    setSelectedAttendance(lastAttendance);
-    setEditModalOpen(true);
-  };
-
-  const handleUpdateAttendance = async (updateData) => {
-    const toastId = toast.loading("Updating attendance...");
-    try {
-      // Get the attendance ID from the selected attendance
-      if (!selectedAttendance?._id) {
-        throw new Error("No attendance record selected for update");
-      }
-
-      const response = await api.put(
-        `/students/${updateData.student}/attendance/${selectedAttendance._id}`,
-        {
-          status: updateData.status,
-          note: updateData.note,
-        }
-      );
-
-      if (response.status === 200) {
-        toast.update(toastId, {
-          render: response?.data?.message || "Attendance updated successfully!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
-        setEditModalOpen(false);
-        setSelectedStudent(null);
-        setSelectedAttendance(null);
-        fetchStudentData(); // Refresh the data
-      }
-    } catch (error) {
-      console.error("Error updating attendance:", error);
-      toast.update(toastId, {
-        render:
-          error?.response?.data?.message || "Failed to update attendance.",
-        type: "error",
-        isLoading: false,
-        autoClose: 2000,
-      });
-    }
-  };
+  useEffect(() => {
+    fetchStudents();
+    fetchStats();
+  }, [fetchStudents, fetchStats]);
 
   const handleDateChange = (e) => {
     const newDate = e.target.value;
     if (isValid(parseISO(newDate))) {
       setDate(newDate);
+      setCurrentPage(1);
     } else {
       toast.error("Please select a valid date");
     }
@@ -276,26 +127,29 @@ export default function AdminAttendanceManagement() {
 
   const handleBatchChange = (value) => {
     setSelectedBatch(value);
-    setCurrentPage(1); // Reset to first page when changing batch
+    setCurrentPage(1);
   };
 
-  // const handlePageChange = (newPage) => {
-  //   setCurrentPage(newPage);
-  // };
+  const handleStatusFilter = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
 
   const handleExport = async () => {
     const toastId = toast.loading("Preparing export...");
     try {
-      // Since there's no direct export endpoint, we'll fetch the attendance data and create a CSV
-      const response = await api.get("/admin/attendance/records", {
-        params: {
-          date,
-          batchId: selectedBatch !== "All Batches" ? selectedBatch : undefined,
-        },
-      });
-
+      const params = {
+        date,
+        batchId: selectedBatch,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      };
+      const response = await api.get("/filtered/attendance", { params });
       if (response.status === 200) {
-        // Create CSV content
         const attendanceData = response.data.attendance;
         const headers = [
           "Student Name",
@@ -311,17 +165,14 @@ export default function AdminAttendanceManagement() {
             [
               record.student.name,
               record.student.studentId,
-              record.student.batches?.length > 0
-                ? record.student.batches.map((batch) => batch.name).join(", ")
-                : "N/A",
+              record.student.batches?.map((batch) => batch.name).join(", ") ||
+                "N/A",
               record.status,
               format(new Date(record.date), "yyyy-MM-dd"),
               format(new Date(record.date), "HH:mm:ss"),
             ].join(",")
           ),
         ].join("\n");
-
-        // Create and trigger download
         const blob = new Blob([csvContent], {
           type: "text/csv;charset=utf-8;",
         });
@@ -336,7 +187,6 @@ export default function AdminAttendanceManagement() {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-
         toast.update(toastId, {
           render: "Export completed successfully!",
           type: "success",
@@ -345,7 +195,6 @@ export default function AdminAttendanceManagement() {
         });
       }
     } catch (error) {
-      console.error("Error exporting attendance:", error);
       toast.update(toastId, {
         render:
           error?.response?.data?.message || "Failed to export attendance.",
@@ -356,19 +205,68 @@ export default function AdminAttendanceManagement() {
     }
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
+  const handleEditClick = (student) => {
+    // Find attendance for the selected date
+    const attendanceForSelectedDate = Array.isArray(student.attendance)
+      ? student.attendance.find((a) => {
+          const attDate = new Date(a.date);
+          const selDate = new Date(date);
+          return (
+            attDate.getFullYear() === selDate.getFullYear() &&
+            attDate.getMonth() === selDate.getMonth() &&
+            attDate.getDate() === selDate.getDate()
+          );
+        })
+      : null;
+    setSelectedStudent(student);
+    setSelectedAttendance(attendanceForSelectedDate);
+    setEditModalOpen(true);
   };
 
-  const handleStatusFilter = (status) => {
-    setStatusFilter(status);
-    setCurrentPage(1); // Reset to first page when filtering
+  const handleUpdateAttendance = async (updateData) => {
+    const toastId = toast.loading("Updating attendance...");
+    try {
+      if (!selectedAttendance?._id) {
+        throw new Error("No attendance record selected for update");
+      }
+      const response = await api.put(
+        `/students/${updateData.student}/attendance/${selectedAttendance._id}`,
+        {
+          status: updateData.status,
+          note: updateData.note,
+        }
+      );
+      if (response.status === 200) {
+        toast.update(toastId, {
+          render: response?.data?.message || "Attendance updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+        setEditModalOpen(false);
+        setSelectedStudent(null);
+        setSelectedAttendance(null);
+        fetchStudents();
+        fetchStats();
+      }
+    } catch (error) {
+      toast.update(toastId, {
+        render:
+          error?.response?.data?.message || "Failed to update attendance.",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
   };
 
-  useEffect(() => {
-    fetchStudentData(currentPage);
-  }, [fetchStudentData, currentPage]);
+  // Add this function to POST attendance for each entry
+  const handleSaveAttendance = async (entry) => {
+    await api.post("/students/attendance", {
+      ...entry,
+      date: date, // Always send the selected date
+    });
+  };
 
   if (error) {
     return (
@@ -378,7 +276,7 @@ export default function AdminAttendanceManagement() {
             Error Loading Data
           </h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={fetchStudentData}>Retry</Button>
+          <Button onClick={fetchStudents}>Retry</Button>
         </div>
       </div>
     );
@@ -387,16 +285,11 @@ export default function AdminAttendanceManagement() {
   return (
     <div className="flex min-h-screen bg-gray-50 pt-16">
       <ToastContainer position="top-center" />
-
-      {/* Sidebar - Fixed on desktop, overlay on mobile */}
       <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar />
       </div>
-
-      {/* Main content area - Properly positioned for mobile and desktop */}
       <div className="flex-1 w-full md:ml-16 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h1 className="text-xl md:text-2xl font-bold">
               Attendance Management
@@ -417,8 +310,6 @@ export default function AdminAttendanceManagement() {
               </Button>
             </div>
           </div>
-
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
@@ -428,7 +319,7 @@ export default function AdminAttendanceManagement() {
                       Present Today
                     </p>
                     <h3 className="text-2xl font-bold text-green-600">
-                      {attendanceStats.presentCount}
+                      {attendanceStats.present}
                     </h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -437,7 +328,6 @@ export default function AdminAttendanceManagement() {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -446,7 +336,7 @@ export default function AdminAttendanceManagement() {
                       Absent Today
                     </p>
                     <h3 className="text-2xl font-bold text-red-600">
-                      {attendanceStats.absentCount}
+                      {attendanceStats.absent}
                     </h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
@@ -455,7 +345,6 @@ export default function AdminAttendanceManagement() {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -464,7 +353,7 @@ export default function AdminAttendanceManagement() {
                       Late Today
                     </p>
                     <h3 className="text-2xl font-bold text-yellow-600">
-                      {attendanceStats.lateCount}
+                      {attendanceStats.late}
                     </h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -473,7 +362,6 @@ export default function AdminAttendanceManagement() {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -482,7 +370,7 @@ export default function AdminAttendanceManagement() {
                       Monthly Average
                     </p>
                     <h3 className="text-2xl font-bold text-blue-600">
-                      {attendanceStats.monthlyAvg.toFixed(1)}%
+                      {attendanceStats.monthlyAvg}%
                     </h3>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -492,8 +380,6 @@ export default function AdminAttendanceManagement() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Filters Section */}
           <Card>
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -506,7 +392,6 @@ export default function AdminAttendanceManagement() {
                     className="w-full"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Batch</label>
                   <Select
@@ -517,7 +402,6 @@ export default function AdminAttendanceManagement() {
                       <SelectValue placeholder="Select batch" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All Batches">All Batches</SelectItem>
                       {batches.map((batch) => (
                         <SelectItem key={batch._id} value={batch._id}>
                           {batch.name}
@@ -526,7 +410,6 @@ export default function AdminAttendanceManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Status</label>
                   <Select
@@ -544,7 +427,6 @@ export default function AdminAttendanceManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Search</label>
                   <div className="relative">
@@ -553,7 +435,7 @@ export default function AdminAttendanceManagement() {
                       type="text"
                       placeholder="Search students..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearch}
                       className="pl-10 w-full"
                     />
                   </div>
@@ -561,8 +443,6 @@ export default function AdminAttendanceManagement() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Students Table */}
           <Card>
             <CardContent className="p-4">
               {isLoading ? (
@@ -584,92 +464,109 @@ export default function AdminAttendanceManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredStudents
-                        .slice(
-                          (currentPage - 1) * itemsPerPage,
-                          currentPage * itemsPerPage
+                      {students.map((student) => {
+                        // Find attendance for the selected date
+                        const attendanceForSelectedDate = Array.isArray(
+                          student.attendance
                         )
-                        .map((student) => {
-                          const lastAttendance = getLastAttendance(student);
-                          return (
-                            <tr
-                              key={student._id}
-                              className="border-b hover:bg-gray-50"
-                            >
-                              <td className="p-4">
-                                <div>
-                                  <p className="font-medium">{student.name}</p>
-                                  <p className="text-sm text-gray-500">
-                                    {student.studentId}
-                                  </p>
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <div className="flex flex-wrap gap-2">
-                                  {student.batches?.map((batch) => (
-                                    <Badge
-                                      key={batch._id}
-                                      variant="secondary"
-                                      className="whitespace-nowrap"
-                                    >
-                                      {batch.name}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <Badge
-                                  variant={
-                                    lastAttendance?.status === "Present"
-                                      ? "success"
-                                      : lastAttendance?.status === "Late"
-                                      ? "warning"
-                                      : "destructive"
-                                  }
-                                >
-                                  {lastAttendance?.status || "Not Marked"}
-                                </Badge>
-                              </td>
-                              <td className="p-4">
-                                {lastAttendance?.updatedAt
-                                  ? format(
-                                      typeof lastAttendance.updatedAt ===
-                                        "string"
-                                        ? parseISO(lastAttendance.updatedAt)
-                                        : new Date(lastAttendance.updatedAt),
-                                      "MMM d, yyyy h:mm a"
-                                    )
-                                  : "N/A"}
-                              </td>
-                              <td className="p-4 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => handleEditClick(student)}
-                                    >
-                                      Edit Attendance
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                          ? student.attendance.find((a) => {
+                              const attDate = new Date(a.date);
+                              const selDate = new Date(date);
+                              return (
+                                attDate.getFullYear() ===
+                                  selDate.getFullYear() &&
+                                attDate.getMonth() === selDate.getMonth() &&
+                                attDate.getDate() === selDate.getDate()
+                              );
+                            })
+                          : null;
+                        return (
+                          <tr
+                            key={student._id}
+                            className="border-b hover:bg-gray-50"
+                          >
+                            <td className="p-4">
+                              <div>
+                                <p className="font-medium">{student.name}</p>
+                                <p className="text-sm text-gray-500">
+                                  {student.studentId}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-wrap gap-2">
+                                {student.batches?.map((batch) => (
+                                  <Badge
+                                    key={batch._id}
+                                    variant="secondary"
+                                    className="whitespace-nowrap"
+                                  >
+                                    {batch.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <Badge
+                                variant={
+                                  attendanceForSelectedDate?.status ===
+                                  "Present"
+                                    ? "success"
+                                    : attendanceForSelectedDate?.status ===
+                                      "Late"
+                                    ? "warning"
+                                    : attendanceForSelectedDate?.status ===
+                                      "Absent"
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                              >
+                                {attendanceForSelectedDate?.status ||
+                                  "Not Marked"}
+                              </Badge>
+                            </td>
+                            <td className="p-4">
+                              {attendanceForSelectedDate?.updatedAt
+                                ? format(
+                                    typeof attendanceForSelectedDate.updatedAt ===
+                                      "string"
+                                      ? parseISO(
+                                          attendanceForSelectedDate.updatedAt
+                                        )
+                                      : new Date(
+                                          attendanceForSelectedDate.updatedAt
+                                        ),
+                                    "MMM d, yyyy h:mm a"
+                                  )
+                                : "N/A"}
+                            </td>
+                            <td className="p-4 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditClick(student)}
+                                  >
+                                    Edit Attendance
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               )}
-
-              {/* Pagination */}
-              {!isLoading && !error && filteredStudents.length > 0 && (
+              {!isLoading && !error && students.length > 0 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-gray-500">
                     Showing{" "}
@@ -702,22 +599,15 @@ export default function AdminAttendanceManagement() {
           </Card>
         </div>
       </div>
-
-      {/* Modals */}
       <MarkAttendanceModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        students={filteredStudents}
+        students={students}
         setStudents={setStudents}
-        onSaveAttendance={addAttendance}
-        batch={
-          selectedBatch !== "All Batches"
-            ? batches.find((b) => b._id === selectedBatch)
-            : null
-        }
+        onSaveAttendance={handleSaveAttendance}
+        batch={batches.find((b) => b._id === selectedBatch) || null}
         selectedDate={date}
       />
-
       <EditIndividualStudentModal
         open={editModalOpen}
         onClose={() => {
@@ -728,18 +618,8 @@ export default function AdminAttendanceManagement() {
         onSave={handleUpdateAttendance}
         student={selectedStudent}
         attendance={selectedAttendance}
-        batch={
-          selectedBatch !== "All Batches"
-            ? batches.find((b) => b._id === selectedBatch)
-            : null
-        }
+        batch={batches.find((b) => b._id === selectedBatch) || null}
       />
     </div>
   );
 }
-
-const getLastAttendance = (student) => {
-  return Array.isArray(student.attendance) && student.attendance.length > 0
-    ? student.attendance[student.attendance.length - 1]
-    : null;
-};

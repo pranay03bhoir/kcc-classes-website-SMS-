@@ -47,6 +47,9 @@ const {
   updateStudentAttendance,
   deleteStudentScore,
   generateNewRefreshAccessToken,
+  getFilteredStudents,
+  getAttendanceStats,
+  getFilteredAttendanceRecords,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -168,5 +171,13 @@ router.delete(
   loginAuth,
   adminAuth,
   removeTeacherFromBatch
+);
+router.get("/filtered/students", loginAuth, adminAuth, getFilteredStudents);
+router.get("/attendance/stats", loginAuth, adminAuth, getAttendanceStats);
+router.get(
+  "/filtered/attendance",
+  loginAuth,
+  adminAuth,
+  getFilteredAttendanceRecords
 );
 module.exports = router;

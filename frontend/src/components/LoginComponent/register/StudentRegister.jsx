@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
+
 export default function StudentRegister() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -49,7 +50,7 @@ export default function StudentRegister() {
         newErrors.contact = "Enter a valid 10-digit contact number";
       if (!formData.parentsContact.match(/^\d{10}$/))
         newErrors.parentsContact =
-          "Enter a valid 10-digit parent’s contact number";
+          "Enter a valid 10-digit parent's contact number";
     }
 
     if (currentStep === 3) {
@@ -59,7 +60,7 @@ export default function StudentRegister() {
       if (!formData.agree) newErrors.agree = "You must agree to the terms";
     }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Proceed only if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
@@ -76,8 +77,9 @@ export default function StudentRegister() {
       agree: !prev.agree,
     }));
   };
+
   const handleNext = () => {
-    if (!validateStep(step)) return; // Prevent navigation if validation fails
+    if (!validateStep(step)) return;
     setStep((prev) => prev + 1);
   };
 
@@ -103,7 +105,6 @@ export default function StudentRegister() {
         }
       );
 
-      // console.log("API Response:", response.data);
       toast.update(toastId, {
         render: response.data.message || "Registered successfully.",
         type: "success",
@@ -126,200 +127,291 @@ export default function StudentRegister() {
 
   const steps = [
     [
-      <Input
-        key="name"
-        name="name"
-        placeholder="Your Name"
-        onChange={handleChange}
-        required
-      />,
-      errors.name && (
-        <p key="name-error" className="text-red-500 text-sm">
-          {errors.name}
-        </p>
-      ),
-      <Input
-        key="email"
-        type="email"
-        name="email"
-        placeholder="Your Email"
-        onChange={handleChange}
-        required
-      />,
-      errors.email && (
-        <p key="email-error" className="text-red-500 text-sm">
-          {errors.email}
-        </p>
-      ),
-    ],
-    [
-      <Input
-        key="password"
-        type="password"
-        name="password"
-        placeholder="Password"
-        onChange={handleChange}
-        required
-        minLength={8}
-      />,
-      errors.password && (
-        <p key="password-error" className="text-red-500 text-sm">
-          {errors.password}
-        </p>
-      ),
-      <Input
-        key="confirmPassword"
-        type="password"
-        name="confirmPassword"
-        placeholder="Confirm password"
-        onChange={handleChange}
-        required
-        minLength={8}
-      />,
-      errors.confirmPassword && (
-        <p key="confirmPassword-error" className="text-red-500 text-sm">
-          {errors.confirmPassword}
-        </p>
-      ),
-    ],
-    [
-      <Input
-        key="contact"
-        type="tel"
-        name="contact"
-        placeholder="Your Contact"
-        onChange={handleChange}
-        required
-        pattern="\d{10}"
-      />,
-      errors.contact && (
-        <p key="contact-error" className="text-red-500 text-sm">
-          {errors.contact}
-        </p>
-      ),
-      <Input
-        key="parentsContact"
-        type="tel"
-        name="parentsContact"
-        placeholder="Parent's Contact"
-        onChange={handleChange}
-        required
-        pattern="\d{10}"
-      />,
-      errors.parentsContact && (
-        <p key="parentsContact-error" className="text-red-500 text-sm">
-          {errors.parentsContact}
-        </p>
-      ),
-    ],
-    [
-      <Input
-        key="admissionYear"
-        type="number"
-        name="admissionYear"
-        placeholder="Admission Year"
-        onChange={handleChange}
-        required
-        pattern="\d{4}"
-      />,
-      errors.admissionYear && (
-        <p key="admissionYear-error" className="text-red-500 text-sm">
-          {errors.admissionYear}
-        </p>
-      ),
-      <Textarea
-        key="address"
-        name="address"
-        placeholder="Address"
-        onChange={handleChange}
-        required
-      />,
-      errors.address && (
-        <p key="address-error" className="text-red-500 text-sm">
-          {errors.address}
-        </p>
-      ),
-      <div key="checkbox" className="flex items-center space-x-2">
-        <Checkbox
-          name="agree"
-          onChange={handleChange}
-          onCheckedChange={handleCheckboxChange}
-        />
-        <label className="text-sm">
-          I agree to the{" "}
-          <a href="#" className="text-blue-600">
-            Terms, Privacy Policy
-          </a>
-          , and Fees.
-        </label>
+      <div key="step1" className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Full Name
+          </label>
+          <Input
+            name="name"
+            placeholder="Enter your full name"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+          />
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
+          </label>
+          <Input
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+          )}
+        </div>
       </div>,
-      errors.agree && (
-        <p key="agree-error" className="text-red-500 text-sm">
-          {errors.agree}
-        </p>
-      ),
+    ],
+    [
+      <div key="step2" className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Password
+          </label>
+          <Input
+            type="password"
+            name="password"
+            placeholder="Create a password"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+            minLength={8}
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Confirm Password
+          </label>
+          <Input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm your password"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+            minLength={8}
+          />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.confirmPassword}
+            </p>
+          )}
+        </div>
+      </div>,
+    ],
+    [
+      <div key="step3" className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contact Number
+          </label>
+          <Input
+            type="tel"
+            name="contact"
+            placeholder="Enter your contact number"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+            pattern="\d{10}"
+          />
+          {errors.contact && (
+            <p className="text-red-500 text-sm mt-1">{errors.contact}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Parent's Contact
+          </label>
+          <Input
+            type="tel"
+            name="parentsContact"
+            placeholder="Enter parent's contact number"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+            pattern="\d{10}"
+          />
+          {errors.parentsContact && (
+            <p className="text-red-500 text-sm mt-1">{errors.parentsContact}</p>
+          )}
+        </div>
+      </div>,
+    ],
+    [
+      <div key="step4" className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Admission Year
+          </label>
+          <Input
+            type="number"
+            name="admissionYear"
+            placeholder="Enter admission year (e.g., 2024)"
+            onChange={handleChange}
+            className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            required
+            pattern="\d{4}"
+          />
+          {errors.admissionYear && (
+            <p className="text-red-500 text-sm mt-1">{errors.admissionYear}</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Address
+          </label>
+          <Textarea
+            name="address"
+            placeholder="Enter your complete address"
+            onChange={handleChange}
+            className="min-h-[100px] border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
+            required
+          />
+          {errors.address && (
+            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+          )}
+        </div>
+        <div className="flex items-start space-x-3 pt-2">
+          <Checkbox
+            name="agree"
+            onChange={handleChange}
+            onCheckedChange={handleCheckboxChange}
+            className="mt-1"
+          />
+          <label className="text-sm text-gray-600 leading-relaxed">
+            I agree to the{" "}
+            <a
+              href="#"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Terms of Service
+            </a>
+            ,{" "}
+            <a
+              href="#"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Privacy Policy
+            </a>
+            , and acknowledge the fee structure.
+          </label>
+        </div>
+        {errors.agree && <p className="text-red-500 text-sm">{errors.agree}</p>}
+      </div>,
     ],
   ];
 
+  const stepTitles = [
+    "Personal Information",
+    "Account Security",
+    "Contact Details",
+    "Additional Information",
+  ];
+
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <Card className="w-full max-w-md p-6 bg-white rounded-2xl shadow-md z-10">
-        <CardContent>
-          <h2 className="text-2xl font-semibold text-center mb-4">
-            Sign Up As Student
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              className="space-y-4"
-            >
-              {steps[step].map((field) => field)}
-            </motion.div>
-            <div className="flex justify-between">
-              {step > 0 && (
-                <Button
-                  onClick={handlePrev}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-                >
-                  Back
-                </Button>
-              )}
-              {step < steps.length - 1 ? (
-                <Button
-                  onClick={handleNext}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Submit <ToastContainer position={`top-center`} />
-                </Button>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Student Registration
+              </h1>
+              <p className="text-gray-600">
+                Step {step + 1} of {steps.length}: {stepTitles[step]}
+              </p>
             </div>
-          </form>
-          <p className="text-sm text-center mt-4">
-            Have an account?{" "}
-            <Link href="/login" className="text-blue-600">
-              Log in
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-      <div
-        className="absolute right-0 top-0 bottom-0 w-full bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
-        }}
-      ></div>
-      <ToastContainer position={`top-center`} />
+
+            {/* Progress Bar */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-2">
+                {steps.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      index <= step
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {steps[step]}
+              </motion.div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-6">
+                {step > 0 && (
+                  <Button
+                    type="button"
+                    onClick={handlePrev}
+                    variant="outline"
+                    className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Previous
+                  </Button>
+                )}
+                {step < steps.length - 1 ? (
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white ml-auto"
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white ml-auto"
+                  >
+                    Create Account
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {/* Login Link */}
+            <div className="text-center mt-8 pt-6 border-t border-gray-200">
+              <p className="text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  href="/login/student"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <ToastContainer
+        position="top-center"
+        toastClassName="rounded-lg shadow-lg"
+        progressClassName="bg-blue-600"
+      />
     </div>
   );
 }
