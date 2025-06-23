@@ -1,18 +1,16 @@
-"use client"
-import React from "react";
+"use client";
+import BrowseOurDepartment from "@/components/Faculty/BrowseOurDepartment";
 import FacultyPageSectionOne from "@/components/Faculty/FacultyPageSectionOne";
 import Navbar from "@/components/NavigationBar/NavBar";
-import BrowseOurDepartment from "@/components/Faculty/BrowseOurDepartment";
 
-import OurFaculty from "@/components/Faculty/OurFaculty";
-import FindYourMentor from "@/components/Faculty/FindYourMentor";
-import EnquiryAndAddressSection from "@/components/Home/EnquiryAndAddressSection";
 import ContactUs from "@/components/Faculty/ContactUs";
+import FindYourMentor from "@/components/Faculty/FindYourMentor";
+import OurFaculty from "@/components/Faculty/OurFaculty";
 import Footer from "@/components/Footer/Footer";
 
 const Faculty = () => {
   return (
-    <div>
+    <div className="min-h-screen w-full flex flex-col justify-center overflow-x-hidden">
       <nav>
         <Navbar />
       </nav>
