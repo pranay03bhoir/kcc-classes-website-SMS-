@@ -1,6 +1,5 @@
-import React from "react";
-import CustomHeading from "@/components/Heading/CustomHeading";
 import HigherSecondary from "@/components/CoursesExploration/HigherSecondary";
+import CustomHeading from "@/components/Heading/CustomHeading";
 
 const HigherSecondaryProgram = () => {
   return (

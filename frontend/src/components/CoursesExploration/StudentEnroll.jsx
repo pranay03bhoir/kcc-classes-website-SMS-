@@ -1,6 +1,5 @@
-import React from "react";
-import EnquiryAndAddressSection from "@/components/Home/EnquiryAndAddressSection";
 import CustomHeading from "@/components/Heading/CustomHeading";
+import EnquiryAndAddressSection from "@/components/Home/EnquiryAndAddressSection";
 
 const StudentEnroll = () => {
   return (

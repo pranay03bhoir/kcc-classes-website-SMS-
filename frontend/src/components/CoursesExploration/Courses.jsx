@@ -54,7 +54,7 @@ const LoadingWrapper = ({ children }) => (
 
 const Courses = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen w-full flex flex-col justify-center overflow-x-hidden">
       <nav className="sticky top-0 z-50 bg-white shadow-sm">
         <Navbar />
       </nav>

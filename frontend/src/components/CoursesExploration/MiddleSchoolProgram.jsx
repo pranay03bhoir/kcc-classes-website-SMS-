@@ -1,4 +1,3 @@
-import React from "react";
 import MiddleSchool from "@/components/EducationalPrograms/MiddleSchool";
 import CustomHeading from "@/components/Heading/CustomHeading";
 import { Button } from "@/components/ui/button";

@@ -172,7 +172,7 @@ export default function CourseCategories() {
       aria-labelledby="course-categories-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center flex justify-center mb-28">
+        <div className="text-center flex flex-col justify-center mb-28">
           <CustomHeading
             id="course-categories-heading"
             title="Our Course Categories"

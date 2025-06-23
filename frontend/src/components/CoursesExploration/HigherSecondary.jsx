@@ -1,11 +1,11 @@
 "use client";
-import React, { useState } from "react";
 import CourseProgram from "@/components/CoursesExploration/CourseProgramComponents/CoursePrograms";
-import { FaFlask, FaAtom, FaCalculator, FaDna, FaSignal } from "react-icons/fa";
 import SubjectOffering from "@/components/CoursesExploration/CourseProgramComponents/SubjectOffering";
 import { Button } from "@/components/ui/button";
-import { MdBusinessCenter } from "react-icons/md";
+import { useState } from "react";
+import { FaAtom, FaCalculator, FaDna, FaFlask, FaSignal } from "react-icons/fa";
 import { HiOutlinePresentationChartLine } from "react-icons/hi";
+import { MdBusinessCenter } from "react-icons/md";
 
 const higherSecondaryProgramData = {
   description:
@@ -142,20 +142,30 @@ const HigherSecondary = () => {
       <div className={`md:pt-40 flex flex-col gap-2`}>
         <div className={`grid grid-cols-2 gap-5 `}>
           <Button
-            className={`rounded-full bg-neutral-200 text-black hover:bg-purple-400 hover:text-white duration-300 ${showSubjects === "Science Stream" ? "bg-purple-600 text-white duration-300 hover:bg-purple-600  " : ""}`}
+            className={`rounded-full bg-neutral-200 text-black hover:bg-purple-400 hover:text-white duration-300 ${
+              showSubjects === "Science Stream"
+                ? "bg-purple-600 text-white duration-300 hover:bg-purple-600  "
+                : ""
+            }`}
             onClick={() => handleSubjectChange("Science Stream")}
           >
             Science Stream
           </Button>
           <Button
-            className={`rounded-full bg-neutral-200 text-black hover:bg-purple-400 hover:text-white duration-300 ${showSubjects === "Commerce Stream" ? "bg-purple-600 text-white duration-300 hover:bg-purple-600" : ""}`}
+            className={`rounded-full bg-neutral-200 text-black hover:bg-purple-400 hover:text-white duration-300 ${
+              showSubjects === "Commerce Stream"
+                ? "bg-purple-600 text-white duration-300 hover:bg-purple-600"
+                : ""
+            }`}
             onClick={() => handleSubjectChange("Commerce Stream")}
           >
             Commerce Stream
           </Button>
         </div>
         <div
-          className={`${showSubjects === "Science Stream" ? "block" : "hidden"}`}
+          className={`${
+            showSubjects === "Science Stream" ? "block" : "hidden"
+          }`}
         >
           <SubjectOffering
             title={scienceStreamData.title}
@@ -165,7 +175,9 @@ const HigherSecondary = () => {
           />
         </div>
         <div
-          className={`${showSubjects === "Commerce Stream" ? "block" : "hidden"}`}
+          className={`${
+            showSubjects === "Commerce Stream" ? "block" : "hidden"
+          }`}
         >
           <SubjectOffering
             title={commerceStreamData.title}
