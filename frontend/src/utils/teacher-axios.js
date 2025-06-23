@@ -61,3 +61,15 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export const updateTeacherDetails = async (data) => {
+  return api.put(`/update/details/${data._id}`, data);
+};
+
+export const getTeacherDetails = async () => {
+  return api.get("/get/teacher/details");
+};
+
+export const resendVerificationEmail = async (data) => {
+  return api.post("/resend-verification-email", data);
+};

@@ -13,7 +13,7 @@ const Batch = require("../models/batch.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const { sendVerificationEmail } = require("../utils/email.js");
+const { sendVerificationEmail } = require("../utils/admin.email.js");
 
 /**
  * Registers a new admin user in the system
@@ -266,6 +266,55 @@ const adminLogout = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Something went wrong",
+    });
+  }
+};
+/**
+ * Resend verification email to unverified teacher
+ * @async
+ * @function resendVerificationEmailTeacher
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - Admin's email address
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with email status
+ * @throws {Error} When email sending fails or teacher not found
+ */
+const resendVerificationEmailAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+    const admin = await Admin.findOne({ email: email });
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    if (admin.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+    const token = jwt.sign({ email: admin.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    await sendVerificationEmail(admin.email, token);
+    return res.status(200).json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (e) {
+    console.error("Error in resendVerificationEmailTeacher:", e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred",
     });
   }
 };
@@ -3253,4 +3302,5 @@ module.exports = {
   getFilteredStudents,
   getAttendanceStats,
   getFilteredAttendanceRecords,
+  resendVerificationEmailAdmin,
 };

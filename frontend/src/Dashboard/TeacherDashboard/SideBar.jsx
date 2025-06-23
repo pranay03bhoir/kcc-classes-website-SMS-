@@ -12,13 +12,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -69,7 +62,7 @@ const navItems = [
   },
   {
     label: "Settings",
-    href: "/admin/settings",
+    href: "/teacherDashboard/settings",
     icon: <FaCog />,
     description: "Configure your settings",
   },
@@ -81,15 +74,12 @@ export default function Sidebar({ teacher }) {
   const [isMobile, setIsMobile] = useState(false);
   const { logout } = useTeacherAuth();
 
-  // Handle window resize for mobile detection
   useEffect(() => {
     const checkMobile = () => {
       const isMobileView = window.innerWidth < 768;
       setIsMobile(isMobileView);
-      // Keep sidebar collapsed by default on all screen sizes
       setIsOpen(false);
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -118,163 +108,156 @@ export default function Sidebar({ teacher }) {
 
   const NavItem = ({ item }) => {
     const isActive = pathname === item.href;
-
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={item.href}
-              className={`flex items-center gap-5 px-4 py-3 rounded-lg transition-all duration-200 
-                ${
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-gray-800 text-gray-300 hover:text-white"
-                }
-                ${!isOpen && "justify-center px-2"}
-              `}
-              onClick={() => isMobile && setIsOpen(false)}
-            >
-              <span
-                className={`text-lg ${
-                  isActive ? "text-white" : "text-gray-400"
-                }`}
-              >
-                {item.icon}
-              </span>
-              <span className={`${isOpen ? "block" : "hidden"} font-medium`}>
-                {item.label}
-              </span>
-            </Link>
-          </TooltipTrigger>
-          {!isOpen && (
-            <TooltipContent side="right" className="bg-gray-800 text-white">
-              <p>{item.label}</p>
-              <p className="text-xs text-gray-400">{item.description}</p>
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
+      <Link
+        href={item.href}
+        aria-label={item.label}
+        className={`flex items-center gap-0 px-0 py-2 rounded-md transition-colors duration-150 text-base focus:outline-none
+          ${
+            isActive
+              ? "text-blue-600 font-semibold"
+              : "text-gray-700 hover:text-blue-500"
+          }
+          ${!isOpen && "justify-center"}
+        `}
+        onClick={() => isMobile && setIsOpen(false)}
+      >
+        <span className={`text-xl ${isActive ? "" : ""}`}>{item.icon}</span>
+        {isOpen && <span className="ml-3 text-sm">{item.label}</span>}
+      </Link>
     );
   };
 
   return (
     <>
-      {/* Mobile Menu Button - Only show on mobile when sidebar is collapsed */}
+      {/* Mobile Menu Button */}
       {isMobile && !isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-3 left-3 p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:hidden"
+          className="fixed top-4 left-4 p-2 bg-white hover:bg-gray-100 rounded-md border border-gray-200 z-50 md:hidden"
           aria-label="Open menu"
         >
-          <FaBars className="h-4 w-4 text-gray-600" />
-        </button>
-      )}
-
-      {/* Desktop Toggle Button - Show when collapsed */}
-      {!isMobile && !isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:block"
-          aria-label="Open sidebar"
-        >
-          <FaBars className="h-4 w-4 text-gray-600" />
-        </button>
-      )}
-
-      {/* Desktop Toggle Button - Show when expanded */}
-      {!isMobile && isOpen && (
-        <button
-          onClick={() => setIsOpen(false)}
-          className="fixed top-4 left-[248px] p-2 bg-white hover:bg-gray-50 rounded-md shadow-sm border border-gray-100 z-50 md:block"
-          aria-label="Close sidebar"
-        >
-          <FaTimes className="h-4 w-4 text-gray-600" />
+          <FaBars className="h-5 w-5 text-gray-700" />
         </button>
       )}
 
       {/* Overlay for mobile */}
       {isOpen && isMobile && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-20 z-40"
           onClick={() => setIsOpen(false)}
-          style={{ pointerEvents: "auto" }}
+          aria-label="Sidebar overlay"
         />
       )}
 
       <aside
-        className={`fixed h-screen ${
-          isOpen ? "w-64" : "w-16"
-        } bg-gray-900 text-white flex flex-col justify-between transition-all duration-300 ease-in-out z-40
-        ${isMobile ? (isOpen ? "left-0" : "-left-16") : "left-0"} top-0`}
-        style={{ pointerEvents: "auto" }}
+        className={`fixed h-screen top-0 left-0 flex flex-col justify-between transition-all duration-200 z-50
+          ${isOpen ? "w-52" : "w-14"}
+          bg-white border-r border-gray-200
+          ${
+            isMobile
+              ? isOpen
+                ? "translate-x-0"
+                : "-translate-x-20"
+              : "translate-x-0"
+          }
+        `}
+        aria-label="Sidebar navigation"
       >
-        <div className="px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1
-              className={`text-2xl font-bold transition-all duration-300 ${
-                isOpen ? "block" : "hidden"
-              }`}
-            >
-              Teacher Panel
-            </h1>
-            {isMobile && (
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 hover:bg-gray-800 rounded-md md:hidden"
-              >
-                <FaTimes className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <NavItem key={item.href} item={item} />
-            ))}
-          </nav>
+        {/* Simple Logo/App Name */}
+        <div className="flex items-center px-4 py-4 min-h-[56px]">
+          <span
+            className={`text-lg font-bold text-gray-900 tracking-tight transition-all duration-200 ${
+              isOpen ? "block" : "hidden"
+            }`}
+          >
+            KCC
+          </span>
+          <span
+            className={`text-lg font-bold text-gray-900 tracking-tight transition-all duration-200 ${
+              !isOpen ? "block" : "hidden"
+            }`}
+          >
+            K
+          </span>
         </div>
 
-        <div
-          className={`px-4 py-6 border-t border-gray-800 ${
-            isOpen ? "block" : "hidden"
-          }`}
-        >
-          <Card className="bg-gray-800 p-4 space-y-4">
-            <div className="flex items-center gap-3">
-              {teacher?.profileImage ? (
-                <img
-                  src={teacher.profileImage}
-                  alt="Teacher"
-                  className="w-12 h-12 rounded-full object-cover border-2 border-blue-500"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center border-2 border-blue-500">
-                  <span className="text-white font-medium text-lg">
-                    {teacher?.name
-                      ?.split(" ")
-                      .slice(0, 2)
-                      .map((word) => word[0])
-                      .join("")
-                      .toUpperCase() || "T"}
-                  </span>
-                </div>
-              )}
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                  {teacher?.name || "Teacher"}
-                </p>
-                <p className="text-xs text-gray-400 truncate max-w-[120px]">
-                  {teacher?.email || "teacher@example.com"}
-                </p>
-              </div>
-            </div>
+        {/* Nav Items */}
+        <nav className="flex-1 flex flex-col gap-1 px-2">
+          {navItems.map((item) => (
+            <NavItem key={item.href} item={item} />
+          ))}
+        </nav>
 
+        {/* Profile & Logout */}
+        <div className={`px-4 py-4 ${isOpen ? "block" : "hidden"}`}>
+          <div className="flex items-center gap-2 mb-2">
+            {teacher?.profileImage ? (
+              <img
+                src={teacher.profileImage}
+                alt="Teacher"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                <span className="text-gray-700 font-semibold text-base">
+                  {teacher?.name
+                    ?.split(" ")
+                    .slice(0, 2)
+                    .map((word) => word[0])
+                    .join("")
+                    .toUpperCase() || "T"}
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-900 font-medium truncate max-w-[90px]">
+                {teacher?.name || "Teacher"}
+              </span>
+              <span className="text-xs text-gray-400 truncate max-w-[90px]">
+                {teacher?.email || "teacher@example.com"}
+              </span>
+            </div>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center gap-2 px-2 py-1 h-8 text-xs font-normal rounded-md">
+                <FaSignOutAlt className="text-base" />
+                <span>Logout</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to logout? You will need to login again
+                  to access your account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  Logout
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {/* Collapsed Sidebar Logout Button */}
+        {!isOpen && (
+          <div className="px-2 py-4">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="w-full bg-red-500 hover:bg-red-600 flex items-center justify-center gap-2">
-                  <FaSignOutAlt />
-                  <span>Logout</span>
-                </Button>
+                <button
+                  className="w-full p-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                  aria-label="Logout"
+                >
+                  <FaSignOutAlt className="text-lg" />
+                </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -295,49 +278,6 @@ export default function Sidebar({ teacher }) {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </Card>
-        </div>
-
-        {/* Collapsed Sidebar Logout Button */}
-        {!isOpen && (
-          <div className="px-2 py-4 border-t border-gray-800">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        className="w-full p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200 flex items-center justify-center"
-                        aria-label="Logout"
-                      >
-                        <FaSignOutAlt className="text-lg" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to logout? You will need to
-                          login again to access your account.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleLogout}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          Logout
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="bg-gray-800 text-white">
-                  <p>Logout</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         )}
 
@@ -345,10 +285,11 @@ export default function Sidebar({ teacher }) {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`fixed top-4 ${
-            isOpen ? "left-[232px]" : "left-4"
-          } p-2 bg-gray-800 hover:bg-gray-700 rounded-full shadow-lg transition-all duration-300 z-50`}
+            isOpen ? "left-48" : "left-4"
+          } p-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-md transition-all duration-200 z-50 focus:outline-none`}
+          aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
         >
-          <span className="text-white">
+          <span className="text-gray-700 text-lg">
             {isOpen ? <FaTimes /> : <FaBars />}
           </span>
         </button>

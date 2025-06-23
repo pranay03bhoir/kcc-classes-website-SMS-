@@ -14,10 +14,21 @@ const teacherSchema = joi.object({
   name: joi.string().required(),
   email: joi.string().email().required(),
   password: joi.string().min(8).required(),
+  oldPassword: joi.string().min(8),
   contact: joi.string().min(10).max(13).required(),
   alternateContact: joi.string().min(10).max(13).required(),
   address: joi.string().required(),
-  joiningYear: joi.number().required(),
+});
+// Joi schema for updating teacher details (all fields optional)
+const teacherUpdateSchema = joi.object({
+  name: joi.string(),
+  email: joi.string().email(),
+  contact: joi.string().min(10).max(13),
+  alternateContact: joi.string().min(10).max(13),
+  address: joi.string(),
+  profileImage: joi.string(),
+  oldPassword: joi.string().min(8),
+  password: joi.string().min(8),
 });
 /**
  * The provided code snippet includes various asynchronous functions for handling teacher registration,
@@ -183,7 +194,7 @@ const teacherLogin = async (req, res) => {
         res.cookie(
           "refreshToken",
           refreshToken,
-          getCookieOptions(cookieExpiration),
+          getCookieOptions(cookieExpiration)
         );
         return res.status(200).json({
           success: true,
@@ -248,7 +259,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
       const newAccessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn: "1h" }
       );
       const newRefreshToken = jwt.sign(
         {
@@ -259,7 +270,7 @@ const generateNewAccessRefreshToken = async (req, res) => {
         process.env.JWT_REFRESH_SECRET,
         {
           expiresIn: "30d",
-        },
+        }
       );
       teacher.refreshToken = newRefreshToken;
       await teacher.save();
@@ -276,19 +287,19 @@ const generateNewAccessRefreshToken = async (req, res) => {
       res.cookie(
         "accessToken",
         newAccessToken,
-        getCookieOptions(60 * 60 * 1000),
+        getCookieOptions(60 * 60 * 1000)
       ); // 1 hour
       res.cookie(
         "refreshToken",
         newRefreshToken,
-        getCookieOptions(30 * 24 * 60 * 60 * 1000),
+        getCookieOptions(30 * 24 * 60 * 60 * 1000)
       ); // 30 days
       return res.status(200).json({
         success: true,
         message: "New access token generated",
         newAccessToken,
       });
-    },
+    }
   );
 };
 /**
@@ -357,7 +368,7 @@ const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
       .select(
-        "name email contact parentsContact address subjects attendance batches studentId",
+        "name email contact parentsContact address subjects attendance batches studentId"
       )
       .populate("subjects", "name")
       .populate("attendance", "subject status date")
@@ -468,7 +479,7 @@ const updateStudentDetails = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
 
     return res.status(200).json({
@@ -550,7 +561,7 @@ const addStudentAttendance = async (req, res) => {
       {
         new: true, // Return the updated document
         // Don't use $set as it would replace the entire array
-      },
+      }
     ).populate({
       path: "attendance",
       select: "subject status date",
@@ -776,7 +787,7 @@ const addStudentScores = async (req, res) => {
         {
           $addToSet: { scores: studentScore },
         },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       )
         .select("name email contact parentsContact address subjects scores")
         .populate("subjects", "name");
@@ -841,7 +852,7 @@ const updateStudentScores = async (req, res) => {
         {
           score: score,
         },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       )
         .select("studentId subject examType score date")
         .populate("subject", "name")
@@ -931,7 +942,9 @@ const getTeacherDetails = async (req, res) => {
     // Fetch teacher details along with populated batches
     // and their respective subjects and students
     const teacher = await Teacher.findById(teacherId)
-      .select("name email contact alternateContact address joiningYear")
+      .select(
+        "name email contact alternateContact address joiningYear createdAt updatedAt isVerified"
+      )
       .populate({
         path: "batches",
         select: "batchId name timing subjectId studentIds",
@@ -966,6 +979,165 @@ const getTeacherDetails = async (req, res) => {
   }
 };
 
+/**
+ * Update teacher details by ID. Only provided fields will be updated.
+ * @param req - Express request object (expects req.params.id and body fields)
+ * @param res - Express response object
+ */
+const updateTeacherDetails = async (req, res) => {
+  try {
+    const teacherId = req.userInfo.id; // Assuming userInfo is set by the auth middleware
+    const { error } = teacherUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    // Fetch the current teacher record
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    // Prepare the fields to update
+    const updateFields = {};
+    const allowedFields = [
+      "name",
+      "email",
+      "contact",
+      "alternateContact",
+      "address",
+      "profileImage",
+      "password", // allow password update
+    ];
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined && field !== "password")
+        updateFields[field] = req.body[field];
+    });
+    // Handle password update
+    if (req.body.password !== undefined) {
+      const newPassword = req.body.password;
+      const oldPassword = req.body.oldPassword;
+      if (!newPassword.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Password cannot be empty",
+        });
+      }
+      // Require oldPassword for password update
+      if (!oldPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password is required to update password",
+        });
+      }
+      // Check if the provided old password matches the current password
+      const isOldPasswordCorrect = await bcrypt.compare(
+        oldPassword,
+        teacher.password
+      );
+      if (!isOldPasswordCorrect) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+      // Check if the provided password is plain text (not already hashed)
+      if (newPassword.length < 60) {
+        const isSamePassword = await bcrypt.compare(
+          newPassword,
+          teacher.password
+        );
+        if (isSamePassword) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Your old password and new-password is same. Please enter a different password.",
+          });
+        }
+        const genSalt = await bcrypt.genSalt(10);
+        updateFields.password = await bcrypt.hash(newPassword, genSalt);
+      } else {
+        // If the password is already a hash (length > 60), do not hash again
+        updateFields.password = newPassword;
+      }
+    }
+    // Update the teacher record with new data
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
+      teacherId,
+      updateFields,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Teacher details updated successfully.",
+      data: updatedTeacher,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong.",
+    });
+  }
+};
+
+/**
+ * Resend verification email to unverified teacher
+ * @async
+ * @function resendVerificationEmailTeacher
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - Teacher's email address
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} JSON response with email status
+ * @throws {Error} When email sending fails or teacher not found
+ */
+const resendVerificationEmailTeacher = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+    const teacher = await Teacher.findOne({ email: email });
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    if (teacher.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+    const token = jwt.sign({ email: teacher.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    await sendVerificationEmail(teacher.email, token);
+    return res.status(200).json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (e) {
+    console.error("Error in resendVerificationEmailTeacher:", e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred",
+    });
+  }
+};
+
 module.exports = {
   teacherRegister,
   teacherLogin,
@@ -983,4 +1155,6 @@ module.exports = {
   updateStudentScores,
   getAllBatches,
   getTeacherDetails,
+  updateTeacherDetails,
+  resendVerificationEmailTeacher,
 };

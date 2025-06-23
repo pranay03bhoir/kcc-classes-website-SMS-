@@ -50,6 +50,7 @@ const {
   getFilteredStudents,
   getAttendanceStats,
   getFilteredAttendanceRecords,
+  resendVerificationEmailAdmin,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -180,4 +181,5 @@ router.get(
   adminAuth,
   getFilteredAttendanceRecords
 );
+router.post("/resend-verification-email", resendVerificationEmailAdmin);
 module.exports = router;

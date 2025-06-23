@@ -1,22 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verify Your Email</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }
-        .container { background: #ffffff; padding: 20px; max-width: 500px; margin: auto; border-radius: 10px; }
-        .btn { background: #007bff; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px; }
-        .footer { margin-top: 20px; color: #777; font-size: 12px; }
+      :root {
+        --accent: #6366f1;
+        --accent2: #0ea5e9;
+        --text-main: #23272f;
+        --text-secondary: #6b7280;
+        --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
+        --card-bg: #fff;
+        --card-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+      }
+      body {
+        font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+        background: var(--bg-gradient);
+        text-align: center;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        background: var(--card-bg);
+        padding: 36px 22px 26px 22px;
+        max-width: 370px;
+        width: 100%;
+        margin: 0 auto;
+        border-radius: 14px;
+        box-shadow: var(--card-shadow);
+        border: 1.5px solid #e0e7ff;
+      }
+      .logo {
+        margin: 0 auto 18px auto;
+      }
+      .logo img {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto;
+        background: #f0f9ff;
+        box-shadow: 0 1px 6px rgba(99, 102, 241, 0.1);
+      }
+      h2 {
+        color: var(--accent);
+        font-size: 1.22rem;
+        margin: 0 0 18px 0;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+      p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin: 12px 0 0 0;
+        line-height: 1.6;
+        font-weight: 400;
+      }
+      .btn {
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        color: #fff;
+        padding: 13px 0;
+        text-decoration: none;
+        display: block;
+        border-radius: 7px;
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 28px auto 14px auto;
+        width: 100%;
+        border: none;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+        letter-spacing: 0.1px;
+        /* No hover effect */
+        cursor: pointer;
+      }
+      .fallback-link {
+        font-size: 12px;
+        color: var(--accent2);
+        word-break: break-all;
+        background: #f3f4f6;
+        border-radius: 4px;
+        padding: 7px 10px;
+        margin: 10px 0 0 0;
+        display: inline-block;
+        max-width: 100%;
+      }
+      .security {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 14px;
+        font-weight: 400;
+      }
+      .footer {
+        margin-top: 28px;
+        color: #7b8bb7;
+        font-size: 11px;
+        padding-top: 12px;
+      }
+      .footer a {
+        color: var(--accent2);
+        text-decoration: underline;
+      }
+      @media (max-width: 480px) {
+        .container {
+          padding: 16px 2vw 14px 2vw;
+          max-width: 98vw;
+        }
+        h2 {
+          font-size: 1rem;
+        }
+        .btn {
+          font-size: 0.97rem;
+        }
+      }
     </style>
-</head>
-<body>
-<div class="container">
-    <h2>Verify Your Email</h2>
-    <p>Click the button below to verify your email:</p>
-    <a href="{{verification_link}}" class="btn">Verify Email</a>
-    <p>If you did not request this, please ignore this email.</p>
-    <p class="footer">&copy; 2025 KccClasses. All rights reserved.</p>
-</div>
-</body>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img src="https://kccclasses.com/logo.png" alt="KCC Classes Logo" />
+      </div>
+      <h2>Verify Your Email</h2>
+      <p><b>Hello, {{user_name}}</b></p>
+      <p>
+        Please verify your email address to complete your registration with KCC
+        Classes.
+      </p>
+      <a href="{{verification_link}}" class="btn">Verify Email</a>
+      <p style="margin-top: 18px; font-size: 0.97rem; color: #888">
+        If the button doesn't work, use this link:
+      </p>
+      <div class="fallback-link">{{verification_link}}</div>
+      <p class="security">Do not share this link with anyone.</p>
+      <p class="footer">
+        &copy; 2025 KCC Classes. All rights reserved.<br />
+        <a href="mailto:support@kccclasses.com">Contact Support</a>
+      </p>
+    </div>
+  </body>
 </html>

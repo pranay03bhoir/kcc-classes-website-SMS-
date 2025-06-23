@@ -7,7 +7,7 @@ const joi = require("joi");
 const Student = require("../models/student.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { sendVerificationEmail } = require("../utils/email");
+const { sendVerificationEmail } = require("../utils/student.email.js");
 
 /**
  * Joi validation schema for student registration

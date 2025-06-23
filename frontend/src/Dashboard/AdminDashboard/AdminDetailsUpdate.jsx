@@ -55,7 +55,7 @@ import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useAuth } from "@/hooks/useAuth";
-import api from "@/utils/axios";
+import api, { resendVerificationEmail } from "@/utils/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -78,7 +78,6 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as z from "zod";
-
 // Validation schema for admin details update form
 const updateAdminSchema = z
   .object({
@@ -355,6 +354,38 @@ const AdminDetailsUpdate = () => {
       </div>
     );
   }
+  const resendVerficationEmail = async () => {
+    try {
+      // Assuming you have an API endpoint to resend the verification email
+      const response = await resendVerificationEmail({
+        email: currentAdmin.email,
+      });
+      if (!response.data.success) {
+        return setError(
+          response.data.message || "Failed to resend verification email."
+        );
+      }
+      // If successful, update the state to show success message
+      if (response.data.success) {
+        setSuccess(
+          response.data.message || "Verification email sent successfully."
+        );
+        setError("");
+        console.log("Verification email sent successfully.");
+        return;
+      }
+      // If the email is already verified, show a success message
+      if (form.isVerified) {
+        setSuccess("Your email is already verified.");
+        setError("");
+        console.log("Your email is already verified.");
+        return;
+      }
+    } catch (error) {
+      console.log("Error resending verification email:", error);
+      setError("Failed to resend verification email.");
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -443,22 +474,56 @@ const AdminDetailsUpdate = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <FaShieldAlt className="text-2xl" />
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold">✓</div>
-                  <div className="text-xs opacity-80">Secure</div>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Security Status</h3>
-              <p className="text-sm opacity-90">
-                Your account is protected with strong security measures
-              </p>
-              <div className="mt-4 flex items-center text-xs opacity-80">
-                <FaCheckCircle className="mr-1" />
-                Email verified and account active
+              <div className="relative z-10">
+                {currentAdmin.isVerified ? (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                        <FaLock className="text-2xl" />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold">✓</div>
+                        <div className="text-xs opacity-80">Secure</div>
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      Security Status
+                    </h3>
+                    <p className="text-sm opacity-90">
+                      Your account is protected with strong security measures
+                    </p>
+                    <div className="mt-4 flex items-center text-xs opacity-80">
+                      <FaEnvelope className="mr-1" />
+                      Email verified and account active
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg p-4 text-center animate-pulse">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaEnvelope className="w-5 h-5 text-yellow-500" />
+                      <span className="font-semibold">
+                        Account Not Verified
+                      </span>
+                    </div>
+                    <div className="text-xs mb-3">
+                      Your email address has not been verified yet. Please check
+                      your inbox (and spam folder) for a verification link.
+                      <br />
+                      If you did not receive the email, you can resend the
+                      verification link below.
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-yellow-400 text-yellow-700 hover:bg-yellow-200"
+                      onClick={() => {
+                        resendVerficationEmail();
+                      }}
+                    >
+                      Resend Verification Email
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

@@ -61,3 +61,7 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export const resendVerificationEmail = async (data) => {
+  return api.post("/resend-verification-email", data);
+};
