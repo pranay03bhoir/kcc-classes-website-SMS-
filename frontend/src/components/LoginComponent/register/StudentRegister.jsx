@@ -98,7 +98,7 @@ export default function StudentRegister() {
     const toastId = toast.loading("Registering...");
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/student/register",
+        `${process.env.NEXT_PUBLIC_AXIOS_STUDENT_URL}/register`,
         formData,
         {
           headers: { "Content-Type": "application/json" },

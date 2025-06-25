@@ -101,7 +101,7 @@ const TeacherRegister = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/teacher/register",
+        `${process.env.NEXT_PUBLIC_AXIOS_TEACHER_URL}/register`,
         submitData,
         {
           headers: { "Content-Type": "application/json" },

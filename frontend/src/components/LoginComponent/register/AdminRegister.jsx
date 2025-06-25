@@ -82,7 +82,7 @@ export default function AdminRegister() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/students/register",
+        `${process.env.NEXT_PUBLIC_AXIOS_ADMIN_URL}/register`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
