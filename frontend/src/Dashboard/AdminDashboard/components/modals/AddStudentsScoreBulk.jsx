@@ -119,18 +119,17 @@ export default function AddStudentsScoreBulk({
             className="fixed inset-0 bg-gradient-to-br from-green-100/60 to-blue-200/60 backdrop-blur-sm"
             aria-hidden="true"
           />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel
-              as={motion.div}
+          <div className="fixed inset-0 flex items-center justify-center p-2 sm:p-4">
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl p-0 overflow-hidden"
+              className="w-full max-w-3xl md:max-w-2xl sm:max-w-lg xs:max-w-xs rounded-2xl bg-white shadow-2xl p-0 overflow-hidden mx-2 sm:mx-0"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-green-500 to-blue-500 text-white">
-                <Dialog.Title className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-r from-green-500 to-blue-500 text-white">
+                <Dialog.Title className="text-lg sm:text-2xl font-bold tracking-tight flex items-center gap-2">
                   <span className="inline-block bg-white/20 rounded-full p-2">
                     <svg
                       width="24"
@@ -154,13 +153,13 @@ export default function AddStudentsScoreBulk({
                   onClick={onClose}
                   className="hover:bg-white/20 rounded-full p-2 transition-colors"
                 >
-                  <IoClose className="w-7 h-7" />
+                  <IoClose className="w-6 h-6 sm:w-7 sm:h-7" />
                 </button>
               </div>
 
-              <div className="px-8 py-6">
+              <div className="px-4 sm:px-8 py-4 sm:py-6">
                 {error && (
-                  <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-center gap-2 shadow-sm animate-pulse">
+                  <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-center gap-2 shadow-sm animate-pulse text-sm sm:text-base">
                     <svg
                       className="w-5 h-5 text-red-500"
                       fill="none"
@@ -179,15 +178,15 @@ export default function AddStudentsScoreBulk({
                 )}
 
                 {/* Form */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                   <div>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 text-gray-700">
                       Subject
                     </label>
                     <select
                       value={subjectId}
                       onChange={(e) => setSubjectId(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100"
+                      className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-base"
                     >
                       <option value="">Select Subject</option>
                       {subjects.map((subject) => (
@@ -198,13 +197,13 @@ export default function AddStudentsScoreBulk({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 text-gray-700">
                       Exam Type
                     </label>
                     <select
                       value={examType}
                       onChange={(e) => setExamType(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100"
+                      className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-base"
                     >
                       {examTypes.map((type) => (
                         <option key={type} value={type}>
@@ -214,23 +213,23 @@ export default function AddStudentsScoreBulk({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 text-gray-700">
                       Date
                     </label>
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100"
+                      className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition outline-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-base"
                     />
                   </div>
                 </div>
 
                 {/* Student Scores */}
-                <div className="bg-gradient-to-br from-blue-50 to-green-50 p-6 rounded-xl shadow-inner">
-                  <h3 className="font-semibold mb-5 text-lg text-blue-700 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-blue-50 to-green-50 p-3 sm:p-6 rounded-xl shadow-inner">
+                  <h3 className="font-semibold mb-3 sm:mb-5 text-base sm:text-lg text-blue-700 flex items-center gap-2">
                     <svg
-                      className="w-6 h-6 text-blue-400"
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -250,11 +249,11 @@ export default function AddStudentsScoreBulk({
                       "Selected Subject"}
                   </h3>
                   {students.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">
+                    <p className="text-gray-500 text-center py-4 text-sm">
                       No students available
                     </p>
                   ) : (
-                    <div className="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-2 sm:space-y-3 max-h-48 sm:max-h-72 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                       {students.map((student) => {
                         // Avatar/Initials
                         const initials = student.name
@@ -266,14 +265,14 @@ export default function AddStudentsScoreBulk({
                         return (
                           <div
                             key={student._id}
-                            className="flex items-center justify-between bg-white px-5 py-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition mb-1"
+                            className="flex items-center justify-between bg-white px-3 sm:px-5 py-2 sm:py-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition mb-1"
                           >
-                            <div className="flex items-center gap-4">
-                              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-green-400 text-white font-bold text-lg shadow">
+                            <div className="flex items-center gap-2 sm:gap-4">
+                              <span className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-400 to-green-400 text-white font-bold text-base sm:text-lg shadow">
                                 {initials}
                               </span>
                               <div>
-                                <p className="font-medium text-gray-800">
+                                <p className="font-medium text-gray-800 text-xs sm:text-base">
                                   {student.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
@@ -281,7 +280,7 @@ export default function AddStudentsScoreBulk({
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                               <input
                                 type="number"
                                 placeholder="Score (0-100)"
@@ -291,9 +290,11 @@ export default function AddStudentsScoreBulk({
                                 onChange={(e) =>
                                   handleScoreChange(student._id, e.target.value)
                                 }
-                                className="w-24 border border-gray-300 rounded-lg px-2 py-1 text-right focus:ring-2 focus:ring-green-400 focus:border-green-400 transition outline-none bg-gray-50 hover:bg-gray-100"
+                                className="w-16 sm:w-24 border border-gray-300 rounded-lg px-2 py-1 text-right focus:ring-2 focus:ring-green-400 focus:border-green-400 transition outline-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-base"
                               />
-                              <span className="text-gray-400">/ 100</span>
+                              <span className="text-gray-400 text-xs sm:text-base">
+                                / 100
+                              </span>
                             </div>
                           </div>
                         );
@@ -303,18 +304,18 @@ export default function AddStudentsScoreBulk({
                 </div>
 
                 {/* Buttons */}
-                <div className="flex justify-end gap-3 mt-8">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-6 sm:mt-8">
                   <button
                     onClick={onClose}
                     disabled={loading}
-                    className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition disabled:opacity-50 shadow-sm"
+                    className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition disabled:opacity-50 shadow-sm text-xs sm:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="px-5 py-2 rounded-lg bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold shadow-md hover:from-green-600 hover:to-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 sm:px-5 py-2 rounded-lg bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold shadow-md hover:from-green-600 hover:to-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-base"
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">
@@ -327,7 +328,7 @@ export default function AddStudentsScoreBulk({
                   </button>
                 </div>
               </div>
-            </Dialog.Panel>
+            </motion.div>
           </div>
         </Dialog>
       )}

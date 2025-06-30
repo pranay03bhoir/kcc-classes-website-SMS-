@@ -210,29 +210,31 @@ const StudentScoreManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+      {/* Sidebar for desktop and mobile handled by Sidebar component */}
       <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar teacher={teacher} />
       </div>
       {/* Main Content */}
-      <div className="flex-1 md:ml-16 p-4 md:p-8">
-        <div className="flex flex-wrap justify-between items-center mb-8">
+      <div className="flex-1 md:ml-16 p-2 sm:p-4 md:p-8">
+        <div className="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Student Grades</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+              Student Grades
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Manage and monitor student performance
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               onClick={() => setShowForm(true)}
             >
               + Add Score
             </button>
             <button
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               onClick={() => setShowBulkModal(true)}
             >
               Bulk Add
@@ -241,12 +243,12 @@ const StudentScoreManagement = () => {
         </div>
         {/* Success/Error Banners */}
         {success && (
-          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm sm:text-base">
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm sm:text-base">
             {error}
           </div>
         )}
@@ -297,11 +299,12 @@ const StudentScoreManagement = () => {
         {/* Top 5 Scorers Section (moved above table, enhanced UI) */}
         {topScorers.length > 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-yellow-50 via-white to-yellow-100 border border-yellow-200 rounded-2xl p-7 shadow-lg">
-              <h2 className="text-2xl font-extrabold text-yellow-800 mb-6 flex items-center gap-3">
-                <FaTrophy className="text-yellow-500 text-3xl" /> Top 5 Scorers
+            <div className="bg-gradient-to-r from-yellow-50 via-white to-yellow-100 border border-yellow-200 rounded-2xl p-4 sm:p-7 shadow-lg">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-yellow-800 mb-4 sm:mb-6 flex items-center gap-3">
+                <FaTrophy className="text-yellow-500 text-2xl sm:text-3xl" />{" "}
+                Top 5 Scorers
               </h2>
-              <div className="flex flex-wrap gap-6 justify-start">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 justify-start">
                 {topScorers.map((scorer, idx) => {
                   let icon = null;
                   let bg = "bg-gray-100";
@@ -374,11 +377,11 @@ const StudentScoreManagement = () => {
           </div>
         )}
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-md p-8 mb-10 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-md p-4 sm:p-8 mb-8 sm:mb-10 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2">
             <FaFilter className="text-blue-500" /> Filter Results
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             <div className="relative">
               <label className=" text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                 <FaBook className="text-blue-400" /> Subject
@@ -432,7 +435,7 @@ const StudentScoreManagement = () => {
           </div>
         </div>
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 mb-8 sm:mb-10">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-7 shadow-md border border-blue-100 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
@@ -499,7 +502,7 @@ const StudentScoreManagement = () => {
         </div>
         {/* Scores Table */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full text-sm sm:text-base">
             <thead className="sticky top-0 z-10 bg-gray-50">
               <tr className="text-left">
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -581,7 +584,7 @@ const StudentScoreManagement = () => {
         </div>
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-end gap-2 mt-8">
+          <div className="flex flex-wrap justify-end gap-2 mt-6 sm:mt-8">
             <button
               className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 shadow-sm border border-gray-200 ${
                 currentPage === 1

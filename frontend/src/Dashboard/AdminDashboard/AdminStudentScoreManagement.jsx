@@ -444,25 +444,27 @@ const AdminStudentScoreManagement = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <ToastContainer position="top-center" />
 
       {/* Sidebar - Fixed on desktop, overlay on mobile */}
-      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
+      <div className="fixed inset-y-0 left-0 z-40 w-16 md:w-64 md:relative md:z-auto">
         <Sidebar />
       </div>
 
-      {/* Main content area - Properly positioned for mobile and desktop */}
-      <div className="flex-1 w-full md:ml-16 p-8">
-        <div className="flex flex-wrap justify-between items-center mb-8">
+      {/* Main content area - Responsive padding and margin */}
+      <div className="flex-1 w-full md:ml-16 p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Student Grades</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+              Student Grades
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Manage and monitor student performance
             </p>
           </div>
           <button
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             onClick={() => {
               setError(null);
               setSuccessMessage(null);
@@ -475,21 +477,21 @@ const AdminStudentScoreManagement = () => {
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm sm:text-base">
             {successMessage}
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm sm:text-base">
             {error}
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8 border border-gray-100">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
             Filter Results
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -566,7 +568,7 @@ const AdminStudentScoreManagement = () => {
         ) : (
           <>
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -679,17 +681,17 @@ const AdminStudentScoreManagement = () => {
 
             {/* Leaderboard Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-800">
+              <div className="p-4 sm:p-6 border-b border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                     Top Performers
                   </h2>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     Based on average scores
                   </span>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="space-y-4">
                   {getTopPerformers.map((student, index) => (
                     <div
@@ -749,14 +751,16 @@ const AdminStudentScoreManagement = () => {
             </div>
 
             {/* Grade Distribution Chart */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                   Grade Distribution
                 </h2>
-                <div className="text-sm text-gray-500">Last 30 days</div>
+                <div className="text-xs sm:text-sm text-gray-500">
+                  Last 30 days
+                </div>
               </div>
-              <div className="h-64">
+              <div className="h-64 w-full">
                 <Line
                   data={gradeDistributionData}
                   options={{
@@ -804,21 +808,21 @@ const AdminStudentScoreManagement = () => {
             </div>
 
             {/* Recent Grades Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-800">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto mb-8">
+              <div className="p-4 sm:p-6 border-b border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                     Recent Grades
                   </h2>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                     <button
-                      className="border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 flex items-center gap-2"
+                      className="w-full sm:w-auto border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 flex items-center gap-2"
                       onClick={handleExport}
                     >
                       <FaDownload className="text-gray-500" /> Export
                     </button>
                     <button
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      className="w-full sm:w-auto bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                       onClick={() => {
                         setBulkAddModalOpen(true);
                       }}
@@ -830,7 +834,7 @@ const AdminStudentScoreManagement = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[700px]">
                   <thead>
                     <tr className="bg-gray-50 text-left">
                       <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -945,8 +949,8 @@ const AdminStudentScoreManagement = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                  <div className="flex justify-end gap-2">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <div className="flex flex-wrap justify-end gap-2">
                     <button
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                         currentPage === 1
