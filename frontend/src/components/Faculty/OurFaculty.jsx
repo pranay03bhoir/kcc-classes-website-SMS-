@@ -78,136 +78,105 @@ const facultyMembers = [
 
 const OurFaculty = () => {
   return (
-    <div className="w-full max-w-7xl mx-auto py-16 px-6 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-      </div>
-
+    <div className="w-full max-w-7xl mx-auto py-16 px-4 bg-white">
       {/* Heading Section */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        viewport={{ once: true, amount: 0.2 }}
-        className="flex items-center justify-center w-full relative z-10"
+        transition={{ duration: 0.7 }}
+        className="flex items-center justify-center w-full mb-10"
       >
         <CustomHeading
           title="Meet Our Faculty"
-          padding="py-16"
-          borderColour="border-white rounded-full"
+          padding="py-8"
+          borderColour="border-red-600 rounded-full"
         />
       </motion.div>
 
       {/* Faculty Cards Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true, amount: 0.2 }}
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10 md:pt-40 pt-16 relative z-10"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:pt-12">
         {facultyMembers.map((faculty, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: index * 0.2 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="group bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col items-center p-6 relative"
+            className="bg-white border border-gray-200 rounded-lg flex flex-col items-center p-6 min-h-[370px]"
           >
-            {/* Profile Image with Overlay */}
-            <div className="relative w-36 h-36 mb-4">
-              <img
-                src={faculty.image}
-                alt={`${faculty.name} - ${faculty.subject} teacher`}
-                className="w-full h-full object-cover rounded-full border-4 border-indigo-500 shadow-md transition-transform duration-300 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 rounded-full bg-indigo-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-            </div>
+            {/* Profile Image */}
+            <img
+              src={faculty.image}
+              alt={`${faculty.name} - ${faculty.subject} teacher`}
+              className="w-24 h-24 object-cover rounded-full mb-4 border border-gray-200"
+            />
 
             {/* Details */}
-            <div className="text-center">
-              <FaChalkboardTeacher className="text-4xl text-indigo-600 mx-auto mb-3 transition-transform duration-300 group-hover:scale-110" />
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            <div className="text-center w-full">
+              <FaChalkboardTeacher className="text-xl text-red-600 mx-auto mb-2" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-1">
                 {faculty.name}
               </h3>
-              <p className="text-gray-600 text-sm mb-3">
+              <p className="text-gray-500 text-xs mb-2">
                 {faculty.description}
               </p>
 
               {/* Achievements */}
-              <div className="mt-4 space-y-2 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-40 transition-all duration-300 overflow-hidden">
-                <h4 className="text-sm font-semibold text-indigo-600">
-                  Key Achievements
-                </h4>
-                <ul className="text-xs text-gray-600 space-y-1">
-                  {faculty.achievements.map((achievement, idx) => (
-                    <li key={idx} className="flex items-center">
-                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full mr-2" />
-                      {achievement}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="text-xs text-gray-400 mb-2 space-y-1">
+                {faculty.achievements.map((achievement, idx) => (
+                  <li key={idx} className="flex items-center justify-center">
+                    <span className="w-1 h-1 bg-red-600 rounded-full mr-2" />
+                    {achievement}
+                  </li>
+                ))}
+              </ul>
 
               {/* Social Links */}
-              <div className="flex justify-center space-x-4 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="flex justify-center space-x-3 mt-2">
                 <a
                   href={faculty.social.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-indigo-600 transition-colors"
+                  className="text-gray-400 hover:text-red-600"
                 >
-                  <FaLinkedin className="w-5 h-5" />
+                  <FaLinkedin className="w-4 h-4" />
                 </a>
                 <a
                   href={faculty.social.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-indigo-600 transition-colors"
+                  className="text-gray-400 hover:text-red-600"
                 >
-                  <FaTwitter className="w-5 h-5" />
+                  <FaTwitter className="w-4 h-4" />
                 </a>
                 <a
                   href={`mailto:${faculty.social.email}`}
-                  className="text-gray-600 hover:text-indigo-600 transition-colors"
+                  className="text-gray-400 hover:text-red-600"
                 >
-                  <FaEnvelope className="w-5 h-5" />
+                  <FaEnvelope className="w-4 h-4" />
                 </a>
               </div>
             </div>
 
             {/* Subject Tag */}
-            <div className="mt-4 px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium shadow-sm transition-colors duration-300 group-hover:bg-indigo-200">
+            <div className="mt-4 px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full text-xs font-medium">
               {faculty.subject}
             </div>
           </motion.div>
         ))}
-      </motion.div>
+      </div>
 
       {/* CTA Button */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 2 }}
-        viewport={{ once: true, amount: 0.2 }}
-        className="pt-16 w-full flex justify-center items-center text-center relative z-10"
-      >
+      <div className="pt-12 w-full flex justify-center items-center text-center">
         <Button
-          className="rounded-full h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          variant="outline"
+          className="rounded-full h-11 px-6 border-red-600 text-red-700 font-medium text-base shadow-none hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
           onClick={() => (window.location.href = "/faculty")}
         >
           Meet our full faculty
           <span className="ml-2">→</span>
         </Button>
-      </motion.div>
+      </div>
     </div>
   );
 };

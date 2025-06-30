@@ -194,7 +194,7 @@ export default function StudentTable({ students, teacher }) {
       </div>
 
       {/* Main content area - Properly positioned for mobile and desktop */}
-      <div className="flex-1 w-full md:ml-16 p-4 md:p-6">
+      <div className="flex-1 md:ml-16 p-4 md:p-6">
         <h1 className="text-xl md:text-2xl font-bold mb-1">Students</h1>
         <p className="text-sm text-gray-600 mb-4">
           Manage your students and view their details.
@@ -227,12 +227,12 @@ export default function StudentTable({ students, teacher }) {
                 </option>
               ))}
             </select>
-            <button
+            {/* <button
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors w-full sm:w-auto"
               aria-label="Add new student"
             >
               + Add Student
-            </button>
+            </button> */}
           </div>
         </div>
 

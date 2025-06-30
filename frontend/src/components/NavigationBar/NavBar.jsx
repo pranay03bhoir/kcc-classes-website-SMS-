@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoCall } from "react-icons/io5";
 
 const Navbar = () => {
@@ -21,6 +21,8 @@ const Navbar = () => {
     nav: {},
   });
   const pathname = usePathname();
+  const menuRef = useRef(null);
+  const overlayRef = useRef(null);
 
   // Don't render navbar on dashboard pages
   const isDashboardPage =
@@ -50,6 +52,23 @@ const Navbar = () => {
     };
     checkLoginStatus();
   }, []);
+
+  // Prevent background scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   const navItems = ["Home", "About Us", "Courses", "Faculty", "Contact"];
 
@@ -97,7 +116,7 @@ const Navbar = () => {
               <div className="absolute inset-0 rounded-full bg-red-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
             </div>
             <div className="flex flex-col">
-              <span className="md:text-2xl text-xl text-red-500 font-bold group-hover:text-red-600 transition-colors">
+              <span className="md:text-2xl text-md text-red-500 font-bold group-hover:text-red-600 transition-colors">
                 KCC-CLASSES
               </span>
               <span className="text-xs text-gray-500 hidden md:block">
@@ -296,25 +315,76 @@ const Navbar = () => {
           <button
             className="md:hidden p-2 text-gray-700 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden bg-white border-t shadow-lg"
+            key="overlay"
+            ref={overlayRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black bg-opacity-30"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Menu (Off-canvas) */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="mobile-menu"
+            ref={menuRef}
+            id="mobile-menu"
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-0 right-0 h-full w-4/5 max-w-xs bg-white z-50 shadow-lg border-l overflow-y-auto"
+            style={{ touchAction: "manipulation" }}
+            tabIndex={-1}
+            aria-modal="true"
+            role="dialog"
           >
-            <div className="container mx-auto px-4 py-4">
-              <div className="grid gap-4">
+            <div className="px-4 py-4 h-full flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                <Link
+                  href="/"
+                  className="flex items-center space-x-3 group"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="relative w-10 h-10">
+                    <img
+                      src={`KCC-icon.jpeg`}
+                      alt="KCC Classes Logo"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="text-lg text-red-500 font-bold">
+                    KCC-CLASSES
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close menu"
+                  className="p-2 rounded-lg hover:bg-red-50"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="flex-1 grid gap-4">
                 {navItems.map((item) => {
                   const path = `/${item.toLowerCase().replace(" ", "")}`;
                   return (
@@ -325,11 +395,12 @@ const Navbar = () => {
                         handleLinkClick("nav", null, item);
                         setIsOpen(false);
                       }}
-                      className={`flex items-center px-4 py-3 text-gray-700 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg ${
+                      className={`flex items-center px-6 py-4 text-lg text-gray-700 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg min-h-[56px] ${
                         isActive(path)
                           ? "text-red-500 font-medium bg-red-50"
                           : ""
                       }`}
+                      style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       <span className="flex-1">{item}</span>
                       {loadingStates.nav[item] ? (
@@ -345,7 +416,6 @@ const Navbar = () => {
                     </Link>
                   );
                 })}
-
                 <div className="border-t border-gray-100 pt-4 mt-2">
                   {isLoggedIn ? (
                     <Link
@@ -390,7 +460,8 @@ const Navbar = () => {
                               key={role}
                               href={`/login/${role.toLowerCase()}`}
                               target="_blank"
-                              className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
+                              className="flex items-center justify-between px-4 py-3 text-md text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm min-h-[48px]"
+                              style={{ WebkitTapHighlightColor: "transparent" }}
                               onClick={() => {
                                 handleLinkClick("login", role);
                                 setIsOpen(false);
@@ -406,7 +477,6 @@ const Navbar = () => {
                           ))}
                         </div>
                       </div>
-
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">
                           Register as:
@@ -417,7 +487,8 @@ const Navbar = () => {
                               key={role}
                               href={`/register/${role.toLowerCase()}-register`}
                               target="_blank"
-                              className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm"
+                              className="flex items-center justify-between px-4 py-3 text-md text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm min-h-[48px]"
+                              style={{ WebkitTapHighlightColor: "transparent" }}
                               onClick={() => {
                                 handleLinkClick("register", role);
                                 setIsOpen(false);

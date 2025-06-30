@@ -387,7 +387,7 @@ export default function AttendancePage() {
       </div>
 
       {/* Main content area - Properly positioned for mobile and desktop */}
-      <div className="flex-1 w-full md:ml-16 p-4 sm:p-6 space-y-4 sm:space-y-6 transition-all duration-300">
+      <div className="flex-1 md:ml-16 p-4 sm:p-6 space-y-4 sm:space-y-6 transition-all duration-300">
         <header className="space-y-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -687,11 +687,21 @@ export default function AttendancePage() {
                           {student.lastAttendance?.status || "N/A"}
                         </Badge>
                         <div className="lg:hidden text-xs text-gray-500 mt-1">
-                          {student.lastAttendance?.time || "N/A"}
+                          {student.lastAttendance?.date
+                            ? format(
+                                new Date(student.lastAttendance.date),
+                                "dd MMM yyyy"
+                              )
+                            : "N/A"}
                         </div>
                       </td>
                       <td className="p-3 hidden lg:table-cell">
-                        {student.lastAttendance?.time || "N/A"}
+                        {student.lastAttendance?.date
+                          ? format(
+                              new Date(student.lastAttendance.date),
+                              "dd MMM yyyy"
+                            )
+                          : "N/A"}
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">

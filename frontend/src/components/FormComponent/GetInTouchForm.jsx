@@ -376,12 +376,14 @@ const RegistrationForm = () => {
   );
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-xl w-full mx-auto px-2 sm:px-4 md:px-0">
       {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-600">Form Progress</span>
-          <span className="text-sm font-medium text-purple-600">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 sm:mb-2 gap-1 sm:gap-0">
+          <span className="text-xs sm:text-sm text-gray-600">
+            Form Progress
+          </span>
+          <span className="text-xs sm:text-sm font-medium text-purple-600">
             {Math.round(progress)}%
           </span>
         </div>
@@ -389,56 +391,56 @@ const RegistrationForm = () => {
       </div>
 
       {/* Form Navigation */}
-      <div className="flex justify-between mb-6">
+      <div className="flex flex-col sm:flex-row justify-between gap-2 mb-4 sm:mb-6">
         <Button
           type="button"
           variant="outline"
           onClick={prevStep}
           disabled={currentStep === 1}
-          className="flex items-center"
+          className="flex items-center w-full sm:w-auto"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Previous
+          <span className="hidden xs:inline">Previous</span>
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={nextStep}
           disabled={currentStep === 5}
-          className="flex items-center"
+          className="flex items-center w-full sm:w-auto"
         >
-          Next
+          <span className="hidden xs:inline">Next</span>
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-lg space-y-6"
+        className="bg-white p-2 sm:p-4 md:p-6 rounded-lg shadow-lg space-y-4 sm:space-y-6"
         noValidate
       >
         {/* Form Header with Actions */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Student Registration
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsPreviewMode(!isPreviewMode)}
-              className="flex items-center"
+              className="flex items-center w-full sm:w-auto"
             >
               {isPreviewMode ? (
                 <>
                   <EyeOff className="w-4 h-4 mr-2" />
-                  Edit Mode
+                  <span className="hidden xs:inline">Edit Mode</span>
                 </>
               ) : (
                 <>
                   <Eye className="w-4 h-4 mr-2" />
-                  Preview
+                  <span className="hidden xs:inline">Preview</span>
                 </>
               )}
             </Button>
@@ -453,30 +455,30 @@ const RegistrationForm = () => {
                 );
                 toast.success("Draft saved successfully");
               }}
-              className="flex items-center"
+              className="flex items-center w-full sm:w-auto"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Draft
+              <span className="hidden xs:inline">Save Draft</span>
             </Button>
           </div>
         </div>
 
         {/* Form Content */}
         <div
-          className={`space-y-6 ${
+          className={`space-y-4 sm:space-y-6 ${
             isPreviewMode ? "pointer-events-none opacity-75" : ""
           }`}
         >
           {/* Student Information */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-700 flex items-center gap-2">
+                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs sm:text-sm">
                   1
                 </span>
                 Student Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
                 <div className="relative">
                   <Input
                     id="firstName"
@@ -534,7 +536,7 @@ const RegistrationForm = () => {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
                 <div className="relative">
                   <Input
                     id="dob"
@@ -593,8 +595,8 @@ const RegistrationForm = () => {
           {/* Contact Information */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-700 flex items-center gap-2">
+                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs sm:text-sm">
                   2
                 </span>
                 Contact Information
@@ -674,7 +676,7 @@ const RegistrationForm = () => {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
                 <div className="relative">
                   <Input
                     id="city"
@@ -743,8 +745,8 @@ const RegistrationForm = () => {
           {/* Academic Information */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-700 flex items-center gap-2">
+                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs sm:text-sm">
                   3
                 </span>
                 Academic Information
@@ -819,13 +821,13 @@ const RegistrationForm = () => {
           {/* Course Selection */}
           {currentStep === 4 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-700 flex items-center gap-2">
+                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs sm:text-sm">
                   4
                 </span>
                 Course Selection
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
                 {[
                   "Mathematics",
                   "Science",
@@ -901,8 +903,8 @@ const RegistrationForm = () => {
           {/* Additional Information */}
           {currentStep === 5 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-purple-700 flex items-center gap-2">
+                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs sm:text-sm">
                   5
                 </span>
                 Additional Information
@@ -954,18 +956,19 @@ const RegistrationForm = () => {
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-between items-center pt-6 border-t">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-4 sm:pt-6 border-t gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={resetForm}
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             Reset Form
           </Button>
           <Button
             type="submit"
-            className="bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isSubmitting || isPreviewMode}
           >
             {isSubmitting ? (

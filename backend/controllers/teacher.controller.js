@@ -943,7 +943,7 @@ const getTeacherDetails = async (req, res) => {
     // and their respective subjects and students
     const teacher = await Teacher.findById(teacherId)
       .select(
-        "name email contact alternateContact address joiningYear createdAt updatedAt isVerified"
+        "name email contact alternateContact address joiningYear createdAt updatedAt isVerified subjects"
       )
       .populate({
         path: "batches",
@@ -951,12 +951,22 @@ const getTeacherDetails = async (req, res) => {
         populate: {
           path: "studentIds",
           select:
-            "name email contact attendance address studentId admissionYear createdAt profileImage",
-          populate: {
-            path: "attendance",
-            select: "subject status date",
-          },
+            "name email contact attendance address studentId admissionYear createdAt profileImage scores",
+          populate: [
+            {
+              path: "attendance",
+              select: "subject status date",
+            },
+            {
+              path: "scores",
+              select: "subject examType score date",
+            },
+          ],
         },
+      })
+      .populate({
+        path: "subjects",
+        select: "name code",
       });
 
     if (!teacher) {
@@ -1137,6 +1147,26 @@ const resendVerificationEmailTeacher = async (req, res) => {
     });
   }
 };
+
+// const getStudentsByBatch = async (req, res) => {
+//   try {
+//    const teacherId = req.userInfo.id
+//     const teacher = await Teacher.findById(teacherId)
+//     if (!teacher) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Teacher not found",
+//       });
+//     }
+
+//   } catch (error) {
+//     console.error("Error fetching students by batch:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
 
 module.exports = {
   teacherRegister,

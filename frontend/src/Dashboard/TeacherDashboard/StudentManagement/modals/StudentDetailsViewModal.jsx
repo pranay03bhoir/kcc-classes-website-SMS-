@@ -136,15 +136,15 @@ export default function StudentDetailsViewModal({
         <div className="mb-4">
           <p className="font-medium mb-2">Recent Scores</p>
           <div className="bg-gray-50 rounded-md p-3 text-sm">
-            {/* {student.scores.map((score, idx) => (
+            {student.scores.map((score, idx) => (
               <div
                 key={idx}
                 className="flex justify-between py-1 border-b last:border-b-0"
               >
-                <span>{score.title}</span>
-                <span>{score.value}/100</span>
+                <span>{score.examType}</span>
+                <span>{score.score}/100</span>
               </div>
-            ))} */}
+            ))}
           </div>
         </div>
 

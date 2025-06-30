@@ -120,8 +120,7 @@ export default function AddStudentsScoreBulk({
             aria-hidden="true"
           />
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel
-              as={motion.div}
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -327,7 +326,7 @@ export default function AddStudentsScoreBulk({
                   </button>
                 </div>
               </div>
-            </Dialog.Panel>
+            </motion.div>
           </div>
         </Dialog>
       )}

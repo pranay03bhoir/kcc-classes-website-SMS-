@@ -12,6 +12,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +32,7 @@ import {
   FaTimes,
   FaUserGraduate,
 } from "react-icons/fa";
+import { GrScorecard } from "react-icons/gr";
 import { toast } from "react-toastify";
 
 const navItems = [
@@ -53,6 +59,12 @@ const navItems = [
     href: "/teacherDashboard/attendance",
     icon: <FaClipboardCheck />,
     description: "Track student attendance",
+  },
+  {
+    label: "Scores",
+    href: "/teacherDashboard/scores",
+    icon: <GrScorecard />,
+    description: "Track student scores",
   },
   {
     label: "Reports",
@@ -109,10 +121,12 @@ export default function Sidebar({ teacher }) {
   const NavItem = ({ item }) => {
     const isActive = pathname === item.href;
     return (
-      <Link
-        href={item.href}
-        aria-label={item.label}
-        className={`flex items-center gap-0 px-0 py-2 rounded-md transition-colors duration-150 text-base focus:outline-none
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href={item.href}
+            aria-label={item.label}
+            className={`flex items-center gap-0 px-0 py-2 rounded-md transition-colors duration-150 text-base focus:outline-none
           ${
             isActive
               ? "text-blue-600 font-semibold"
@@ -120,11 +134,16 @@ export default function Sidebar({ teacher }) {
           }
           ${!isOpen && "justify-center"}
         `}
-        onClick={() => isMobile && setIsOpen(false)}
-      >
-        <span className={`text-xl ${isActive ? "" : ""}`}>{item.icon}</span>
-        {isOpen && <span className="ml-3 text-sm">{item.label}</span>}
-      </Link>
+            onClick={() => isMobile && setIsOpen(false)}
+          >
+            <span className={`text-xl ${isActive ? "" : ""}`}>{item.icon}</span>
+            {isOpen && <span className="ml-3 text-sm">{item.label}</span>}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {item.description}
+        </TooltipContent>
+      </Tooltip>
     );
   };
 

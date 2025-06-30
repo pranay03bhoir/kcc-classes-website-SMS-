@@ -62,27 +62,27 @@ const EnquiryAndAddressSection = () => {
 
   return (
     <section
-      className="py-24 bg-gradient-to-b from-white to-gray-50"
+      className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-white to-gray-50"
       aria-labelledby="contact-section"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16">
           {/* Left Column - Contact Form and Info */}
-          <div className="space-y-12">
+          <div className="space-y-8 md:space-y-10 lg:space-y-12">
             <div className="w-full transform transition-all duration-300 hover:scale-[1.01]">
               <GetInTouchForm />
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm">
               <h2
                 id="contact-section"
-                className="text-2xl font-medium mb-8 text-gray-900 flex items-center"
+                className="text-xl sm:text-2xl font-medium mb-6 sm:mb-8 text-gray-900 flex items-center"
               >
-                <span className="w-1 h-8 bg-blue-500 rounded-full mr-3"></span>
+                <span className="w-1 h-6 sm:h-8 bg-blue-500 rounded-full mr-2 sm:mr-3"></span>
                 Contact Information
               </h2>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {contactInfo.map((info, index) => (
                   <a
                     key={index}
@@ -93,21 +93,21 @@ const EnquiryAndAddressSection = () => {
                         ? "noopener noreferrer"
                         : undefined
                     }
-                    className="flex items-start space-x-4 group p-4 rounded-xl transition-all duration-300 hover:bg-gray-50"
+                    className="flex items-start space-x-3 sm:space-x-4 group p-3 sm:p-4 rounded-xl transition-all duration-300 hover:bg-gray-50"
                     aria-label={`${info.title}: ${info.content}`}
                     onMouseEnter={() => setActiveContact(index)}
                     onMouseLeave={() => setActiveContact(null)}
                   >
                     <div className="mt-1">
                       <div
-                        className={`p-3 rounded-full transition-colors duration-300 ${
+                        className={`p-2 sm:p-3 rounded-full transition-colors duration-300 ${
                           activeContact === index ? "bg-blue-50" : "bg-gray-50"
                         }`}
                       >
                         <info.icon
-                          className={`${
+                          className={`$${
                             info.iconColor
-                          } text-lg transition-transform duration-300 ${
+                          } text-base sm:text-lg transition-transform duration-300 ${
                             activeContact === index ? "scale-110" : ""
                           }`}
                           aria-hidden="true"
@@ -116,17 +116,17 @@ const EnquiryAndAddressSection = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200 text-base sm:text-lg">
                           {info.title}
                         </h3>
                         {info.title === "Address" && (
-                          <FaExternalLinkAlt className="text-gray-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                          <FaExternalLinkAlt className="text-gray-400 text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                         )}
                       </div>
-                      <p className="mt-1 text-gray-600 leading-relaxed">
+                      <p className="mt-1 text-gray-600 leading-relaxed text-sm sm:text-base break-words">
                         {info.content}
                       </p>
-                      <p className="mt-2 text-sm text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <p className="mt-2 text-xs sm:text-sm text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         {info.description}
                       </p>
                     </div>
@@ -137,19 +137,19 @@ const EnquiryAndAddressSection = () => {
           </div>
 
           {/* Right Column - Map and Business Hours */}
-          <div className="space-y-12">
+          <div className="space-y-8 md:space-y-10 lg:space-y-12">
             {/* Map Section */}
-            <div className="h-[600px] bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-8 pb-4">
-                <h2 className="text-2xl font-medium text-gray-900 flex items-center">
-                  <span className="w-1 h-8 bg-blue-500 rounded-full mr-3"></span>
+            <div className="h-64 sm:h-96 md:h-[500px] lg:h-[600px] bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-8 pb-2 sm:pb-4">
+                <h2 className="text-xl sm:text-2xl font-medium text-gray-900 flex items-center">
+                  <span className="w-1 h-6 sm:h-8 bg-blue-500 rounded-full mr-2 sm:mr-3"></span>
                   Location
                 </h2>
               </div>
-              <div className="w-full h-[calc(100%-80px)] relative">
+              <div className="w-full h-[calc(100%-56px)] sm:h-[calc(100%-80px)] relative">
                 {isMapLoading && (
                   <div className="absolute inset-0 bg-gray-50 flex items-center justify-center">
-                    <div className="text-gray-400 animate-pulse">
+                    <div className="text-gray-400 animate-pulse text-sm sm:text-base">
                       Loading map...
                     </div>
                   </div>
@@ -167,42 +167,44 @@ const EnquiryAndAddressSection = () => {
             </div>
 
             {/* Business Hours - Centered below map */}
-            <div className="max-w-md mx-auto bg-white rounded-2xl shadow-sm p-8">
-              <div className="flex items-center justify-center space-x-3 mb-8">
+            <div className="max-w-full sm:max-w-md mx-auto bg-white rounded-2xl shadow-sm p-4 sm:p-8">
+              <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-6 sm:mb-8">
                 <div className="relative">
                   <FaClock
-                    className="text-gray-700 text-lg"
+                    className="text-gray-700 text-base sm:text-lg"
                     aria-hidden="true"
                   />
                   <span
-                    className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                    className={`absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
                       currentStatus === "open" ? "bg-green-500" : "bg-red-500"
                     }`}
                   ></span>
                 </div>
-                <h2 className="text-2xl font-medium text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-medium text-gray-900">
                   Business Hours
                 </h2>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {businessHours.map((schedule, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 sm:py-3 border-b border-gray-100 last:border-0"
                   >
-                    <span className="text-gray-700">{schedule.day}</span>
-                    <div className="flex items-center space-x-2">
+                    <span className="text-gray-700 text-sm sm:text-base">
+                      {schedule.day}
+                    </span>
+                    <div className="flex items-center space-x-1 sm:space-x-2 mt-1 sm:mt-0">
                       <span
-                        className={`${
+                        className={`$${
                           schedule.status === "closed"
                             ? "text-red-500"
                             : "text-green-600"
-                        }`}
+                        } text-sm sm:text-base`}
                       >
                         {schedule.hours}
                       </span>
                       {schedule.status === "open" && (
-                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                           Open
                         </span>
                       )}
