@@ -127,7 +127,7 @@ export default function StudentLogin({ role }) {
 
       const redirectMap = {
         student: "/studentdashboard",
-        teacher: "/teacherDashboard/students",
+        teacher: "/teacherDashboard",
         admin: "/admindashboard",
       };
 

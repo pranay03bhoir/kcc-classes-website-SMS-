@@ -65,7 +65,8 @@ const StudentScoreManagement = () => {
       setError("");
       try {
         const res = await getTeacherDetails();
-        const allSubjects = res.data.teacher.subjects;
+
+        const allSubjects = res.data.teacher.subjects || [];
         const batches = res.data.teacher.batches || [];
         const allStudents = batches.flatMap((batch) => batch.studentIds || []);
         setStudents(allStudents);
@@ -77,7 +78,7 @@ const StudentScoreManagement = () => {
             studentId: student._id,
             studentIdDisplay: student.studentId,
             studentName: student.name,
-            subject: allSubjects.find((s) => s._id === score.subject) || {},
+            subject: allSubjects.find((s) => s._id === score.subject._id) || {},
             date: score.date,
           }))
         );

@@ -93,7 +93,6 @@ export default function TeacherDetailsUpdate() {
       setError("");
       try {
         const res = await getTeacherDetails();
-        console.log("Teacher details:", res.data.teacher);
         if (res.data && res.data.teacher) {
           setForm(res.data.teacher);
           formHook.reset({
@@ -147,7 +146,6 @@ export default function TeacherDetailsUpdate() {
     setError("");
     try {
       const payload = { ...data };
-      console.log("Submitting payload:", payload);
 
       // Password logic
       if (showPasswordSection) {
@@ -208,7 +206,7 @@ export default function TeacherDetailsUpdate() {
           return;
         }
     } catch (error) {
-      log("Error resending verification email:", error);
+      console.log("Error resending verification email:", error);
       setError("Failed to resend verification email.");
     }
   };

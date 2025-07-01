@@ -948,30 +948,36 @@ const getTeacherDetails = async (req, res) => {
       )
       .populate({
         path: "batches",
-        select: "batchId name timing subjectId studentIds",
-        populate: {
-          path: "studentIds",
-          select:
-            "name email contact attendance address studentId admissionYear createdAt profileImage scores",
-          populate: [
-            {
-              path: "attendance",
-              select: "subject status date",
-            },
-            {
-              path: "scores",
-              select: "subject examType score date",
-              populate: {
-                path: "subject",
+        select: "batchId name timings subjectId studentIds",
+        populate: [
+          {
+            path: "subjectId",
+            select: "name code description gradeLevel imageUrl",
+          },
+          {
+            path: "studentIds",
+            select:
+              "name email contact attendance address studentId admissionYear createdAt profileImage scores",
+            populate: [
+              {
+                path: "attendance",
+                select: "subject status date",
+              },
+              {
+                path: "scores",
+                select: "subject examType score date",
+                populate: {
+                  path: "subject",
+                  select: "name",
+                },
+              },
+              {
+                path: "batches",
                 select: "name",
               },
-            },
-            {
-              path: "batches",
-              select: "name",
-            },
-          ],
-        },
+            ],
+          },
+        ],
       })
       .populate({
         path: "subjects",

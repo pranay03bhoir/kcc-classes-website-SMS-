@@ -66,6 +66,7 @@ const AdminStudentScoreManagement = () => {
     subject: "All Subjects",
     examType: "All Types",
     gradeRange: "All Grades",
+    dateOrder: "Newest First",
   });
   const [stats, setStats] = useState({
     averageScore: 0,
@@ -300,7 +301,7 @@ const AdminStudentScoreManagement = () => {
   }, [students]);
 
   const filteredScores = useMemo(() => {
-    return allScores.filter((score) => {
+    let scores = allScores.filter((score) => {
       if (
         filters.subject !== "All Subjects" &&
         score.subject?.name !== filters.subject
@@ -318,6 +319,19 @@ const AdminStudentScoreManagement = () => {
       }
       return true;
     });
+
+    // Sort by date
+    scores.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      if (filters.dateOrder === "Newest First") {
+        return dateB - dateA;
+      } else {
+        return dateA - dateB;
+      }
+    });
+
+    return scores;
   }, [allScores, filters]);
 
   // Implement client-side pagination for filtered scores
@@ -448,7 +462,7 @@ const AdminStudentScoreManagement = () => {
       <ToastContainer position="top-center" />
 
       {/* Sidebar - Fixed on desktop, overlay on mobile */}
-      <div className="fixed inset-y-0 left-0 z-40 w-16 md:w-64 md:relative md:z-auto">
+      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar />
       </div>
 
@@ -494,7 +508,7 @@ const AdminStudentScoreManagement = () => {
           <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
             Filter Results
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
@@ -546,6 +560,21 @@ const AdminStudentScoreManagement = () => {
                 <option value="70-79">70-79</option>
                 <option value="60-69">60-69</option>
                 <option value="0-59">Below 60</option>
+              </select>
+            </div>
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sort by Date
+              </label>
+              <select
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white hover:border-gray-300"
+                value={filters.dateOrder}
+                onChange={(e) =>
+                  handleFilterChange("dateOrder", e.target.value)
+                }
+              >
+                <option value="Newest First">Newest First</option>
+                <option value="Oldest First">Oldest First</option>
               </select>
             </div>
             <div className="flex items-end">

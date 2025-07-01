@@ -32,6 +32,7 @@ import {
   FaTimes,
   FaUserGraduate,
 } from "react-icons/fa";
+import { FaLayerGroup } from "react-icons/fa6";
 import { GrScorecard } from "react-icons/gr";
 import { toast } from "react-toastify";
 
@@ -47,6 +48,12 @@ const navItems = [
     href: "/teacherDashboard/courses",
     icon: <FaBook />,
     description: "Manage your courses",
+  },
+  {
+    label: "Batches",
+    href: "/teacherDashboard/batches",
+    icon: <FaLayerGroup />,
+    description: "Manage your batches",
   },
   {
     label: "Students",
