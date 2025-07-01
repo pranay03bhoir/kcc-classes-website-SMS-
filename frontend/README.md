@@ -5,20 +5,22 @@ This is the frontend of the **Tutoring Academy Website** built using **Next.js**
 
 ## Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation Guide](#installation-guide)
-  - [Prerequisites](#prerequisites)
-  - [Clone the Repository](#clone-the-repository)
-  - [Setup Environment Variables](#setup-environment-variables)
-  - [Run the Development Server](#run-the-development-server)
-- [Project Structure](#project-structure)
-- [Available Scripts](#available-scripts)
-- [Learn More](#learn-more)
-- [Deploy on Vercel](#deploy-on-vercel)
-- [Contributing](#contributing)
-- [License](#license)
-- [Need Help?](#need-help)
+- [Tutoring Academy Website Frontend](#tutoring-academy-website-frontend)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Tech Stack](#tech-stack)
+  - [Installation Guide](#installation-guide)
+    - [Prerequisites](#prerequisites)
+    - [Clone the Repository](#clone-the-repository)
+    - [Setup Environment Variables](#setup-environment-variables)
+    - [Run the Development Server](#run-the-development-server)
+  - [Project Structure](#project-structure)
+  - [Available Scripts](#available-scripts)
+  - [Learn More](#learn-more)
+  - [Deploy on Vercel](#deploy-on-vercel)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Need Help?](#need-help)
 
 ## Features
 
@@ -84,14 +86,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 frontend/
 ├── public/                 # Public assets
 ├── src/
-│   ├── components/         # Reusable components
-│   ├── pages/              # Next.js pages
-│   ├── redux/              # Redux store and slices
-│   ├── styles/             # Global styles
-│   ├── utils/              # Utility functions
-│   └── app/                # App configuration and layout
+│   ├── app/                # App routing, layouts, and pages (Next.js app directory)
+│   ├── components/         # Reusable UI and feature components
+│   ├── Dashboard/          # Dashboard components for Admin, Student, Teacher
+│   ├── data/               # Static/mock data
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility libraries
+│   ├── utils/              # Axios and utility functions
+│   └── globals.css         # Global styles
 ├── .env.local              # Environment variables
-├── next.config.js          # Next.js configuration
+├── next.config.mjs         # Next.js configuration
 ├── package.json            # Project dependencies and scripts
 └── README.md               # Project documentation
 ```
