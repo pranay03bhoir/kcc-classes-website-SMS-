@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 export default function StudentDetailsViewModal({
   open,
@@ -24,13 +25,15 @@ export default function StudentDetailsViewModal({
       onOpenChange={onOpenChange}
       className=" bg-black/30 backdrop-blur-sm"
     >
-      <DialogContent className="max-w-xl p-6">
+      <DialogContent className="max-w-xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Student Details</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">
+            Student Details
+          </DialogTitle>
         </DialogHeader>
 
         {/* Header Section */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4">
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-medium text-gray-700">
             {/* <img
               className="w-full h-full rounded-full object-cover"
@@ -54,17 +57,19 @@ export default function StudentDetailsViewModal({
               </span>
             )}
           </div>
-          <div>
-            <p className="text-lg font-semibold">{student.name}</p>
-            <p className="text-sm text-gray-500">ID: {student.studentId}</p>
+          <div className="text-center sm:text-left">
+            <p className="text-base sm:text-lg font-semibold">{student.name}</p>
+            <p className="text-xs sm:text-sm text-gray-500">
+              ID: {student.studentId}
+            </p>
           </div>
         </div>
 
         {/* Student Info Grid */}
-        <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-700 mb-4">
           <div>
             <p className="font-medium">Email</p>
-            <p>{student.email}</p>
+            <p className="break-all">{student.email}</p>
           </div>
           <div>
             <p className="font-medium">Phone</p>
@@ -126,34 +131,63 @@ export default function StudentDetailsViewModal({
               })}
             </p>
           </div>
-          <div className="col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <p className="font-medium">Address</p>
-            <p>{student.address}</p>
+            <p className="break-words">{student.address}</p>
           </div>
         </div>
 
         {/* Recent Scores */}
         <div className="mb-4">
           <p className="font-medium mb-2">Recent Scores</p>
-          <div className="bg-gray-50 rounded-md p-3 text-sm">
-            {student.scores.map((score, idx) => (
-              <div
-                key={idx}
-                className="flex justify-between py-1 border-b last:border-b-0"
-              >
-                <span>{score.examType}</span>
-                <span>{score.score}/100</span>
+          {student.scores && student.scores.length > 0 ? (
+            <div className="rounded-md p-2 sm:p-3 text-xs sm:text-sm max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-4 gap-2 font-semibold text-gray-600 border-b pb-1 mb-1">
+                <span>Exam</span>
+                {student.scores[0].subject && <span>Subject</span>}
+                <span>Date</span>
+                <span>Score</span>
               </div>
-            ))}
-          </div>
+              {student.scores.map((score, idx) => {
+                // Color logic for progress bar
+                let barColor = "bg-green-500";
+                if (score.score < 50) barColor = "bg-red-500";
+                else if (score.score < 75) barColor = "bg-yellow-400";
+                return (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-4 gap-2 items-center py-1 border-b last:border-b-0"
+                  >
+                    <span>{score.examType}</span>
+                    {score.subject.name && <span>{score.subject.name}</span>}
+                    <span>{score.date.split("T")[0]}</span>
+                    <span className="flex flex-col gap-1">
+                      <span className="font-medium">{score.score}/100</span>
+                      <div className="w-24">
+                        <Progress value={score.score} className={barColor} />
+                      </div>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-gray-400 italic p-2">No scores available.</div>
+          )}
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto"
+          >
             Close
           </Button>
-          <Button onClick={onEdit}>Edit</Button>
+          <Button onClick={onEdit} className="w-full sm:w-auto">
+            Edit
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -24,7 +24,9 @@ export default function EditStudentModal({
       setFormData({
         name: student.name || "",
         email: student.email || "",
-        batches: student.batches || "",
+        batches: Array.isArray(student.batches)
+          ? student.batches[0] || ""
+          : student.batches || "",
         contact: student.contact || "",
         address: student.address || "",
       });

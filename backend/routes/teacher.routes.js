@@ -18,6 +18,7 @@ const {
   getTeacherDetails,
   updateTeacherDetails,
   resendVerificationEmailTeacher,
+  getTeacherCourses,
 } = require("../controllers/teacher.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware");
 const teacherAuth = require("../middlewares/teacherAuth.middleware");
@@ -50,6 +51,7 @@ router.post("/students/scores", addStudentScores);
 router.put("/students/update/scores/:scoreId", updateStudentScores);
 router.get("/get/batches", getAllBatches);
 router.get("/get/teacher/details", loginAuth, teacherAuth, getTeacherDetails);
+router.get("/get/teacher/courses", loginAuth, teacherAuth, getTeacherCourses);
 router.put("/update/details/:id", loginAuth, teacherAuth, updateTeacherDetails);
 router.post("/resend-verification-email", resendVerificationEmailTeacher);
 module.exports = router;

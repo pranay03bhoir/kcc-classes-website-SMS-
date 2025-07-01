@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import api from "@/utils/teacher-axios";
 import PropTypes from "prop-types";
@@ -17,7 +19,7 @@ import EditStudentModal from "./modals/StudentUpdateModal";
 
 const ITEMS_PER_PAGE = 10;
 
-export default function StudentTable({ students, teacher }) {
+export default function StudentTable({ students = [], teacher }) {
   const { refreshToken } = useTeacherAuth();
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("All");
@@ -227,21 +229,21 @@ export default function StudentTable({ students, teacher }) {
                 </option>
               ))}
             </select>
-            {/* <button
+            <button
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors w-full sm:w-auto"
               aria-label="Add new student"
             >
-              + Add Student
-            </button> */}
+              Filter Students
+            </button>
           </div>
         </div>
 
         {/* Student Table */}
-        <div className="overflow-x-auto -mx-4 md:mx-0">
+        <div className="overflow-x-auto -mx-4 md:mx-0 rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="min-w-full inline-block align-middle">
             <div className="overflow-hidden">
-              <table className="min-w-full bg-white border rounded-md overflow-hidden shadow-sm">
-                <thead className="bg-gray-100 text-gray-700 text-left">
+              <table className="min-w-full bg-white border rounded-md overflow-hidden shadow-md md:shadow-lg md:rounded-lg md:border md:border-gray-200">
+                <thead className="bg-gray-100 text-gray-700 text-left sticky top-0 z-10">
                   <tr>
                     <th className="px-3 md:px-4 py-3 cursor-pointer hover:bg-gray-200 whitespace-nowrap">
                       ID <SortIcon columnKey="studentId" />
@@ -270,7 +272,9 @@ export default function StudentTable({ students, teacher }) {
                         colSpan="6"
                         className="px-4 py-8 text-center text-gray-500"
                       >
-                        Loading students...
+                        <div className="flex justify-center items-center">
+                          <LoadingSpinner size={32} />
+                        </div>
                       </td>
                     </tr>
                   ) : paginatedStudents.length === 0 ? (
@@ -283,10 +287,12 @@ export default function StudentTable({ students, teacher }) {
                       </td>
                     </tr>
                   ) : (
-                    paginatedStudents.map((student) => (
+                    paginatedStudents.map((student, index) => (
                       <tr
                         key={student._id}
-                        className="border-t hover:bg-gray-50 transition-colors"
+                        className={`border-t transition-colors ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } hover:bg-blue-50`}
                       >
                         <td className="px-3 md:px-4 py-3 whitespace-nowrap">
                           {student.studentId}
@@ -312,10 +318,10 @@ export default function StudentTable({ students, teacher }) {
                         </td>
                         <td className="px-3 md:px-4 py-3">
                           <div className="flex flex-wrap gap-1">
-                            {teacher.batches.map((batch) => (
+                            {(student.batches || []).map((batch) => (
                               <span
                                 key={batch._id || batch.name}
-                                className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full"
+                                className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full border border-purple-200"
                               >
                                 {batch.name}
                               </span>
@@ -324,54 +330,85 @@ export default function StudentTable({ students, teacher }) {
                         </td>
                         <td className="px-3 md:px-4 py-3 whitespace-nowrap">
                           <div
-                            className={`px-2 py-1 rounded-full text-xs text-center ${
+                            className={`px-2 py-1 rounded-full text-xs text-center font-semibold flex items-center justify-center gap-1 w-20 mx-auto
+                              ${
+                                student.attendance?.[
+                                  student.attendance.length - 1
+                                ]?.status === "Absent"
+                                  ? "bg-red-100/70 text-red-800 border border-red-200"
+                                  : student.attendance?.[
+                                      student.attendance.length - 1
+                                    ]?.status === "Late"
+                                  ? "bg-yellow-100/70 text-yellow-800 border border-yellow-200"
+                                  : student.attendance?.[
+                                      student.attendance.length - 1
+                                    ]?.status === "Present"
+                                  ? "bg-green-100/70 text-green-800 border border-green-200"
+                                  : "bg-gray-100/70 text-gray-800 border border-gray-200"
+                              }`}
+                            aria-label={`Attendance status: ${
                               student.attendance?.[
                                 student.attendance.length - 1
-                              ]?.status === "Absent"
-                                ? "bg-red-100/50 text-red-800"
-                                : student.attendance?.[
-                                    student.attendance.length - 1
-                                  ]?.status === "Late"
-                                ? "bg-yellow-100/50 text-yellow-800"
-                                : student.attendance?.[
-                                    student.attendance.length - 1
-                                  ]?.status === "Present"
-                                ? "bg-green-100/50 text-green-800"
-                                : "bg-gray-100/50 text-gray-800"
+                              ]?.status || "N/A"
                             }`}
                           >
                             {student.attendance?.[student.attendance.length - 1]
                               ?.status || "N/A"}
                           </div>
-                          <div className="text-xs md:text-sm text-gray-500">
+                          <div className="text-xs md:text-sm text-gray-500 text-center">
                             {student.attendedDays}
                           </div>
                         </td>
                         <td className="px-3 md:px-4 py-3 whitespace-nowrap">
-                          {student.avgScore || "N/A"}
+                          <span
+                            className={`inline-block px-2 py-1 rounded-full text-xs font-semibold w-16 text-center
+                              ${
+                                student.avgScore >= 80
+                                  ? "bg-green-100 text-green-800 border border-green-200"
+                                  : student.avgScore >= 50
+                                  ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                  : student.avgScore
+                                  ? "bg-red-100 text-red-800 border border-red-200"
+                                  : "bg-gray-100 text-gray-800 border border-gray-200"
+                              }`}
+                            aria-label={`Average score: ${
+                              student.avgScore || "N/A"
+                            }`}
+                          >
+                            {student.avgScore !== undefined &&
+                            student.avgScore !== null
+                              ? student.avgScore
+                              : "N/A"}
+                          </span>
                         </td>
                         <td className="px-3 md:px-4 py-3 whitespace-nowrap">
                           <div className="flex space-x-2 md:space-x-3">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-50"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                setIsViewModalOpen(true);
-                              }}
-                              aria-label={`View details for ${student.name}`}
+                            <Tooltip
+                              content={`View details for ${student.name}`}
                             >
-                              <FiEye className="w-4 h-4 md:w-5 md:h-5" />
-                            </button>
-                            <button
-                              className="text-gray-600 hover:text-gray-800 transition-colors p-1 rounded-full hover:bg-gray-50"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                setIsEditModalOpen(true);
-                              }}
-                              aria-label={`Edit ${student.name}`}
-                            >
-                              <FiEdit2 className="w-4 h-4 md:w-5 md:h-5" />
-                            </button>
+                              <button
+                                className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setIsViewModalOpen(true);
+                                }}
+                                aria-label={`View details for ${student.name}`}
+                              >
+                                <FiEye className="w-4 h-4 md:w-5 md:h-5" />
+                              </button>
+                            </Tooltip>
+                            <Tooltip content={`Edit ${student.name}`}>
+                              <button
+                                className="text-gray-600 hover:text-gray-800 transition-colors p-1 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setIsEditModalOpen(true);
+                                }}
+                                aria-label={`Edit ${student.name}`}
+                              >
+                                <FiEdit2 className="w-4 h-4 md:w-5 md:h-5" />
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
@@ -425,11 +462,13 @@ export default function StudentTable({ students, teacher }) {
                         <span className="px-2 py-1">...</span>
                       )}
                       <button
-                        className={`px-3 py-1 border rounded ${
-                          page === currentPage
-                            ? "bg-blue-600 text-white"
-                            : "hover:bg-gray-100"
-                        }`}
+                        className={`px-3 py-1 border rounded transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-0.5
+                          ${
+                            page === currentPage
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "hover:bg-blue-50 border-gray-300"
+                          }
+                        `}
                         onClick={() => handlePageChange(page)}
                         aria-label={`Go to page ${page}`}
                         aria-current={page === currentPage ? "page" : undefined}

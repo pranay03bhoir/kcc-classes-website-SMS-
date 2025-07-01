@@ -6,6 +6,7 @@ const Student = require("../models/student.model");
 const Attendance = require("../models/attendance.model");
 const Score = require("../models/score.model");
 const Batch = require("../models/batch.model");
+const Subject = require("../models/subject.model");
 // const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -960,13 +961,21 @@ const getTeacherDetails = async (req, res) => {
             {
               path: "scores",
               select: "subject examType score date",
+              populate: {
+                path: "subject",
+                select: "name",
+              },
+            },
+            {
+              path: "batches",
+              select: "name",
             },
           ],
         },
       })
       .populate({
         path: "subjects",
-        select: "name code",
+        select: "name code description gradeLevel imageUrl",
       });
 
     if (!teacher) {
@@ -1148,25 +1157,39 @@ const resendVerificationEmailTeacher = async (req, res) => {
   }
 };
 
-// const getStudentsByBatch = async (req, res) => {
-//   try {
-//    const teacherId = req.userInfo.id
-//     const teacher = await Teacher.findById(teacherId)
-//     if (!teacher) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Teacher not found",
-//       });
-//     }
-
-//   } catch (error) {
-//     console.error("Error fetching students by batch:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
+const getTeacherCourses = async (req, res) => {
+  try {
+    const teacherId = req.userInfo.id;
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found",
+      });
+    }
+    const courses = await Subject.find({ teachers: teacherId }).populate(
+      "students",
+      "name email contact address studentId admissionYear createdAt profileImage scores"
+    );
+    if (!courses || courses.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No courses found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Courses found",
+      courses,
+    });
+  } catch (error) {
+    console.error("Error in getTeacherCourses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Some error occurred",
+    });
+  }
+};
 
 module.exports = {
   teacherRegister,
@@ -1187,4 +1210,5 @@ module.exports = {
   getTeacherDetails,
   updateTeacherDetails,
   resendVerificationEmailTeacher,
+  getTeacherCourses,
 };
