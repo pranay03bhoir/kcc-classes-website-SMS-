@@ -20,7 +20,7 @@ export const useStudentAuth = () => {
       const response = await api.get("/get/student/details");
       if (response.data.success) {
         setIsAuthenticated(true);
-        setUser(response.data.data);
+        setUser(response.data.student);
       } else {
         setIsAuthenticated(false);
         setUser(null);

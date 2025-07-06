@@ -21,53 +21,54 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  HiOutlineArrowRightOnRectangle,
-  HiOutlineBars3,
-  HiOutlineBookOpen,
-  HiOutlineChartBar,
-  HiOutlineClipboardDocumentCheck,
-  HiOutlineClipboardDocumentList,
-  HiOutlineCog6Tooth,
-  HiOutlineHome,
-  HiOutlineXMark,
-} from "react-icons/hi2";
+  FaHome,
+  FaBook,
+  FaClipboardList,
+  FaChartBar,
+  FaClipboardCheck,
+  FaCog,
+  FaBars,
+  FaTimes,
+  FaSignOutAlt,
+  FaGraduationCap,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const navItems = [
   {
     label: "Dashboard",
     href: "/studentdashboard",
-    icon: <HiOutlineHome />,
+    icon: <FaHome />,
     description: "View your dashboard overview",
   },
   {
     label: "Courses",
     href: "/studentdashboard/courses",
-    icon: <HiOutlineBookOpen />,
+    icon: <FaBook />,
     description: "View your enrolled courses",
   },
   {
     label: "Assignments",
     href: "/studentdashboard/assignments",
-    icon: <HiOutlineClipboardDocumentList />,
+    icon: <FaClipboardList />,
     description: "View and submit assignments",
   },
   {
     label: "Grades",
     href: "/studentdashboard/grades",
-    icon: <HiOutlineChartBar />,
+    icon: <FaChartBar />,
     description: "Check your grades and scores",
   },
   {
     label: "Attendance",
     href: "/studentdashboard/attendance",
-    icon: <HiOutlineClipboardDocumentCheck />,
+    icon: <FaClipboardCheck />,
     description: "View your attendance record",
   },
   {
     label: "Settings",
     href: "/studentdashboard/settings",
-    icon: <HiOutlineCog6Tooth />,
+    icon: <FaCog />,
     description: "Configure your settings",
   },
 ];
@@ -118,18 +119,18 @@ export default function Sidebar({ student }) {
           <Link
             href={item.href}
             aria-label={item.label}
-            className={`flex items-center gap-0 px-0 py-2 rounded-md transition-colors duration-150 text-base focus:outline-none
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-base focus:outline-none
           ${
             isActive
-              ? "text-blue-600 font-semibold"
-              : "text-gray-700 hover:text-blue-500"
+              ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+              : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
           }
           ${!isOpen && "justify-center"}
         `}
             onClick={() => isMobile && setIsOpen(false)}
           >
-            <span className={`text-xl ${isActive ? "" : ""}`}>{item.icon}</span>
-            {isOpen && <span className="ml-3 text-sm">{item.label}</span>}
+            <span className={`text-xl ${isActive ? "text-white" : ""}`}>{item.icon}</span>
+            {isOpen && <span className="text-sm font-medium">{item.label}</span>}
           </Link>
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={8}>
@@ -142,7 +143,7 @@ export default function Sidebar({ student }) {
   // If student is null or undefined, show loading state
   if (!student) {
     return (
-      <aside className="h-screen w-52 fixed bg-white border-r border-gray-200 flex flex-col justify-between p-4 z-40">
+      <aside className="h-screen w-52 fixed bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col justify-between p-4 z-40">
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
@@ -176,10 +177,10 @@ export default function Sidebar({ student }) {
       {isMobile && !isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 p-2 bg-white hover:bg-gray-100 rounded-md border border-gray-200 z-50 md:hidden"
+          className="fixed top-4 left-4 p-2 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 z-50 md:hidden shadow-lg"
           aria-label="Open menu"
         >
-          <HiOutlineBars3 className="h-5 w-5 text-gray-700" />
+          <FaBars className="h-5 w-5 text-gray-700" />
         </button>
       )}
 
@@ -193,9 +194,9 @@ export default function Sidebar({ student }) {
       )}
 
       <aside
-        className={`fixed h-screen top-0 left-0 flex flex-col justify-between transition-all duration-200 z-50
+        className={`fixed h-screen top-0 left-0 flex flex-col justify-between transition-all duration-300 z-50
           ${isOpen ? "w-52" : "w-14"}
-          bg-white border-r border-gray-200
+          bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 shadow-lg
           ${
             isMobile
               ? isOpen
@@ -206,26 +207,24 @@ export default function Sidebar({ student }) {
         `}
         aria-label="Sidebar navigation"
       >
-        {/* Simple Logo/App Name */}
-        <div className="flex items-center px-4 py-4 min-h-[56px]">
-          <span
-            className={`text-lg font-bold text-gray-900 tracking-tight transition-all duration-200 ${
-              isOpen ? "block" : "hidden"
-            }`}
-          >
-            Student Dashboard
-          </span>
-          <span
-            className={`text-lg font-bold text-gray-900 tracking-tight transition-all duration-200 ${
-              !isOpen ? "block" : "hidden"
-            }`}
-          >
-            S
-          </span>
+        {/* Logo/App Name */}
+        <div className="flex items-center px-4 py-6 min-h-[56px]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+              <FaGraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <span
+              className={`text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent transition-all duration-200 ${
+                isOpen ? "block" : "hidden"
+              }`}
+            >
+              Student Portal
+            </span>
+          </div>
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 flex flex-col gap-1 px-2">
+        <nav className="flex-1 flex flex-col gap-2 px-3">
           {navItems.map((item) => (
             <NavItem key={item.href} item={item} />
           ))}
@@ -233,38 +232,40 @@ export default function Sidebar({ student }) {
 
         {/* Profile & Logout */}
         <div className={`px-4 py-4 ${isOpen ? "block" : "hidden"}`}>
-          <div className="flex items-center gap-2 mb-2">
-            {student?.profileImage ? (
-              <img
-                src={student.profileImage}
-                alt="Student"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-gray-700 font-semibold text-base">
-                  {student?.name
-                    ?.split(" ")
-                    .slice(0, 2)
-                    .map((word) => word[0])
-                    .join("")
-                    .toUpperCase() || "S"}
+          <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm mb-3">
+            <div className="flex items-center gap-3">
+              {student?.profileImage ? (
+                <img
+                  src={student.profileImage}
+                  alt="Student"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {student?.name
+                      ?.split(" ")
+                      .slice(0, 2)
+                      .map((word) => word[0])
+                      .join("")
+                      .toUpperCase() || "S"}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-900 font-semibold truncate max-w-[90px]">
+                  {student?.name || "Student"}
+                </span>
+                <span className="text-xs text-gray-500 truncate max-w-[90px]">
+                  {student?.email || "student@example.com"}
                 </span>
               </div>
-            )}
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-900 font-medium truncate max-w-[90px]">
-                {student?.name || "Student"}
-              </span>
-              <span className="text-xs text-gray-400 truncate max-w-[90px]">
-                {student?.email || "student@example.com"}
-              </span>
             </div>
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center gap-2 px-2 py-1 h-8 text-xs font-normal rounded-md">
-                <HiOutlineArrowRightOnRectangle className="text-base" />
+              <Button className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white flex items-center justify-center gap-2 px-3 py-2 h-9 text-sm font-medium rounded-lg shadow-sm">
+                <FaSignOutAlt className="text-base" />
                 <span>Logout</span>
               </Button>
             </AlertDialogTrigger>
@@ -295,10 +296,10 @@ export default function Sidebar({ student }) {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button
-                  className="w-full p-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                  className="w-full p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white flex items-center justify-center shadow-sm"
                   aria-label="Logout"
                 >
-                  <HiOutlineArrowRightOnRectangle className="text-lg" />
+                  <FaSignOutAlt className="text-lg" />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -328,11 +329,11 @@ export default function Sidebar({ student }) {
           onClick={() => setIsOpen(!isOpen)}
           className={`fixed top-4 ${
             isOpen ? "left-48" : "left-4"
-          } p-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-md transition-all duration-200 z-50 focus:outline-none`}
+          } p-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200 z-50 focus:outline-none shadow-lg`}
           aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
         >
           <span className="text-gray-700 text-lg">
-            {isOpen ? <HiOutlineXMark /> : <HiOutlineBars3 />}
+            {isOpen ? <FaTimes /> : <FaBars />}
           </span>
         </button>
       </aside>

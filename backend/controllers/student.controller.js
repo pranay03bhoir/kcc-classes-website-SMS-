@@ -8,6 +8,7 @@ const Student = require("../models/student.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../utils/student.email.js");
+const { populate } = require("../models/counterStudent.model.js");
 
 /**
  * Joi validation schema for student registration
@@ -467,13 +468,45 @@ const getStudentDetails = async (req, res) => {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select(
-        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects"
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects attendance role createdAt updatedAt"
       )
-      .populate(
-        "subjects",
-        "name code description teachers category duration gradeLevel"
-      )
-      .populate("batches", "name classStd timings subjectId teacherId batchId")
+      .populate({
+        path: "subjects",
+        select:
+          "name code description teachers category duration gradeLevel classesPerWeek rating createdAt updatedAt",
+        populate: {
+          path: "teachers",
+          select: "name email contact profileImage",
+        },
+      })
+      .populate({
+        path: "batches",
+        select: "name classStd timings subjectId teacherId batchId",
+        populate: {
+          path: "teacherId",
+          select: "name email contact profileImage",
+        },
+        populate: {
+          path: "subjectId",
+          select: "name code description category duration classesPerWeek",
+        },
+      })
+      .populate({
+        path: "scores",
+        select: "subject score date examType",
+        populate: {
+          path: "subject",
+          select: "name code description",
+        },
+      })
+      .populate({
+        path: "attendance",
+        select: "subject date status",
+        populate: {
+          path: "subject",
+          select: "name code description",
+        },
+      })
       .lean();
 
     if (!student) {
@@ -485,7 +518,7 @@ const getStudentDetails = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: student,
+      student,
     });
   } catch (e) {
     console.error("Error in getStudentDetails:", e);

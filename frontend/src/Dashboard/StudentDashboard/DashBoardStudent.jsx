@@ -76,10 +76,12 @@ const DashBoardStudent = () => {
   // Show loading while checking authentication
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Checking authentication...</p>
+          <p className="mt-4 text-gray-600 font-medium">
+            Checking authentication...
+          </p>
         </div>
       </div>
     );
@@ -88,10 +90,12 @@ const DashBoardStudent = () => {
   // Show loading while not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+          <p className="mt-4 text-gray-600 font-medium">
+            Redirecting to login...
+          </p>
         </div>
       </div>
     );
@@ -99,10 +103,12 @@ const DashBoardStudent = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading student dashboard...</p>
+          <p className="mt-4 text-gray-600 font-medium">
+            Loading student dashboard...
+          </p>
         </div>
       </div>
     );
@@ -110,14 +116,18 @@ const DashBoardStudent = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-red-500">
-        <p>{error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <p className="text-red-600 font-medium">{error}</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-16">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-16">
       {/* Sidebar - Fixed on desktop, overlay on mobile */}
       <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
         <Sidebar student={studentData} />
@@ -125,17 +135,56 @@ const DashBoardStudent = () => {
 
       {/* Main content area - Properly positioned for mobile and desktop */}
       <main className="flex-1 w-full md:ml-16 p-6">
-        <h1 className="text-2xl font-bold mb-4">Student Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ProfileCard student={studentData} />
-          <ScoreCard student={studentData} />
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Welcome back, {studentData?.name?.split(" ")[0] || "Student"}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Here's what's happening with your studies today
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Current Date</p>
+                <p className="text-lg font-semibold text-gray-700">
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <AttendanceTable student={studentData} />
-          <CourseList student={studentData?.subjects} />
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <ProfileCard student={studentData || {}} />
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <ScoreCard student={studentData || {}} />
+          </div>
         </div>
-        <div className="mt-6">
-          <SubjectList student={studentData} />
+
+        {/* Content Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+            <AttendanceTable student={studentData || {}} />
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+            <CourseList student={studentData || {}} />
+          </div>
+        </div>
+
+        {/* Full Width Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+          <SubjectList student={studentData || {}} />
         </div>
       </main>
       <ToastContainer
