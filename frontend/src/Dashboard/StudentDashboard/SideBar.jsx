@@ -54,8 +54,8 @@ const navItems = [
     description: "View and submit assignments",
   },
   {
-    label: "Grades",
-    href: "/studentdashboard/grades",
+    label: "Scores",
+    href: "/studentdashboard/scores",
     icon: <FaChartBar />,
     description: "Check your grades and scores",
   },

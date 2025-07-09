@@ -9,6 +9,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../utils/student.email.js");
 const { populate } = require("../models/counterStudent.model.js");
+const { default: mongoose } = require("mongoose");
 
 /**
  * Joi validation schema for student registration
@@ -550,8 +551,15 @@ const getStudentDetails = async (req, res) => {
 const updateStudentProfile = async (req, res) => {
   try {
     const studentId = req.userInfo.id;
-    const { name, password, contact, parentsContact, address, profileImage } =
-      req.body;
+    const {
+      name,
+      password,
+      contact,
+      parentsContact,
+      address,
+      profileImage,
+      currentStd,
+    } = req.body;
 
     // Fetch the current student record
     const student = await Student.findById(studentId);
@@ -569,6 +577,7 @@ const updateStudentProfile = async (req, res) => {
       parentsContact,
       address,
       profileImage,
+      currentStd,
     };
 
     // If a new password is provided, check if it's different from the current password
@@ -644,6 +653,133 @@ const getStudentSubjects = async (req, res) => {
     });
   }
 };
+const getStudentScores = async (req, res) => {
+  try {
+    const studentId = req.userInfo.id;
+    let studentObjectId;
+    try {
+      studentObjectId = new mongoose.Types.ObjectId(studentId);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid student ID format",
+      });
+    }
+    const student = await Student.findById(studentObjectId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    const scores = await Student.aggregate([
+      { $match: { _id: studentObjectId } },
+      {
+        $lookup: {
+          from: "scores",
+          localField: "scores",
+          foreignField: "_id",
+          as: "scoresDetails",
+        },
+      },
+      {
+        $unwind: "$scoresDetails",
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "scoresDetails.subject",
+          foreignField: "_id",
+          as: "subjectDetails",
+        },
+      },
+      {
+        $unwind: "$subjectDetails",
+      },
+      {
+        $project: {
+          _id: 0,
+          subjectName: "$subjectDetails.name",
+          score: "$scoresDetails.score",
+          date: "$scoresDetails.date",
+          examType: "$scoresDetails.examType",
+        },
+      },
+    ]);
+    return res.status(200).json({
+      success: true,
+      scores,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+const getStudentAttendance = async (req, res) => {
+  try {
+    const studentId = req.userInfo.id;
+    let studentObjectId;
+    try {
+      studentObjectId = new mongoose.Types.ObjectId(studentId);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid student ID format",
+      });
+    }
+    const student = await Student.findById(studentObjectId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+    const attendance = await Student.aggregate([
+      { $match: { _id: studentObjectId } },
+      {
+        $lookup: {
+          from: "attendances",
+          localField: "attendance",
+          foreignField: "_id",
+          as: "attendanceDetails",
+        },
+      },
+      { $unwind: "$attendanceDetails" },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "attendanceDetails.subject",
+          foreignField: "_id",
+          as: "subjectDetails",
+        },
+      },
+      { $unwind: "$subjectDetails" },
+      {
+        $project: {
+          _id: 0,
+          subjectName: "$subjectDetails.name",
+          date: "$attendanceDetails.date",
+          status: "$attendanceDetails.status",
+          note: "$attendanceDetails.note",
+          createdAt: "$attendanceDetails.createdAt",
+        },
+      },
+    ]);
+    return res.status(200).json({
+      success: true,
+      attendance,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 
 module.exports = {
   studentRegister,
@@ -656,4 +792,6 @@ module.exports = {
   getStudentDetails,
   updateStudentProfile,
   getStudentSubjects,
+  getStudentScores,
+  getStudentAttendance,
 };
