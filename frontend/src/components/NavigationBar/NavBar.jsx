@@ -8,6 +8,34 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoCall } from "react-icons/io5";
 
+// Utility to get a cookie by name
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Function to try refreshing token for a given role
+async function tryRefreshToken(role) {
+  let url = "";
+  if (role === "admin") url = "/admin/refresh";
+  else if (role === "teacher") url = "/teacher/refresh";
+  else url = "/student/refresh";
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await res.json();
+    return data.success;
+  } catch {
+    return false;
+  }
+}
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -206,9 +234,28 @@ const Navbar = () => {
               <>
                 <div className="relative">
                   <button
-                    onClick={() => {
-                      setLoginOpen(!loginOpen);
-                      setRegisterOpen(false);
+                    onClick={async () => {
+                      const refreshToken = getCookie("refreshToken");
+                      if (refreshToken) {
+                        const roles = ["admin", "teacher", "student"];
+                        for (const role of roles) {
+                          const refreshed = await tryRefreshToken(role);
+                          if (refreshed) {
+                            window.location.href =
+                              role === "admin"
+                                ? "/admindashboard"
+                                : role === "teacher"
+                                ? "/teacherDashboard"
+                                : "/studentdashboard";
+                            return;
+                          }
+                        }
+                        setLoginOpen(!loginOpen);
+                        setRegisterOpen(false);
+                      } else {
+                        setLoginOpen(!loginOpen);
+                        setRegisterOpen(false);
+                      }
                     }}
                     className="px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                   >
@@ -237,9 +284,19 @@ const Navbar = () => {
                               href={`/login/${role.toLowerCase()}`}
                               target="_blank"
                               className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-500 transition-colors"
-                              onClick={() => {
-                                handleLinkClick("login", role);
-                                setLoginOpen(false);
+                              onClick={(e) => {
+                                if (isLoggedIn) {
+                                  e.preventDefault();
+                                  window.location.href =
+                                    userRole === "admin"
+                                      ? "/admindashboard"
+                                      : userRole === "teacher"
+                                      ? "/teacherDashboard"
+                                      : "/studentdashboard";
+                                } else {
+                                  handleLinkClick("login", role);
+                                  setLoginOpen(false);
+                                }
                               }}
                             >
                               <span className="flex-1">{role} Login</span>
@@ -462,9 +519,19 @@ const Navbar = () => {
                               target="_blank"
                               className="flex items-center justify-between px-4 py-3 text-md text-gray-700 bg-white hover:bg-red-50 hover:text-red-500 transition-colors rounded-lg shadow-sm min-h-[48px]"
                               style={{ WebkitTapHighlightColor: "transparent" }}
-                              onClick={() => {
-                                handleLinkClick("login", role);
-                                setIsOpen(false);
+                              onClick={(e) => {
+                                if (isLoggedIn) {
+                                  e.preventDefault();
+                                  window.location.href =
+                                    userRole === "admin"
+                                      ? "/admindashboard"
+                                      : userRole === "teacher"
+                                      ? "/teacherDashboard"
+                                      : "/studentdashboard";
+                                } else {
+                                  handleLinkClick("login", role);
+                                  setIsOpen(false);
+                                }
                               }}
                             >
                               <span>{role} Login</span>
