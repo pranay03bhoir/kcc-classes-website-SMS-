@@ -1221,43 +1221,199 @@ const getTeachersById = async (req, res) => {
 const updateTeachersDetails = async (req, res) => {
   try {
     const teacherId = req.params.id;
-    const existingTeacher = await Teacher.findById(teacherId);
-    if (!existingTeacher) {
+    const {
+      name,
+      email,
+      password,
+      contact,
+      alternateContact,
+      address,
+      profileImage,
+      joiningYear,
+      isVerified,
+      role,
+    } = req.body;
+
+    // Validate teacher ID
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid teacher ID format",
+      });
+    }
+
+    // Fetch the current teacher record
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) {
       return res.status(404).json({
         success: false,
         message: "Teacher not found",
       });
     }
-    const { name, email, password, contact, address } = req.body;
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const teacher = await Teacher.findByIdAndUpdate(
-      teacherId,
-      {
-        name: name,
-        email: email,
-        password: hashedPassword,
-        contact: contact,
-        address: address,
-      },
-      { new: true, runValidators: true }
-    );
-    if (!teacher) {
-      res.status(404).json({
-        success: false,
-        message: "Teacher details update failed",
+
+    // Prepare the fields to update
+    const updateFields = {};
+
+    // Validate and update name
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Name cannot be empty",
+        });
+      }
+      updateFields.name = name.trim();
+    }
+
+    // Validate and update email
+    if (email !== undefined) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide a valid email address",
+        });
+      }
+      // Check if email already exists (excluding current teacher)
+      const existingTeacher = await Teacher.findOne({
+        email: email.toLowerCase().trim(),
+        _id: { $ne: teacherId },
       });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: "Teacher details updated",
+      if (existingTeacher) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+      updateFields.email = email.toLowerCase().trim();
+    }
+
+    // Validate and update contact
+    if (contact !== undefined) {
+      const contactRegex = /^[0-9]{10}$/;
+      if (!contactRegex.test(contact)) {
+        return res.status(400).json({
+          success: false,
+          message: "Contact number must be a 10-digit number",
+        });
+      }
+      updateFields.contact = contact.trim();
+    }
+
+    // Validate and update alternateContact
+    if (alternateContact !== undefined) {
+      const contactRegex = /^[0-9]{10}$/;
+      if (!contactRegex.test(alternateContact)) {
+        return res.status(400).json({
+          success: false,
+          message: "Alternate contact number must be a 10-digit number",
+        });
+      }
+      updateFields.alternateContact = alternateContact.trim();
+    }
+
+    // Update address
+    if (address !== undefined) {
+      if (!address.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Address cannot be empty",
+        });
+      }
+      updateFields.address = address.trim();
+    }
+
+    // Update profileImage
+    if (profileImage !== undefined) {
+      updateFields.profileImage = profileImage.trim();
+    }
+
+    // Validate and update joiningYear
+    if (joiningYear !== undefined) {
+      const currentYear = new Date().getFullYear();
+      if (
+        typeof joiningYear !== "number" ||
+        joiningYear < 2000 ||
+        joiningYear > currentYear + 1
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: `Joining year must be between 2000 and ${currentYear + 1}`,
+        });
+      }
+      updateFields.joiningYear = joiningYear;
+    }
+
+    // Update boolean fields
+    if (isVerified !== undefined) {
+      updateFields.isVerified = Boolean(isVerified);
+    }
+    if (role !== undefined) {
+      updateFields.role = role;
+    }
+
+    // Handle password update
+    if (password !== undefined) {
+      if (!password.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Password cannot be empty",
+        });
+      }
+      // Check if the provided password is plain text (not already hashed)
+      if (password.length < 60) {
+        const isSamePassword = await bcrypt.compare(password, teacher.password);
+        if (isSamePassword) {
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a new password",
+          });
+        }
+        const genSalt = await bcrypt.genSalt(10);
+        updateFields.password = await bcrypt.hash(password, genSalt);
+      } else {
+        updateFields.password = password;
+      }
+    }
+
+    // Add updatedAt timestamp
+    updateFields.updatedAt = new Date();
+
+    // Update the teacher record with new data
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
+      teacherId,
+      updateFields,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password -refreshToken");
+
+    if (!updatedTeacher) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update teacher details",
       });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Teacher details updated successfully.",
+      data: updatedTeacher,
+    });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({
+    console.error("Error updating teacher details:", e);
+    // Handle specific MongoDB errors
+    if (e.code === 11000) {
+      const field = Object.keys(e.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
+      });
+    }
+    return res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: "Something went wrong while updating teacher details.",
     });
   }
 };
