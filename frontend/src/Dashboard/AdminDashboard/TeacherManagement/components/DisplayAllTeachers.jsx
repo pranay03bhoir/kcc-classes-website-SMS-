@@ -1,26 +1,32 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
-import api from "@/utils/axios";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FaUser, FaEdit, FaEye, FaSearch } from "react-icons/fa";
-import Sidebar from "@/Dashboard/AdminDashboard/SideBar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import EditTeacherDetails from "./modals/EditTeacherDetails";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import api from "@/utils/axios";
+import { useEffect, useMemo, useState } from "react";
+import { FaEdit, FaEye, FaSearch, FaUser } from "react-icons/fa";
 import AddTeacher from "./modals/AddTeacher";
+import EditTeacherDetails from "./modals/EditTeacherDetails";
 
 const DisplayAllTeachers = () => {
   const [teachers, setTeachers] = useState([]);
@@ -42,9 +48,7 @@ const DisplayAllTeachers = () => {
         setError(res.data.message || "Failed to fetch teachers");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Error fetching teachers."
-      );
+      setError(err.response?.data?.message || "Error fetching teachers.");
     } finally {
       setLoading(false);
     }
@@ -66,11 +70,7 @@ const DisplayAllTeachers = () => {
   }, [teachers, search]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 pt-16">
-      {/* Sidebar - Fixed on desktop, overlay on mobile */}
-      <div className="fixed inset-y-0 left-0 z-40 md:relative md:z-auto">
-        <Sidebar />
-      </div>
+    <div className="flex py-10 bg-gray-50 pt-16">
       {/* Main content area - Properly positioned for mobile and desktop */}
       <div className="flex-1 w-full md:ml-16 bg-[#f9fafb] p-4 md:p-6 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
@@ -106,17 +106,36 @@ const DisplayAllTeachers = () => {
               {loading ? (
                 <div className="flex flex-col justify-center items-center h-40 gap-2">
                   <LoadingSpinner />
-                  <span className="text-gray-500 mt-2">Loading teachers...</span>
+                  <span className="text-gray-500 mt-2">
+                    Loading teachers...
+                  </span>
                 </div>
               ) : error ? (
                 <div className="flex justify-center items-center h-32">
-                  <Alert variant="destructive" className="w-full max-w-md mx-auto rounded-lg shadow">
+                  <Alert
+                    variant="destructive"
+                    className="w-full max-w-md mx-auto rounded-lg shadow"
+                  >
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 </div>
               ) : filteredTeachers.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-32 text-gray-500 gap-2">
-                  <svg width="64" height="64" fill="none" viewBox="0 0 24 24" className="mb-2"><circle cx="12" cy="12" r="10" fill="#f3f4f6"/><path d="M8 10h8M8 14h5" stroke="#a0aec0" strokeWidth="2" strokeLinecap="round"/></svg>
+                  <svg
+                    width="64"
+                    height="64"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    className="mb-2"
+                  >
+                    <circle cx="12" cy="12" r="10" fill="#f3f4f6" />
+                    <path
+                      d="M8 10h8M8 14h5"
+                      stroke="#a0aec0"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                   <span>No teachers found.</span>
                 </div>
               ) : (
@@ -135,18 +154,23 @@ const DisplayAllTeachers = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredTeachers.map((teacher, idx) => (
-                        <TableRow key={teacher._id} className="hover:bg-blue-50/40 transition-all group">
+                        <TableRow
+                          key={teacher._id}
+                          className="hover:bg-blue-50/40 transition-all group"
+                        >
                           <TableCell>{idx + 1}</TableCell>
                           <TableCell>
                             <Avatar className="border-2 border-blue-200 shadow-sm group-hover:border-blue-400 transition-all">
                               <AvatarFallback>
-                                {teacher.name
-                                  ? teacher.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")
-                                      .toUpperCase()
-                                  : <FaUser className="text-gray-400" />}
+                                {teacher.name ? (
+                                  teacher.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                ) : (
+                                  <FaUser className="text-gray-400" />
+                                )}
                               </AvatarFallback>
                             </Avatar>
                           </TableCell>
@@ -199,7 +223,8 @@ const DisplayAllTeachers = () => {
           <DialogHeader>
             <DialogTitle>Teacher Details</DialogTitle>
             <DialogDescription>
-              View details for <span className="font-semibold">{viewTeacher?.name}</span>
+              View details for{" "}
+              <span className="font-semibold">{viewTeacher?.name}</span>
             </DialogDescription>
           </DialogHeader>
           {viewTeacher && (
@@ -207,25 +232,32 @@ const DisplayAllTeachers = () => {
               <div className="flex items-center gap-3">
                 <Avatar className="border-2 border-blue-200 shadow-sm">
                   <AvatarFallback>
-                    {viewTeacher.name
-                      ? viewTeacher.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                      : <FaUser className="text-gray-400" />}
+                    {viewTeacher.name ? (
+                      viewTeacher.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                    ) : (
+                      <FaUser className="text-gray-400" />
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold text-lg">{viewTeacher.name}</div>
-                  <div className="text-xs text-gray-500">{viewTeacher.teacherId}</div>
+                  <div className="font-semibold text-lg">
+                    {viewTeacher.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {viewTeacher.teacherId}
+                  </div>
                 </div>
               </div>
               <div>
                 <span className="font-medium">Email:</span> {viewTeacher.email}
               </div>
               <div>
-                <span className="font-medium">Contact:</span> {viewTeacher.contact}
+                <span className="font-medium">Contact:</span>{" "}
+                {viewTeacher.contact}
               </div>
               {/* Add more fields as needed */}
             </div>

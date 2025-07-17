@@ -616,6 +616,103 @@ const createStudents = async (req, res) => {
   }
 };
 
+const createTeachers = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      contact,
+      alternateContact,
+      address,
+      profileImage,
+      joiningYear,
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password || !contact || !address || !joiningYear) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "All required fields (name, email, password, contact, address) must be provided",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
+    }
+
+    // Check if teacher already exists
+    const existingTeacher = await Teacher.findOne({ email: email });
+    if (existingTeacher) {
+      return res.status(400).json({
+        success: false,
+        message: `Teacher with email ${email} already exists. Kindly login`,
+      });
+    }
+
+    // Validate contact number
+    const contactRegex = /^[0-9]{10}$/;
+    if (!contactRegex.test(contact)) {
+      return res.status(400).json({
+        success: false,
+        message: "Contact number must be a 10-digit number",
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create teacher object
+    const teacherData = {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      contact: contact.trim(),
+      alternateContact: alternateContact ? alternateContact.trim() : "",
+      joiningYear: parseInt(joiningYear),
+      address: address.trim(),
+      role: "teacher",
+    };
+
+    // Add optional fields if provided
+    if (profileImage) teacherData.profileImage = profileImage.trim();
+
+    const teacher = new Teacher(teacherData);
+    await teacher.save();
+
+    // Send verification email
+    const token = jwt.sign({ email: teacher.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    try {
+      await sendVerificationEmail(teacher.email, token);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      // Continue with teacher creation even if email fails
+    }
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Teacher registered successfully. A verification link has been sent to your email.",
+    });
+  } catch (e) {
+    console.error("Error creating teacher:", e);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while creating teacher",
+    });
+  }
+};
+
 /**
  * Updates details of an existing student
  * @async
@@ -1408,7 +1505,9 @@ const updateTeachersDetails = async (req, res) => {
       const field = Object.keys(e.keyPattern)[0];
       return res.status(400).json({
         success: false,
-        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
+        message: `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } already exists`,
       });
     }
     return res.status(500).json({
@@ -1953,41 +2052,88 @@ const enrollStudentInSubject = async (req, res) => {
 const addTeacherToSubject = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const { subjects } = req.query;
+    let { subjects } = req.query;
+
+    // Validate teacherId
+    if (!teacherId || !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing teacherId",
+      });
+    }
+
+    // Validate subjects
+    if (!subjects || (Array.isArray(subjects) && subjects.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one subjectId must be provided",
+      });
+    }
+
+    // Normalize subjects to array
+    const subjectArray = Array.isArray(subjects) ? subjects : [subjects];
+
+    // Fetch teacher
     const existingTeacher = await Teacher.findById(teacherId);
     if (!existingTeacher) {
       return res.status(404).json({
         success: false,
         message: "Teacher not found",
       });
-    } else {
-      const subjectArray = Array.isArray(subjects) ? subjects : [subjects];
+    }
 
-      const isAlreadyAdded = subjectArray.some((subject) =>
-        existingTeacher.subjects
-          .map((c) => c.toString())
-          .includes(subject.toString())
-      );
-      if (isAlreadyAdded) {
-        return res.status(400).json({
-          success: false,
-          message: "Teacher already added in the subject",
-        });
-      } else {
-        const teacher = await Teacher.findByIdAndUpdate(
+    // Prepare result summary
+    const results = [];
+    for (const subjectId of subjectArray) {
+      if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+        results.push({ subjectId, status: "invalid_subject_id" });
+        continue;
+      }
+      // Check if subject exists
+      const subject = await Subject.findById(subjectId);
+      if (!subject) {
+        results.push({ subjectId, status: "subject_not_found" });
+        continue;
+      }
+      // Check if teacher already added to subject
+      const alreadyInTeacher = existingTeacher.subjects
+        .map(String)
+        .includes(subjectId);
+      const alreadyInSubject = subject.teachers.map(String).includes(teacherId);
+      if (alreadyInTeacher && alreadyInSubject) {
+        results.push({ subjectId, status: "already_added" });
+        continue;
+      }
+      // Add subject to teacher if not present
+      if (!alreadyInTeacher) {
+        await Teacher.findByIdAndUpdate(
           teacherId,
-          {
-            $addToSet: { subjects: { $each: subjectArray } },
-          },
+          { $addToSet: { subjects: subjectId } },
           { new: true, runValidators: true }
         );
-        return res.status(200).json({
-          success: true,
-          message: "Teacher added to subject successfully",
-          teacher,
-        });
       }
+      // Add teacher to subject if not present
+      if (!alreadyInSubject) {
+        await Subject.findByIdAndUpdate(
+          subjectId,
+          { $addToSet: { teachers: teacherId } },
+          { new: true, runValidators: true }
+        );
+      }
+      results.push({ subjectId, status: "added" });
     }
+
+    // Refetch updated teacher
+    const updatedTeacher = await Teacher.findById(teacherId).populate(
+      "subjects"
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Add teacher to subject operation completed.",
+      results,
+      teacher: updatedTeacher,
+    });
   } catch (e) {
     console.error(e);
     res.status(500).json({
@@ -2064,46 +2210,95 @@ const removeStudentFromSubject = async (req, res) => {
  * @throws {Error} If removal fails or subject not found
  */
 const removeTeacherFromSubject = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id: subjectId } = req.params;
-    const { teacherIds } = req.body;
-    const teacher = await Subject.findByIdAndUpdate(
-      subjectId,
-      {
-        $pull: { teachers: { $in: teacherIds } },
-      },
-      { new: true }
+    let { teacherIds } = req.query;
+
+    // Validate teacherIds
+    if (!teacherIds || !Array.isArray(teacherIds) || teacherIds.length === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        success: false,
+        message: "teacherIds must be a non-empty array",
+      });
+    }
+    // Validate ObjectIds
+    const invalidIds = teacherIds.filter(
+      (id) => !mongoose.Types.ObjectId.isValid(id)
     );
-    if (!teacher) {
+    if (invalidIds.length > 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        success: false,
+        message: `Invalid teacherIds: ${invalidIds.join(", ")}`,
+      });
+    }
+
+    // Check if subject exists
+    const subject = await Subject.findById(subjectId).session(session);
+    if (!subject) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({
         success: false,
-        message: "Teacher not found",
+        message: "Subject not found",
       });
-    } else {
-      const teachers = await Teacher.updateMany(
-        { _id: { $in: teacherIds } },
-        {
-          $pull: { subjects: subjectId },
-        },
-        { new: true }
-      );
-      if (!teachers) {
-        return res.status(404).json({
-          success: false,
-          message: "Teacher not found",
-        });
-      } else {
-        res.status(200).json({
-          success: true,
-          message: "Teacher removed from subject successfully",
-        });
-      }
     }
+
+    // Track results
+    const removed = [];
+    const notFound = [];
+    const notAssociated = [];
+
+    for (const teacherId of teacherIds) {
+      const teacher = await Teacher.findById(teacherId).session(session);
+      if (!teacher) {
+        notFound.push(teacherId);
+        continue;
+      }
+      // Check if teacher is associated with subject
+      const isInSubject = subject.teachers.map(String).includes(teacherId);
+      if (!isInSubject) {
+        notAssociated.push(teacherId);
+        continue;
+      }
+      // Remove teacher from subject
+      await Subject.findByIdAndUpdate(
+        subjectId,
+        { $pull: { teachers: teacherId } },
+        { session }
+      );
+      // Remove subject from teacher
+      await Teacher.findByIdAndUpdate(
+        teacherId,
+        { $pull: { subjects: subjectId } },
+        { session }
+      );
+      removed.push(teacherId);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      success: true,
+      message: "Remove teacher(s) from subject operation completed.",
+      removed,
+      notFound,
+      notAssociated,
+    });
   } catch (e) {
-    console.error(e);
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error in removeTeacherFromSubject:", e);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
+      error: e.message,
     });
   }
 };
@@ -3415,6 +3610,7 @@ module.exports = {
   getAdminDetails,
   updateAdminDetails,
   createStudents,
+  createTeachers,
   updateStudentDetails,
   getAllStudents,
   getAllStudentsWithPagination,

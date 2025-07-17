@@ -3,7 +3,8 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     process.env.NEXT_PUBLIC_AXIOS_ADMIN_URL ||
-    "http://localhost:5000/api/admin",
+    "http://localhost:5000/api/admin" ||
+    "192.168.1.106:5000",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -38,7 +39,8 @@ api.interceptors.response.use(
         const refreshResponse = await axios.post(
           `${
             process.env.NEXT_PUBLIC_AXIOS_ADMIN_URL ||
-            "http://localhost:5000/api/admin"
+            "http://localhost:5000/api/admin" ||
+            "192.168.1.106:5000"
           }/refresh`,
           {},
           { withCredentials: true }
@@ -64,4 +66,27 @@ export default api;
 
 export const resendVerificationEmail = async (data) => {
   return api.post("/resend-verification-email", data);
+};
+
+export const addTeacherToSubject = async (teacherId, subjects) => {
+  // subjects can be a string or array of subject IDs
+  let query = "";
+  if (Array.isArray(subjects)) {
+    query = subjects
+      .map((id) => `subjects=${encodeURIComponent(id)}`)
+      .join("&");
+  } else {
+    query = `subjects=${encodeURIComponent(subjects)}`;
+  }
+  return api.put(`/subjects/add/teachers/${teacherId}?${query}`);
+};
+
+export const removeTeacherFromSubject = async (subjectId, teacherIds) => {
+  // teacherIds must be an array
+  if (!Array.isArray(teacherIds))
+    throw new Error("teacherIds must be an array");
+  const query = teacherIds
+    .map((id) => `teacherIds=${encodeURIComponent(id)}`)
+    .join("&");
+  return api.put(`/subjects/teachers/${subjectId}?${query}`);
 };

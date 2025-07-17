@@ -51,6 +51,7 @@ const {
   getAttendanceStats,
   getFilteredAttendanceRecords,
   resendVerificationEmailAdmin,
+  createTeachers,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -182,4 +183,5 @@ router.get(
   getFilteredAttendanceRecords
 );
 router.post("/resend-verification-email", resendVerificationEmailAdmin);
+router.post("/create/teachers", loginAuth, adminAuth, createTeachers);
 module.exports = router;

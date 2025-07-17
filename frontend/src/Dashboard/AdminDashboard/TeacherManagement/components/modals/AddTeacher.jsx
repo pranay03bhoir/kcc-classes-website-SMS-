@@ -1,10 +1,9 @@
-import React from 'react'
-import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import api from "@/utils/axios";
+import { useState } from "react";
 
 const AddTeacher = ({ onSuccess, onClose }) => {
   const [form, setForm] = useState({
@@ -16,8 +15,6 @@ const AddTeacher = ({ onSuccess, onClose }) => {
     address: "",
     joiningYear: "",
     profileImage: "",
-    isVerified: false,
-    role: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,27 +33,29 @@ const AddTeacher = ({ onSuccess, onClose }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    // Trim all string fields
+    // Prepare payload according to backend requirements
     const trimmedForm = {
-      ...form,
       name: form.name.trim(),
-      email: form.email.trim(),
+      email: form.email.toLowerCase().trim(),
+      password: form.password,
       contact: form.contact.trim(),
       alternateContact: form.alternateContact.trim(),
       address: form.address.trim(),
+      joiningYear: form.joiningYear !== "" ? parseInt(form.joiningYear) : "",
       profileImage: form.profileImage.trim(),
-      role: form.role.trim(),
-      joiningYear: form.joiningYear !== "" ? Number(form.joiningYear) : "",
     };
+    // Remove optional fields if empty
+    if (!trimmedForm.alternateContact) delete trimmedForm.alternateContact;
+    if (!trimmedForm.profileImage) delete trimmedForm.profileImage;
     // Validate contact fields
-    if (!validateContact(trimmedForm.contact)) {
+    if (!/^[0-9]{10}$/.test(trimmedForm.contact)) {
       setError("Contact number must be a 10-digit number");
       setLoading(false);
       return;
     }
     if (
       trimmedForm.alternateContact &&
-      !validateContact(trimmedForm.alternateContact)
+      !/^[0-9]{10}$/.test(trimmedForm.alternateContact)
     ) {
       setError("Alternate contact number must be a 10-digit number");
       setLoading(false);
@@ -74,8 +73,30 @@ const AddTeacher = ({ onSuccess, onClose }) => {
       setLoading(false);
       return;
     }
+    // Validate required fields
+    if (
+      !trimmedForm.name ||
+      !trimmedForm.email ||
+      !trimmedForm.password ||
+      !trimmedForm.contact ||
+      !trimmedForm.address ||
+      !trimmedForm.joiningYear
+    ) {
+      setError(
+        "All required fields (name, email, password, contact, address) must be provided"
+      );
+      setLoading(false);
+      return;
+    }
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedForm.email)) {
+      setError("Please provide a valid email address");
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await api.post("/teachers/register", trimmedForm);
+      const res = await api.post("/create/teachers", trimmedForm);
       if (res.data.success) {
         onSuccess && onSuccess();
       } else {
@@ -89,67 +110,69 @@ const AddTeacher = ({ onSuccess, onClose }) => {
   };
 
   return (
-    <div style={{ maxHeight: "90vh", overflowY: "auto" }}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
+    <div className="max-h-[70vh] overflow-y-auto px-2 sm:px-4 md:px-8 bg-white rounded-2xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
         {error && (
-          <Alert variant="destructive" className="mb-2">
+          <Alert variant="destructive" className="mb-2 border-0 bg-red-50 text-red-700">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
         {/* Main Info Section */}
-        <div className="rounded-xl border bg-white/80 shadow-sm p-6 flex flex-col gap-6">
-          <h3 className="text-base font-medium text-slate-700 mb-2 border-b border-slate-100 pb-2">Personal Information</h3>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Name</label>
+        <div className="rounded-xl bg-neutral-50 p-3 sm:p-4 flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-neutral-700 mb-1 pb-1 tracking-tight">
+            Personal Information
+          </h3>
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 md:gap-4 items-stretch">
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Name</label>
               <Input
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
                 autoFocus
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="Enter full name"
               />
             </div>
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Contact</label>
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Contact</label>
               <Input
                 name="contact"
                 value={form.contact}
                 onChange={handleChange}
                 required
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="10-digit number"
               />
             </div>
           </div>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Alternate Contact</label>
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 md:gap-4 items-stretch">
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Alternate Contact</label>
               <Input
                 name="alternateContact"
                 value={form.alternateContact}
                 onChange={handleChange}
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="10-digit number (optional)"
               />
             </div>
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Address</label>
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Address</label>
               <Textarea
                 name="address"
                 value={form.address}
                 onChange={handleChange}
-                className="flex-1 min-h-[48px] bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="min-h-[40px] bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="Full address"
                 rows={2}
               />
             </div>
           </div>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Joining Year</label>
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 md:gap-4 items-stretch">
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Joining Year</label>
               <Input
                 name="joiningYear"
                 type="number"
@@ -158,82 +181,70 @@ const AddTeacher = ({ onSuccess, onClose }) => {
                 required
                 min="2000"
                 max={new Date().getFullYear() + 1}
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="YYYY"
               />
             </div>
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Profile Image</label>
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Profile Image</label>
               <Input
                 name="profileImage"
                 value={form.profileImage}
                 onChange={handleChange}
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="Image URL (optional)"
               />
             </div>
           </div>
         </div>
         {/* Account Section */}
-        <div className="rounded-xl border bg-white/80 shadow-sm p-6 flex flex-col gap-6">
-          <h3 className="text-base font-medium text-slate-700 mb-2 border-b border-slate-100 pb-2">Account & Access</h3>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div className="flex-1 min-w-[400px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Email</label>
+        <div className="rounded-xl bg-neutral-50 p-3 sm:p-4 flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-neutral-700 mb-1 pb-1 tracking-tight">
+            Account & Access
+          </h3>
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 md:gap-4 items-stretch">
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Email</label>
               <Input
                 name="email"
                 type="email"
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="Email address"
               />
             </div>
-            <div className="flex-1 min-w-[400px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Role <span className="text-xs text-gray-400">(optional)</span></label>
-              <Input
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                className="flex-1 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
-                placeholder="Role (optional)"
-              />
-            </div>
           </div>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div className="flex-1 min-w-[320px] flex items-center gap-4">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Password</label>
+          <div className="flex flex-col md:flex-row flex-wrap gap-3 md:gap-4 items-stretch">
+            <div className="flex-1 min-w-0 md:min-w-[180px] flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-600">Password</label>
               <Input
                 name="password"
                 type="password"
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="pr-10 bg-slate-50 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg"
+                className="pr-10 bg-neutral-100 border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm placeholder:text-neutral-400"
                 placeholder="Password"
               />
             </div>
-            <div className="flex-1 min-w-[320px] flex items-center gap-4 mt-2">
-              <input
-                type="checkbox"
-                name="isVerified"
-                checked={form.isVerified}
-                onChange={handleChange}
-                id="isVerified"
-                className="accent-primary h-5 w-5 rounded-full border-2 border-primary bg-white transition-colors duration-150 focus:ring-2 focus:ring-primary/40"
-              />
-              <label htmlFor="isVerified" className="text-sm font-medium text-slate-700">
-                Verified
-              </label>
-            </div>
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button type="submit" disabled={loading} className="min-w-[120px] bg-primary text-white hover:bg-primary/90 rounded-lg shadow-sm">
+        <div className="mt-2 flex flex-col sm:flex-row justify-end gap-2 w-full">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="min-w-[100px] bg-primary text-white hover:bg-primary/90 rounded-lg shadow-none font-medium text-sm px-3 py-2"
+          >
             {loading ? "Adding..." : "Add Teacher"}
           </Button>
-          <Button type="button" variant="outline" onClick={onClose} className="rounded-lg">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 font-medium text-sm px-3 py-2 shadow-none"
+          >
             Cancel
           </Button>
         </div>
