@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Course = require("../models/subject.model");
 const Teacher = require("../models/teacher.model");
+const Topper = require("../models/topper.model");
 function userAuthCheck(req, res) {
   const token = req.cookies.accessToken;
 
@@ -47,4 +48,20 @@ const searchATeacher = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
-module.exports = { userAuthCheck, getAllCourses, searchATeacher };
+const getAllToppers = async (req, res) => {
+  try {
+    const toppers = await Topper.find();
+    if (!toppers || toppers.length === 0) {
+      return res.status(404).json({ message: "No toppers found" });
+    }
+    return res.status(200).json({ toppers });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+module.exports = {
+  userAuthCheck,
+  getAllCourses,
+  searchATeacher,
+  getAllToppers,
+};

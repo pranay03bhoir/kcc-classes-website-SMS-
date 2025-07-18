@@ -8,4 +8,8 @@ const api = axios.create({
   },
 });
 
+export const getAllToppers = async () => {
+  return api.get("/get/toppers");
+};
+
 export default api;
