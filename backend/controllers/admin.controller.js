@@ -14,6 +14,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { sendVerificationEmail } = require("../utils/admin.email.js");
+const Topper = require("../models/topper.model");
 
 /**
  * Registers a new admin user in the system
@@ -2216,6 +2217,11 @@ const removeTeacherFromSubject = async (req, res) => {
     const { id: subjectId } = req.params;
     let { teacherIds } = req.query;
 
+    // Convert single teacherId string to array
+    if (typeof teacherIds === "string") {
+      teacherIds = [teacherIds];
+    }
+
     // Validate teacherIds
     if (!teacherIds || !Array.isArray(teacherIds) || teacherIds.length === 0) {
       await session.abortTransaction();
@@ -3602,6 +3608,128 @@ const getFilteredAttendanceRecords = async (req, res) => {
   }
 };
 
+/**
+ * Adds a new topper student record to the system.
+ * @async
+ * @function addTopperStudent
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing topper student details
+ * @param {string} req.body.studentName - Name of the topper student
+ * @param {string} req.body.examType - Type of exam (e.g., Board, JEE, NEET)
+ * @param {number|string} req.body.score - Score achieved by the student
+ * @param {number|string} req.body.year - Year of the exam
+ * @param {string} [req.body.profileImage] - (Optional) Profile image URL
+ * @param {string|string[]} [req.body.otherAchievements] - (Optional) Other achievements (string or array of strings)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success status, message, and topper data
+ * @throws {Error} If required fields are missing, topper already exists, or database error occurs
+ */
+const addTopperStudent = async (req, res) => {
+  try {
+    const topperStudent = req.body;
+    if (
+      !topperStudent.studentName ||
+      !topperStudent.examType ||
+      !topperStudent.score ||
+      !topperStudent.year
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Fill the required fields",
+      });
+    }
+    const existingTopper = await Topper.findOne({
+      studentName: topperStudent.studentName,
+      examType: topperStudent.examType,
+      year: topperStudent.year,
+    });
+    if (existingTopper) {
+      return res.status(400).json({
+        success: false,
+        message: "Topper already exists for this exam type and year",
+      });
+    }
+    // Prepare topper data according to the model
+    const topperData = {
+      studentName: topperStudent.studentName,
+      score: topperStudent.score,
+      examType: topperStudent.examType,
+      year: topperStudent.year,
+      profileImage: topperStudent.profileImage || "",
+      otherAchievements: Array.isArray(topperStudent.otherAchievements)
+        ? topperStudent.otherAchievements
+        : topperStudent.otherAchievements
+        ? [topperStudent.otherAchievements]
+        : [],
+    };
+    const newTopper = new Topper(topperData);
+    await newTopper.save();
+    return res.status(201).json({
+      success: true,
+      message: "Topper added successfully",
+      topper: newTopper,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getAllToppers = async (req, res) => {
+  try {
+    const toppers = await Topper.find({});
+    if (!toppers || toppers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No toppers found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Toppers found successfully",
+      toppers,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const deleteTopperStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid topper ID",
+      });
+    }
+    const topper = await Topper.findByIdAndDelete(id);
+    if (!topper) {
+      return res.status(404).json({
+        success: false,
+        message: "Topper not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Topper deleted successfully",
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 module.exports = {
   adminRegister,
   adminLogin,
@@ -3655,4 +3783,7 @@ module.exports = {
   getAttendanceStats,
   getFilteredAttendanceRecords,
   resendVerificationEmailAdmin,
+  addTopperStudent,
+  getAllToppers,
+  deleteTopperStudent,
 };

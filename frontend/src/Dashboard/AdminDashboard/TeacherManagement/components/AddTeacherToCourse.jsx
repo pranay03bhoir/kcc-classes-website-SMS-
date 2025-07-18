@@ -156,9 +156,24 @@ const AddTeacherToCourse = () => {
               <h3 className="text-lg sm:text-xl font-semibold text-green-700 mb-2">
                 Success!
               </h3>
-              <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
+              <p className="text-gray-600 mb-2 text-center text-sm sm:text-base">
                 Teacher has been assigned to the selected subject(s).
               </p>
+              {/* Feedback summary */}
+              <div className="bg-green-50 border border-green-200 rounded-md px-4 py-3 mb-4 w-full max-w-md">
+                <div className="mb-2">
+                  <span className="font-semibold text-green-800">Teacher:</span> <br />
+                  <span className="text-green-900">{selectedTeacherObj ? `${selectedTeacherObj.name} (${selectedTeacherObj.email})` : "-"}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-green-800">Assigned Subjects:</span>
+                  <ul className="list-disc list-inside text-green-900 mt-1">
+                    {subjects.filter(s => selectedSubjects.includes(s._id)).map(s => (
+                      <li key={s._id}>{s.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
               <Button
                 onClick={handleReset}
                 className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-blue-700 transition-all flex items-center gap-2"

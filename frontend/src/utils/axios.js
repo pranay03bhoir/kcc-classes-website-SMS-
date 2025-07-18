@@ -82,11 +82,25 @@ export const addTeacherToSubject = async (teacherId, subjects) => {
 };
 
 export const removeTeacherFromSubject = async (subjectId, teacherIds) => {
-  // teacherIds must be an array
-  if (!Array.isArray(teacherIds))
-    throw new Error("teacherIds must be an array");
+  // Ensure teacherIds is always an array
+  if (!Array.isArray(teacherIds)) {
+    teacherIds = [teacherIds];
+  }
+  // The backend expects teacherIds as a query array (e.g., ?teacherIds=1&teacherIds=2)
   const query = teacherIds
     .map((id) => `teacherIds=${encodeURIComponent(id)}`)
     .join("&");
   return api.put(`/subjects/teachers/${subjectId}?${query}`);
+};
+
+export const addTopperStudent = async (data) => {
+  return api.post("/add/topper", data);
+};
+
+export const getAllToppers = async () => {
+  return api.get("/get/all/toppers");
+};
+
+export const deleteTopperStudent = async (id) => {
+  return api.delete(`/delete/topper/${id}`);
 };

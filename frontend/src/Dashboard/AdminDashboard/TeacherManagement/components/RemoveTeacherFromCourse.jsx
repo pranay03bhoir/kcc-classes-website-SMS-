@@ -44,6 +44,7 @@ const RemoveTeacherFromCourse = () => {
   const [subjectSearch, setSubjectSearch] = useState("");
   const [teacherDropdownOpen, setTeacherDropdownOpen] = useState(false);
   const [teacherSearch, setTeacherSearch] = useState("");
+  const [removalResult, setRemovalResult] = useState(null); // To store backend response
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +61,9 @@ const RemoveTeacherFromCourse = () => {
     };
     fetchData();
   }, []);
+  console.log("Teachers:", teachers);
+  console.log("Subjects:", subjects);
+
   // Filter teachers to only those assigned to the selected subject
   const teachersForSubject = selectedSubject
     ? teachers.filter((t) => {
@@ -80,8 +84,9 @@ const RemoveTeacherFromCourse = () => {
     }
     setLoading(true);
     try {
-      await removeTeacherFromSubject(selectedSubject, selectedTeachers);
+      const res = await removeTeacherFromSubject(selectedSubject, selectedTeachers);
       setSuccess(true);
+      setRemovalResult(res.data); // Store backend response
       toast.success("Teacher(s) removed from subject successfully");
     } catch (e) {
       toast.error(
@@ -91,6 +96,8 @@ const RemoveTeacherFromCourse = () => {
       setLoading(false);
     }
   };
+  console.log("Selected Subject:", selectedSubject);
+  console.log("Selected Teachers:", selectedTeachers);
 
   const handleReset = () => {
     setSelectedSubject("");
@@ -98,6 +105,7 @@ const RemoveTeacherFromCourse = () => {
     setSuccess(false);
     setSubjectSearch("");
     setTeacherSearch("");
+    setRemovalResult(null);
   };
 
   // For displaying selected subject in the trigger
@@ -157,14 +165,58 @@ const RemoveTeacherFromCourse = () => {
         </CardHeader>
         <CardContent className="px-0">
           {success ? (
-            <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12 w-full">
               <FaCheckCircle className="text-green-500 text-4xl sm:text-5xl mb-4 animate-bounce" />
               <h3 className="text-lg sm:text-xl font-semibold text-green-700 mb-2">
                 Success!
               </h3>
-              <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
-                Teacher(s) have been removed from the selected subject.
+              <p className="text-gray-600 mb-2 text-center text-sm sm:text-base">
+                Teacher removal operation completed.
               </p>
+              {/* Feedback summary */}
+              <div className="bg-green-50 border border-green-200 rounded-md px-4 py-3 mb-4 w-full max-w-md">
+                <div className="mb-2">
+                  <span className="font-semibold text-green-800">Subject:</span> <br />
+                  <span className="text-green-900">{selectedSubjectObj ? selectedSubjectObj.name : "-"}</span>
+                </div>
+                {removalResult && (
+                  <>
+                    {removalResult.removed && removalResult.removed.length > 0 && (
+                      <div className="mb-2">
+                        <span className="font-semibold text-green-700">Removed:</span>
+                        <ul className="list-disc list-inside text-green-700 text-sm">
+                          {removalResult.removed.map((id) => {
+                            const t = teachers.find((x) => String(x._id) === String(id));
+                            return <li key={id}>{t ? `${t.name} (${t.email})` : id}</li>;
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                    {removalResult.notFound && removalResult.notFound.length > 0 && (
+                      <div className="mb-2">
+                        <span className="font-semibold text-red-600">Not Found:</span>
+                        <ul className="list-disc list-inside text-red-600 text-sm">
+                          {removalResult.notFound.map((id) => {
+                            const t = teachers.find((x) => String(x._id) === String(id));
+                            return <li key={id}>{t ? `${t.name} (${t.email})` : id}</li>;
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                    {removalResult.notAssociated && removalResult.notAssociated.length > 0 && (
+                      <div className="mb-2">
+                        <span className="font-semibold text-yellow-600">Not Associated with Subject:</span>
+                        <ul className="list-disc list-inside text-yellow-600 text-sm">
+                          {removalResult.notAssociated.map((id) => {
+                            const t = teachers.find((x) => String(x._id) === String(id));
+                            return <li key={id}>{t ? `${t.name} (${t.email})` : id}</li>;
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
               <Button
                 onClick={handleReset}
                 className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-blue-700 transition-all flex items-center gap-2"

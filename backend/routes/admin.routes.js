@@ -52,6 +52,9 @@ const {
   getFilteredAttendanceRecords,
   resendVerificationEmailAdmin,
   createTeachers,
+  addTopperStudent,
+  getAllToppers,
+  deleteTopperStudent,
 } = require("../controllers/admin.controller");
 const adminAuth = require("../middlewares/adminAuth.middleware");
 const loginAuth = require("../middlewares/loginAuth.middleware");
@@ -184,4 +187,7 @@ router.get(
 );
 router.post("/resend-verification-email", resendVerificationEmailAdmin);
 router.post("/create/teachers", loginAuth, adminAuth, createTeachers);
+router.post("/add/topper", loginAuth, adminAuth, addTopperStudent);
+router.get("/get/all/toppers", loginAuth, adminAuth, getAllToppers);
+router.delete("/delete/topper/:id", loginAuth, adminAuth, deleteTopperStudent);
 module.exports = router;

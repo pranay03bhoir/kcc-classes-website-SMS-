@@ -19,6 +19,7 @@ import {
   FaTimes,
   FaUserGraduate,
 } from "react-icons/fa";
+import { FaTrophy } from "react-icons/fa6";
 import { MdScore } from "react-icons/md";
 
 const navItems = [
@@ -57,6 +58,12 @@ const navItems = [
     href: "/admindashboard/scores",
     icon: <MdScore />,
     description: "Track and manage students scores",
+  },
+  {
+    label: "Topper",
+    href: "/admindashboard/topper",
+    icon: <FaTrophy />,
+    description: "Add Topper students",
   },
   {
     label: "Reports",
