@@ -833,4 +833,5 @@ module.exports = {
   getStudentSubjects,
   getStudentScores,
   getStudentAttendance,
+  getStudentLeaderboard,
 };
