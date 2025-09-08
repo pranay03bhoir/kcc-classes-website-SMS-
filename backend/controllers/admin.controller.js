@@ -241,30 +241,45 @@ const generateNewRefreshAccessToken = async (req, res) => {
  */
 const adminLogout = async (req, res) => {
   try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) {
-      return res.status(204).send();
-    }
-    await Admin.updateOne(
-      { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } }
-    );
-    const clearCookies = ["accessToken", "refreshToken"];
-    clearCookies.forEach((cookie) => {
-      res.clearCookie(cookie, "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: process.env.NODE_ENV === "PRODUCTION" ? "Lax" : "None",
-      });
+    const { refreshToken } = req.cookies || {};
+
+    // Use the same cookie policy as login/refresh for reliable clearing
+    const isProd = process.env.NODE_ENV === "PRODUCTION";
+    const isCrossSite = process.env.CROSS_SITE === "true"; // align with login
+    const cookieDomain = process.env.COOKIE_DOMAIN || undefined; // optional
+
+    const getClearCookieOptions = () => ({
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+      path: "/",
+      domain: cookieDomain,
     });
 
-    res.status(200).json({
+    // Best-effort DB token invalidation (do not fail logout if not found)
+    if (refreshToken) {
+      try {
+        await Admin.updateOne(
+          { refreshToken: refreshToken },
+          { $unset: { refreshToken: "" } }
+        );
+      } catch (dbErr) {
+        console.error("Logout: failed to unset refreshToken:", dbErr);
+      }
+    }
+
+    // Always clear cookies regardless of presence in request
+    ["accessToken", "refreshToken"].forEach((cookieName) => {
+      res.clearCookie(cookieName, getClearCookieOptions());
+    });
+
+    return res.status(200).json({
       success: true,
       message: "Logged out successfully",
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
