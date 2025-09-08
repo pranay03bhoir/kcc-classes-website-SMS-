@@ -255,7 +255,7 @@ const studentLogin = async (req, res) => {
         res.cookie(
           "refreshToken",
           refreshToken,
-          getCookieOptions(cookieExpiration),
+          getCookieOptions(cookieExpiration)
         );
         return res.status(200).json({
           success: true,
@@ -360,13 +360,13 @@ const generateNewRefreshAccessToken = async (req, res) => {
         const newAccessToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" },
+          { expiresIn: "1h" }
         );
 
         const newRefreshToken = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_REFRESH_SECRET,
-          { expiresIn: "30d" },
+          { expiresIn: "30d" }
         );
 
         student.refreshToken = newRefreshToken;
@@ -385,12 +385,12 @@ const generateNewRefreshAccessToken = async (req, res) => {
         res.cookie(
           "accessToken",
           newAccessToken,
-          getCookieOptions(60 * 60 * 1000),
+          getCookieOptions(60 * 60 * 1000)
         ); // 1 hour
         res.cookie(
           "refreshToken",
           newRefreshToken,
-          getCookieOptions(30 * 24 * 60 * 60 * 1000),
+          getCookieOptions(30 * 24 * 60 * 60 * 1000)
         ); // 30 days
 
         return res.status(200).json({
@@ -399,7 +399,7 @@ const generateNewRefreshAccessToken = async (req, res) => {
           newAccessToken,
           data: student,
         });
-      },
+      }
     );
   } catch (e) {
     console.error(e);
@@ -423,23 +423,35 @@ const generateNewRefreshAccessToken = async (req, res) => {
  */
 const studentLogout = async (req, res) => {
   try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) {
-      return res.status(204).send();
-    }
-    await Student.updateOne(
-      { refreshToken: refreshToken },
-      { $unset: { refreshToken: "" } },
-    );
-    const cookiesToClear = ["accessToken", "refreshToken"];
-    cookiesToClear.forEach((cookie) => {
-      res.clearCookie(cookie, "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: "Lax",
-        expires: new Date(0),
-      });
+    const { refreshToken } = req.cookies || {};
+
+    const isProd = process.env.NODE_ENV === "PRODUCTION";
+    const isCrossSite = process.env.CROSS_SITE === "true";
+    const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
+    const getClearCookieOptions = () => ({
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+      path: "/",
+      domain: cookieDomain,
     });
+
+    if (refreshToken) {
+      try {
+        await Student.updateOne(
+          { refreshToken: refreshToken },
+          { $unset: { refreshToken: "" } }
+        );
+      } catch (dbErr) {
+        console.error("Student logout: failed to unset refreshToken:", dbErr);
+      }
+    }
+
+    ["accessToken", "refreshToken"].forEach((cookieName) => {
+      res.clearCookie(cookieName, getClearCookieOptions());
+    });
+
     return res.status(200).json({
       success: true,
       message: "Logged out successfully",
@@ -469,7 +481,7 @@ const getStudentDetails = async (req, res) => {
     const studentId = req.userInfo.id;
     const student = await Student.findById(studentId)
       .select(
-        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects attendance role createdAt updatedAt",
+        "studentId name email contact parentsContact address currentStd admissionYear profileImage batches scores subjects attendance role createdAt updatedAt"
       )
       .populate({
         path: "subjects",
@@ -600,7 +612,7 @@ const updateStudentProfile = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      },
+      }
     );
 
     return res.status(200).json({

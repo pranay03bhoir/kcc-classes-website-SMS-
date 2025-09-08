@@ -319,29 +319,42 @@ const generateNewAccessRefreshToken = async (req, res) => {
  */
 const teacherLogout = async (req, res) => {
   try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) {
-      return res.status(203).send();
-    }
-    await Teacher.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
+    const { refreshToken } = req.cookies || {};
 
-    const cookiesToClear = ["accessToken", "refreshToken"];
-    cookiesToClear.forEach((cookie) => {
-      res.clearCookie(cookie, "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "PRODUCTION",
-        sameSite: "Lax",
-        expires: new Date(0),
-      });
+    const isProd = process.env.NODE_ENV === "PRODUCTION";
+    const isCrossSite = process.env.CROSS_SITE === "true";
+    const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
+    const getClearCookieOptions = () => ({
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isCrossSite ? "None" : isProd ? "Lax" : "Strict",
+      path: "/",
+      domain: cookieDomain,
     });
 
-    res.status(200).json({
+    if (refreshToken) {
+      try {
+        await Teacher.updateOne(
+          { refreshToken },
+          { $unset: { refreshToken: "" } }
+        );
+      } catch (dbErr) {
+        console.error("Teacher logout: failed to unset refreshToken:", dbErr);
+      }
+    }
+
+    ["accessToken", "refreshToken"].forEach((cookieName) => {
+      res.clearCookie(cookieName, getClearCookieOptions());
+    });
+
+    return res.status(200).json({
       success: true,
       message: "Teacher logged out",
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
