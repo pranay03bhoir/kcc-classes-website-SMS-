@@ -9,7 +9,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "npm install && npm install -g pm2 && pm2 start server.js --name kcc-backend",
+    "stop": "pm2 stop kcc-backend"
+
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
