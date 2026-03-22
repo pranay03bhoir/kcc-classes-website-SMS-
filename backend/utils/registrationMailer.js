@@ -10,21 +10,34 @@ function getTransporter() {
     return null;
   }
 
-  return nodemailer.createTransport({
+  const transporterConfig = {
     host,
     port,
     secure: port === 465,
     auth: { user, pass },
     // Add timeout and connection settings
-    connectionTimeout: 30000, // 30 seconds
-    greetingTimeout: 10000,    // 10 seconds
-    socketTimeout: 30000,      // 30 seconds
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 15000,    // 15 seconds
+    socketTimeout: 60000,      // 60 seconds
     // Add TLS settings for better reliability
     tls: {
-      rejectUnauthorized: false,
-      ciphers: 'SSLv3'
-    }
-  });
+      rejectUnauthorized: false
+    },
+    // Add pool and rate limiting for Render
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 1000,
+    rateLimit: 5
+  };
+
+  // Add debug mode for troubleshooting
+  if (process.env.NODE_ENV === 'PRODUCTION') {
+    transporterConfig.debug = true;
+    transporterConfig.logger = true;
+  }
+
+  return nodemailer.createTransport(transporterConfig);
 }
 
 function escapeHtml(s) {

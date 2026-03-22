@@ -7,6 +7,7 @@ const studentRoutes = require("./routes/student.routes");
 const teacherRoutes = require("./routes/teacher.routes");
 const adminRoutes = require("./routes/admin.routes");
 const commonRoutes = require("./routes/common.routes");
+const { retryFailedEmails } = require("./utils/emailRetryService");
 const app = express();
 
 const allowedOrigins = [
@@ -59,4 +60,13 @@ app.use("/api/common", commonRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running at Port ${process.env.PORT}`);
+  
+  // Start email retry service after 5 minutes, then every 30 minutes
+  setTimeout(() => {
+    console.log("Starting email retry service...");
+    retryFailedEmails();
+    
+    // Run retry every 30 minutes
+    setInterval(retryFailedEmails, 30 * 60 * 1000);
+  }, 5 * 60 * 1000); // 5 minutes
 });
