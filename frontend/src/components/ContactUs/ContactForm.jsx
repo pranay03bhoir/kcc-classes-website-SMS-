@@ -64,12 +64,48 @@ export default function ContactForm() {
         status: error.response?.status
       });
       
-      const msg =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to send message. Please try again.";
-      toast.error(msg);
+      // Fallback to email if API fails
+      if (error.message?.includes('network') || error.message?.includes('timeout') || error.message?.includes('server')) {
+        await fallbackEmailSubmission(data);
+      } else {
+        const msg =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to send message. Please try again.";
+        toast.error(msg);
+      }
     }
+  };
+
+  const fallbackEmailSubmission = async (data) => {
+    const subject = encodeURIComponent(`Contact Form: ${data.subject}`);
+    const body = encodeURIComponent(`
+Name: ${data.fullName}
+Email: ${data.email}
+Phone: ${data.phone}
+Subject: ${data.subject}
+Grade: ${data.grade}
+Message: ${data.message}
+    `);
+    
+    const mailtoLink = `mailto:kccclasses.kcc@gmail.com?subject=${subject}&body=${body}`;
+    
+    toast.info(
+      <div>
+        <p>Server is temporarily unavailable. Please click below to send email directly:</p>
+        <a 
+          href={mailtoLink} 
+          className="text-blue-600 underline hover:text-blue-800"
+          onClick={(e) => {
+            e.preventDefault();
+            window.location.href = mailtoLink;
+          }}
+        >
+          Open Email Client
+        </a>
+      </div>,
+      { autoClose: false }
+    );
   };
 
   const handleConnectivityTest = async () => {
