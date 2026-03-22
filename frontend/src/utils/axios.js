@@ -3,8 +3,9 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     process.env.NEXT_PUBLIC_AXIOS_ADMIN_URL ||
-    "http://localhost:5000/api/admin" ||
-    "192.168.1.106:5000",
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? "http://localhost:5000/api/admin"
+      : "https://kcc-classes-website-sms.onrender.com/api/admin"),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -39,8 +40,9 @@ api.interceptors.response.use(
         const refreshResponse = await axios.post(
           `${
             process.env.NEXT_PUBLIC_AXIOS_ADMIN_URL ||
-            "http://localhost:5000/api/admin" ||
-            "192.168.1.106:5000"
+            (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+              ? "http://localhost:5000/api/admin"
+              : "https://kcc-classes-website-sms.onrender.com/api/admin")
           }/refresh`,
           {},
           { withCredentials: true }

@@ -5,7 +5,7 @@ const api = axios.create({
     process.env.NEXT_PUBLIC_AXIOS_USER_URL ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
       ? "http://localhost:5000/api/common"
-      : "/api/common"),
+      : "https://kcc-classes-website-sms.onrender.com/api/common"),
   withCredentials: true, // This ensures that cookies are sent with requests
   headers: {
     "Content-Type": "application/json",
