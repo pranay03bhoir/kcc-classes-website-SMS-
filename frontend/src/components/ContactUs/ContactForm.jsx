@@ -1,5 +1,6 @@
 "use client";
 
+import { submitContactInquiry } from "@/api/contact";
 import CustomHeading from "@/components/Heading/CustomHeading";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, useInView } from "framer-motion";
@@ -34,7 +35,7 @@ export default function ContactForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       subject: "Other",
-      grade: "Select Grade/Class",
+      grade: "",
       consent: false,
     },
   });
@@ -44,16 +45,16 @@ export default function ContactForm() {
 
   const onSubmit = async (data) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Here you would typically send data to your backend
-      console.log("Form data:", data);
-
-      toast.success("Message sent successfully! We'll get back to you soon.");
+      const res = await submitContactInquiry(data);
+      toast.success(
+        res?.message || "Message sent successfully! We'll get back to you soon.",
+      );
       reset();
     } catch (error) {
-      toast.error("Failed to send message. Please try again.");
+      const msg =
+        error.response?.data?.message ||
+        "Failed to send message. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -291,7 +292,7 @@ export default function ContactForm() {
 
           <div className="flex items-start gap-3">
             <input
-              {...register("consent")}
+              {...register("consent", { value: true })}
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
             />

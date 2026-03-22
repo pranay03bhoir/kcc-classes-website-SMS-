@@ -5,6 +5,7 @@
 
 const joi = require("joi");
 const Student = require("../models/student.model");
+const Testimonial = require("../models/testimonial.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../utils/student.email.js");
@@ -792,6 +793,103 @@ const getStudentAttendance = async (req, res) => {
     });
   }
 };
+const testimonialBodySchema = joi.object({
+  rating: joi.number().integer().min(1).max(5).required(),
+  text: joi.string().trim().min(20).max(2000).required(),
+});
+
+const upsertStudentTestimonial = async (req, res) => {
+  try {
+    if (!req.userInfo || req.userInfo.role !== "student") {
+      return res.status(403).json({
+        success: false,
+        message: "Only students can submit testimonials",
+      });
+    }
+    const { error, value } = testimonialBodySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+    const studentId = req.userInfo.id;
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    const std = (student.currentStd || "").trim();
+    const displayRole = std ? `${std} Student` : "Student";
+
+    const testimonial = await Testimonial.findOneAndUpdate(
+      { student: studentId },
+      {
+        $set: {
+          rating: value.rating,
+          text: value.text,
+          status: "approved",
+          displayName: student.name || "",
+          displayRole,
+          displayImage: (student.profileImage && String(student.profileImage).trim()) || "",
+        },
+      },
+      { new: true, upsert: true, runValidators: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Thank you! Your testimonial has been saved.",
+      testimonial: {
+        id: testimonial._id,
+        rating: testimonial.rating,
+        text: testimonial.text,
+        status: testimonial.status,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getMyTestimonial = async (req, res) => {
+  try {
+    if (!req.userInfo || req.userInfo.role !== "student") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+    const doc = await Testimonial.findOne({ student: req.userInfo.id }).lean();
+    if (!doc) {
+      return res.status(200).json({ success: true, testimonial: null });
+    }
+    return res.status(200).json({
+      success: true,
+      testimonial: {
+        id: doc._id,
+        rating: doc.rating,
+        text: doc.text,
+        status: doc.status,
+        updatedAt: doc.updatedAt,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 const getStudentLeaderboard = async (req, res) => {
   try {
     const leaderBoard = await Student.aggregate([
@@ -846,4 +944,6 @@ module.exports = {
   getStudentScores,
   getStudentAttendance,
   getStudentLeaderboard,
+  upsertStudentTestimonial,
+  getMyTestimonial,
 };

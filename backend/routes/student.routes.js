@@ -12,6 +12,8 @@ const {
   studentAuthCheck,
   getStudentScores,
   getStudentAttendance,
+  upsertStudentTestimonial,
+  getMyTestimonial,
 } = require("../controllers/student.controller");
 const loginAuth = require("../middlewares/loginAuth.middleware.js");
 const router = express.Router();
@@ -28,4 +30,6 @@ router.put("/update", loginAuth, updateStudentProfile);
 router.get("/get/Subjects", loginAuth, getStudentSubjects);
 router.get("/get/student/scores", loginAuth, getStudentScores);
 router.get("/get/student/attendance", loginAuth, getStudentAttendance);
+router.post("/testimonial", loginAuth, upsertStudentTestimonial);
+router.get("/testimonial/me", loginAuth, getMyTestimonial);
 module.exports = router;

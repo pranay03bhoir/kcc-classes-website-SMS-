@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { submitStudentRegistration } from "@/api/registration";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   ArrowLeft,
@@ -145,7 +146,7 @@ const RegistrationForm = () => {
   const debouncedCitySearch = useDebounce((value) => {
     if (value.length > 1) {
       const filtered = INDIAN_CITIES.filter((city) =>
-        city.toLowerCase().includes(value.toLowerCase())
+        city.toLowerCase().includes(value.toLowerCase()),
       );
       setCitySuggestions(filtered);
       setShowSuggestions(true);
@@ -158,7 +159,7 @@ const RegistrationForm = () => {
   const debouncedSchoolSearch = useDebounce((value) => {
     if (value.length > 1) {
       const filtered = COMMON_SCHOOLS.filter((school) =>
-        school.toLowerCase().includes(value.toLowerCase())
+        school.toLowerCase().includes(value.toLowerCase()),
       );
       setSchoolSuggestions(filtered);
       setShowSuggestions(true);
@@ -202,6 +203,31 @@ const RegistrationForm = () => {
       default:
         return "";
     }
+  };
+
+  const validateForm = () => {
+    const next = {
+      firstName: validateField("firstName", formData.firstName) || "",
+      lastName: validateField("lastName", formData.lastName) || "",
+      email: validateField("email", formData.email) || "",
+      phone: validateField("phone", formData.phone) || "",
+      pin: validateField("pin", formData.pin) || "",
+      address: !formData.address?.trim() ? "Address is required" : "",
+      city: !formData.city?.trim() ? "City is required" : "",
+      currentClass: !formData.currentClass?.trim()
+        ? "Please select your class"
+        : "",
+      school: !formData.school?.trim() ? "School is required" : "",
+      subjects: !formData.subjects?.length
+        ? "Select at least one subject"
+        : "",
+      batch: !formData.batch?.trim() ? "Please select a batch" : "",
+      agree: !formData.agree
+        ? "You must agree to the terms and conditions"
+        : "",
+    };
+    setErrors((prev) => ({ ...prev, ...next }));
+    return !Object.values(next).some(Boolean);
   };
 
   const handleChange = (e) => {
@@ -302,13 +328,16 @@ const RegistrationForm = () => {
 
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Form submitted:", formData);
-      toast.success("Registration successful! We'll contact you soon.");
+      const data = await submitStudentRegistration(formData);
+      toast.success(
+        data?.message || "Registration successful! We'll contact you soon.",
+      );
       resetForm();
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      const msg =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      toast.error(msg);
       console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
@@ -451,7 +480,7 @@ const RegistrationForm = () => {
               onClick={() => {
                 localStorage.setItem(
                   "registrationForm",
-                  JSON.stringify(formData)
+                  JSON.stringify(formData),
                 );
                 toast.success("Draft saved successfully");
               }}
@@ -921,7 +950,15 @@ const RegistrationForm = () => {
                 <Checkbox
                   name="agree"
                   checked={formData.agree}
-                  onChange={handleChange}
+                  onCheckedChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      agree: Boolean(checked),
+                    }));
+                    if (errors.agree) {
+                      setErrors((prev) => ({ ...prev, agree: "" }));
+                    }
+                  }}
                   className={`mt-1 ${errors.agree ? "border-red-500" : ""}`}
                 />
                 <label className="text-sm">
