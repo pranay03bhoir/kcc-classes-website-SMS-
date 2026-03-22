@@ -26,15 +26,25 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 15000, // 15 second timeout
+  timeout: 60000, // 60 second timeout for Render cold starts
 });
 
-// Add response interceptor for better error handling
+// Add response interceptor for better error handling and retry logic
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    // Retry logic for timeouts (Render cold starts)
+    if (error.code === 'ECONNABORTED' && !error.config._retry) {
+      error.config._retry = true;
+      console.log("Request timed out, retrying once...");
+      
+      // Retry with longer timeout
+      error.config.timeout = 90000; // 90 seconds for retry
+      return api.request(error.config);
+    }
+    
     if (error.code === 'ECONNABORTED') {
-      error.message = 'Request timeout. The server is taking too long to respond.';
+      error.message = 'Request timeout. The server is starting up (cold start). Please wait a moment and try again.';
     } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
       error.message = 'Network error. Please check your internet connection.';
     } else if (error.response) {

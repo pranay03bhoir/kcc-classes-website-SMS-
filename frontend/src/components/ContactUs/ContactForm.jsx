@@ -1,8 +1,10 @@
 "use client";
 
+import React from "react";
 import { submitContactInquiry } from "@/api/contact";
 import CustomHeading from "@/components/Heading/CustomHeading";
 import { testConnectivity } from "@/utils/connectivity-test";
+import { startBackendWarmup } from "@/utils/backend-warmup";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
@@ -43,6 +45,11 @@ export default function ContactForm() {
 
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
+
+  // Start backend warm-up when component mounts
+  React.useEffect(() => {
+    startBackendWarmup();
+  }, []);
 
   const onSubmit = async (data) => {
     console.log("Contact form submission started:", data);
