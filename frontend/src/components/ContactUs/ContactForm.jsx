@@ -44,13 +44,22 @@ export default function ContactForm() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   const onSubmit = async (data) => {
+    console.log("Contact form submission data:", data);
+    
     try {
+      console.log("Submitting to API...");
       const res = await submitContactInquiry(data);
+      console.log("API response:", res);
       toast.success(
         res?.message || "Message sent successfully! We'll get back to you soon.",
       );
       reset();
     } catch (error) {
+      console.error("Contact form submission error:", error);
+      console.error("Error response:", error.response);
+      console.error("Error status:", error.response?.status);
+      console.error("Error data:", error.response?.data);
+      
       const msg =
         error.response?.data?.message ||
         "Failed to send message. Please try again.";
@@ -292,7 +301,7 @@ export default function ContactForm() {
 
           <div className="flex items-start gap-3">
             <input
-              {...register("consent", { value: true })}
+              {...register("consent")}
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
             />

@@ -12,6 +12,12 @@ const api = axios.create({
   },
 });
 
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log("API Base URL configured to:", api.defaults.baseURL);
+  console.log("Current hostname:", window.location.hostname);
+}
+
 export const getAllToppers = async () => {
   return api.get("/get/toppers");
 };
