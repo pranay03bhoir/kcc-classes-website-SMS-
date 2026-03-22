@@ -18,30 +18,22 @@ const allowedOrigins = [
   /^https:\/\/.*\.vercel\.app$/
 ].filter(Boolean);
 
-console.log("Server starting with NODE_ENV:", process.env.NODE_ENV);
-console.log("FRONTEND_URL from env:", process.env.FRONTEND_URL);
-console.log("Allowed origins:", allowedOrigins);
-
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log("CORS request from origin:", origin);
     if (!origin) return callback(null, true); // Allow requests with no origin (mobile apps, curl)
     
     // Check if origin is explicitly allowed
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log("Origin allowed:", origin);
       return callback(null, true);
     }
     
     // Check regex patterns (for Vercel URLs)
     for (const allowedOrigin of allowedOrigins) {
       if (allowedOrigin instanceof RegExp && allowedOrigin.test(origin)) {
-        console.log("Origin allowed by regex:", origin);
         return callback(null, true);
       }
     }
     
-    console.log("Origin blocked:", origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -63,7 +55,6 @@ app.listen(process.env.PORT, () => {
   
   // Start email retry service after 5 minutes, then every 30 minutes
   setTimeout(() => {
-    console.log("Starting email retry service...");
     retryFailedEmails();
     
     // Run retry every 30 minutes

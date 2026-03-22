@@ -3,7 +3,6 @@
 import React from "react";
 import { submitContactInquiry } from "@/api/contact";
 import CustomHeading from "@/components/Heading/CustomHeading";
-import { testConnectivity } from "@/utils/connectivity-test";
 import { startBackendWarmup } from "@/utils/backend-warmup";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, useInView } from "framer-motion";
@@ -52,25 +51,13 @@ export default function ContactForm() {
   }, []);
 
   const onSubmit = async (data) => {
-    console.log("Contact form submission started:", data);
-    
     try {
-      console.log("Sending API request...");
       const res = await submitContactInquiry(data);
-      console.log("API request successful:", res);
       toast.success(
         res?.message || "Message sent successfully! We'll get back to you soon.",
       );
       reset();
     } catch (error) {
-      console.error("Contact form submission failed:", error);
-      console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
       // Fallback to email if API fails
       if (error.message?.includes('network') || error.message?.includes('timeout') || error.message?.includes('server')) {
         await fallbackEmailSubmission(data);
@@ -115,17 +102,6 @@ Message: ${data.message}
       </div>,
       { autoClose: false }
     );
-  };
-
-  const handleConnectivityTest = async () => {
-    console.log("Running connectivity test...");
-    const result = await testConnectivity();
-    
-    if (result.success) {
-      toast.success(`API is reachable! Status: ${result.status}`);
-    } else {
-      toast.error(`API connectivity failed: ${result.error || result.code || 'Unknown error'}`);
-    }
   };
 
   const socialLinks = [
@@ -378,55 +354,45 @@ Message: ${data.message}
             <p className="text-sm text-red-500">{errors.consent.message}</p>
           )}
 
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={handleConnectivityTest}
-              className="flex-1 py-3 px-6 rounded-lg text-gray-700 font-semibold border border-gray-300 hover:bg-gray-50 transition-colors"
-            >
-              Test Connection
-            </button>
-            
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`flex-1 py-3 px-6 rounded-lg text-white font-semibold transition-all
-                ${
-                  isSubmitting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-red-500 hover:bg-red-600 hover:shadow-lg"
-                }
-              `}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Sending...
-                </span>
-              ) : (
-                "Send Message"
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full py-3 px-6 rounded-lg text-white font-semibold transition-all
+              ${
+                isSubmitting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-red-500 hover:bg-red-600 hover:shadow-lg"
+              }
+            `}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Sending...
+              </span>
+            ) : (
+              "Send Message"
+            )}
+          </button>
         </form>
       </motion.div>
       <ToastContainer

@@ -8,8 +8,6 @@ const retryFailedEmails = async () => {
       emailNotificationFailed: true
     }).limit(10); // Process 10 at a time
 
-    console.log(`Found ${failedInquiries.length} failed email notifications to retry`);
-
     for (const inquiry of failedInquiries) {
       try {
         await sendContactInquiryToOwner(inquiry.toObject());
@@ -21,11 +19,7 @@ const retryFailedEmails = async () => {
           emailRetryCount: (inquiry.emailRetryCount || 0) + 1,
           lastEmailRetry: new Date()
         });
-
-        console.log(`Email retry successful for inquiry: ${inquiry._id}`);
       } catch (error) {
-        console.error(`Email retry failed for inquiry ${inquiry._id}:`, error.message);
-        
         // Update retry count
         await ContactInquiry.findByIdAndUpdate(inquiry._id, {
           emailRetryCount: (inquiry.emailRetryCount || 0) + 1,
@@ -34,7 +28,7 @@ const retryFailedEmails = async () => {
       }
     }
   } catch (error) {
-    console.error("Email retry service error:", error);
+    // Silently handle service errors
   }
 };
 

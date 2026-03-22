@@ -372,9 +372,7 @@ const submitContactInquiry = async (req, res) => {
     // Try to send email, but don't fail the submission if email fails
     try {
       await sendContactInquiryToOwner(normalized);
-      console.log("Contact inquiry email sent successfully");
     } catch (emailErr) {
-      console.error("submitContactInquiry email failed (inquiry saved):", emailErr);
       // Don't delete the inquiry - keep it and retry email later
       // The submission is successful, just email notification failed
       
@@ -390,7 +388,6 @@ const submitContactInquiry = async (req, res) => {
       id: doc._id,
     });
   } catch (error) {
-    console.error("submitContactInquiry:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

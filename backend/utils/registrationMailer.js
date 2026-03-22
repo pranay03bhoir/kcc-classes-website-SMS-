@@ -31,12 +31,6 @@ function getTransporter() {
     rateLimit: 5
   };
 
-  // Add debug mode for troubleshooting
-  if (process.env.NODE_ENV === 'PRODUCTION') {
-    transporterConfig.debug = true;
-    transporterConfig.logger = true;
-  }
-
   return nodemailer.createTransport(transporterConfig);
 }
 

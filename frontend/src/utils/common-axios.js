@@ -36,7 +36,6 @@ api.interceptors.response.use(
     // Retry logic for timeouts (Render cold starts)
     if (error.code === 'ECONNABORTED' && !error.config._retry) {
       error.config._retry = true;
-      console.log("Request timed out, retrying once...");
       
       // Retry with longer timeout
       error.config.timeout = 120000; // 120 seconds for retry
@@ -57,8 +56,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-console.log("API configured with baseURL:", getBaseURL());
 
 export const getAllToppers = async () => {
   return api.get("/get/toppers");

@@ -27,12 +27,10 @@ export const stopBackendWarmup = () => {
 
 const warmUpBackend = async () => {
   try {
-    console.log("Warming up backend...");
     // Use a public endpoint that doesn't require auth
     await api.get("/get/toppers", { timeout: 10000 });
-    console.log("Backend warm-up successful");
   } catch (error) {
-    console.log("Backend warm-up failed (expected if cold):", error.message);
+    // Expected if backend is cold - ignore silently
   }
 };
 
