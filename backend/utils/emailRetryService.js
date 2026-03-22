@@ -1,5 +1,5 @@
 // Email retry service for failed notifications
-const ContactInquiry = require("../models/ContactInquiry");
+const ContactInquiry = require("../models/contactInquiry.model");
 const { sendContactInquiryToOwner } = require("./registrationMailer");
 
 const retryFailedEmails = async () => {
