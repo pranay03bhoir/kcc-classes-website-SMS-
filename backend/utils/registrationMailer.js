@@ -15,6 +15,15 @@ function getTransporter() {
     port,
     secure: port === 465,
     auth: { user, pass },
+    // Add timeout and connection settings
+    connectionTimeout: 30000, // 30 seconds
+    greetingTimeout: 10000,    // 10 seconds
+    socketTimeout: 30000,      // 30 seconds
+    // Add TLS settings for better reliability
+    tls: {
+      rejectUnauthorized: false,
+      ciphers: 'SSLv3'
+    }
   });
 }
 

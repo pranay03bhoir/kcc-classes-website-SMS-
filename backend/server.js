@@ -12,7 +12,9 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://www.kccclasses.in",
-  process.env.FRONTEND_URL
+  process.env.FRONTEND_URL,
+  // Allow all Vercel preview URLs for development
+  /^https:\/\/.*\.vercel\.app$/
 ].filter(Boolean);
 
 console.log("Server starting with NODE_ENV:", process.env.NODE_ENV);
@@ -23,13 +25,23 @@ const corsOptions = {
   origin: function (origin, callback) {
     console.log("CORS request from origin:", origin);
     if (!origin) return callback(null, true); // Allow requests with no origin (mobile apps, curl)
+    
+    // Check if origin is explicitly allowed
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log("Origin allowed:", origin);
-      callback(null, true);
-    } else {
-      console.log("Origin blocked:", origin);
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+    
+    // Check regex patterns (for Vercel URLs)
+    for (const allowedOrigin of allowedOrigins) {
+      if (allowedOrigin instanceof RegExp && allowedOrigin.test(origin)) {
+        console.log("Origin allowed by regex:", origin);
+        return callback(null, true);
+      }
+    }
+    
+    console.log("Origin blocked:", origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

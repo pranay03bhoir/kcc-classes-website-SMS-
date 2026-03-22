@@ -369,14 +369,19 @@ const submitContactInquiry = async (req, res) => {
 
     const doc = await ContactInquiry.create(normalized);
 
+    // Try to send email, but don't fail the submission if email fails
     try {
       await sendContactInquiryToOwner(normalized);
+      console.log("Contact inquiry email sent successfully");
     } catch (emailErr) {
-      await ContactInquiry.findByIdAndDelete(doc._id);
-      console.error("submitContactInquiry email:", emailErr);
-      return res.status(503).json({
-        message:
-          "We could not send your message. Please try again in a few minutes or call us directly.",
+      console.error("submitContactInquiry email failed (inquiry saved):", emailErr);
+      // Don't delete the inquiry - keep it and retry email later
+      // The submission is successful, just email notification failed
+      
+      // Optional: Add a retry mechanism or flag for manual review
+      await ContactInquiry.findByIdAndUpdate(doc._id, { 
+        emailNotificationFailed: true,
+        emailFailureReason: emailErr.message
       });
     }
 
