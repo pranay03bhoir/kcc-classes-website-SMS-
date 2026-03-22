@@ -98,18 +98,20 @@ Message: ${data.message}
     const mailtoLink = `mailto:kccclasses.kcc@gmail.com?subject=${subject}&body=${body}`;
     
     toast.info(
-      <div>
-        <p>Server is temporarily unavailable. Please click below to send email directly:</p>
+      <div className="text-left">
+        <p className="mb-2">🚀 Server is starting up (cold start). This can take 1-2 minutes on free hosting.</p>
+        <p className="mb-3">In the meantime, you can:</p>
         <a 
           href={mailtoLink} 
-          className="text-blue-600 underline hover:text-blue-800"
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           onClick={(e) => {
             e.preventDefault();
             window.location.href = mailtoLink;
           }}
         >
-          Open Email Client
+          📧 Send Email Directly
         </a>
+        <p className="mt-2 text-sm text-gray-600">Or wait 30 seconds and try again.</p>
       </div>,
       { autoClose: false }
     );

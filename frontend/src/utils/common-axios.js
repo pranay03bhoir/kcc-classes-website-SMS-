@@ -39,7 +39,7 @@ api.interceptors.response.use(
       console.log("Request timed out, retrying once...");
       
       // Retry with longer timeout
-      error.config.timeout = 90000; // 90 seconds for retry
+      error.config.timeout = 120000; // 120 seconds for retry
       return api.request(error.config);
     }
     
