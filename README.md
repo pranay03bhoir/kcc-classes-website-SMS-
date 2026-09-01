@@ -235,12 +235,20 @@ npm run dev
 ## Environment Variables
 ### Backend (`backend/.env`)
 ```
+ADMIN_BASE_URL=http://localhost:5000/api/admin
+CROSS_SITE=true
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PASS=your_email_pass
+EMAIL_PORT=587
+EMAIL_USER=your_email_username
+FRONTEND_URL=http://localhost:3000/
+JWT_REFRESH_SECRET=your_jwt_refresh_secret
+JWT_SECRET=your_jwt_access_secret
+MONGO_URI=your_mongo_uri
+NODE_ENV=your_production_environment
 PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+STUDENT_BASE_URL=http://localhost:5000/api/student
+TEACHER_BASE_URL=http://localhost:5000/api/teacher
 ```
 
 ### Frontend
